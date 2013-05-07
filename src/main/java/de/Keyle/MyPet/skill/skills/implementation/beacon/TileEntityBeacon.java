@@ -21,9 +21,9 @@
 package de.Keyle.MyPet.skill.skills.implementation.beacon;
 
 import de.Keyle.MyPet.skill.skills.implementation.Beacon;
-import net.minecraft.server.v1_5_R3.EntityHuman;
+import net.minecraft.entity.player.EntityPlayer;
 
-public class TileEntityBeacon extends net.minecraft.server.v1_5_R3.TileEntityBeacon
+public class TileEntityBeacon extends net.minecraft.tileentity.TileEntityBeacon
 {
     private Beacon beaconSkill;
     private boolean primaryBuffCheck = false;
@@ -34,19 +34,18 @@ public class TileEntityBeacon extends net.minecraft.server.v1_5_R3.TileEntityBea
     }
 
     @Override
-    public void update()
+    public void updateEntity()
     {
     }
 
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    public boolean a(EntityHuman entityhuman)
+    @Override
+    public boolean isUseableByPlayer(EntityPlayer entityhuman)
     {
         return true;
     }
 
     @Override
-    public void d(int effectId)
+    public void setPrimaryEffect(int effectId)
     {
         if (!beaconSkill.activate(true, effectId))
         {
@@ -60,7 +59,7 @@ public class TileEntityBeacon extends net.minecraft.server.v1_5_R3.TileEntityBea
     }
 
     @Override
-    public void e(int effectId)
+    public void setSecondaryEffect(int effectId)
     {
         if (!beaconSkill.activate(false, effectId))
         {

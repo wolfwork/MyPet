@@ -24,7 +24,7 @@ import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.ai.attack.MyPetAIMeleeAttack;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.world.World;
 
 @EntitySize(width = 5.5f, height = 5.5F)
 public class EntityMyGiant extends EntityMyPet
@@ -57,15 +57,15 @@ public class EntityMyGiant extends EntityMyPet
 
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a(int i, int j, int k, int l)
+    protected void playStepSound(int i, int j, int k, int l)
     {
-        makeSound("mob.zombie.step", 0.15F, 1.0F);
+        playSound("mob.zombie.step", 0.15F, 1.0F);
     }
 
     /**
      * Returns the default sound of the MyPet
      */
-    protected String bb()
+    protected String getLivingSound()
     {
         return !playIdleSound() ? "" : "mob.zombie.say";
     }
@@ -74,7 +74,7 @@ public class EntityMyGiant extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.zombie.hurt";
     }
@@ -83,7 +83,7 @@ public class EntityMyGiant extends EntityMyPet
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.zombie.death";
     }

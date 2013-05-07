@@ -22,30 +22,29 @@ package de.Keyle.MyPet.entity.ai.movement;
 
 import de.Keyle.MyPet.entity.ai.MyPetAIGoal;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
-import net.minecraft.server.v1_5_R3.EntityLiving;
 
 public class MyPetAIFloat extends MyPetAIGoal
 {
-    private EntityLiving entityMyPet;
+    private EntityMyPet entityMyPet;
 
     public MyPetAIFloat(EntityMyPet entityMyPet)
     {
         this.entityMyPet = entityMyPet;
-        entityMyPet.getNavigation().e(true);
+        entityMyPet.getNavigator().setCanSwim(true);
     }
 
     @Override
     public boolean shouldStart()
     {
-        return entityMyPet.world.getMaterial((int) entityMyPet.locX, (int) entityMyPet.locY, (int) entityMyPet.locZ).isLiquid();
+        return entityMyPet.worldObj.getBlockMaterial((int) entityMyPet.posX, (int) entityMyPet.posY, (int) entityMyPet.posZ).isLiquid();
     }
 
     @Override
     public void tick()
     {
-        if (entityMyPet.aE().nextFloat() < 0.9D)
+        if (entityMyPet.getRNG().nextFloat() < 0.9D)
         {
-            entityMyPet.motY += 0.05D;
+            entityMyPet.motionY += 0.05D;
         }
     }
 }

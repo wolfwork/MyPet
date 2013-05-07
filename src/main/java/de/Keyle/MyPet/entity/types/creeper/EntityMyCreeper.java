@@ -23,7 +23,7 @@ package de.Keyle.MyPet.entity.types.creeper;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.world.World;
 
 
 @EntitySize(width = 0.6F, height = 0.9F)
@@ -49,11 +49,11 @@ public class EntityMyCreeper extends EntityMyPet
     {
         if (!powered)
         {
-            this.datawatcher.watch(17, (byte) 0);
+            this.getDataWatcher().updateObject(17, (byte) 0);
         }
         else
         {
-            this.datawatcher.watch(17, (byte) 1);
+            this.getDataWatcher().updateObject(17, (byte) 1);
         }
         ((MyCreeper) myPet).isPowered = powered;
     }
@@ -65,15 +65,15 @@ public class EntityMyCreeper extends EntityMyPet
 
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a()
+    protected void entityInit()
     {
-        super.a();
-        this.datawatcher.a(16, new Byte((byte) -1)); // N/A
-        this.datawatcher.a(17, new Byte((byte) 0));  // powered
+        super.entityInit();
+        this.getDataWatcher().addObject(16, new Byte((byte) -1)); // N/A
+        this.getDataWatcher().addObject(17, new Byte((byte) 0));  // powered
     }
 
     @Override
-    protected String bb()
+    protected String getLivingSound()
     {
         return "";
     }
@@ -82,7 +82,7 @@ public class EntityMyCreeper extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.creeper.say";
     }
@@ -91,7 +91,7 @@ public class EntityMyCreeper extends EntityMyPet
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.creeper.death";
     }

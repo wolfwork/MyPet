@@ -21,8 +21,6 @@
 package de.Keyle.MyPet;
 
 import de.Keyle.MyPet.chatcommands.*;
-import de.Keyle.MyPet.chatcommands.CommandHelp;
-import de.Keyle.MyPet.chatcommands.CommandStop;
 import de.Keyle.MyPet.entity.types.IMyPet;
 import de.Keyle.MyPet.entity.types.InactiveMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
@@ -68,11 +66,14 @@ import de.Keyle.MyPet.util.configuration.NBT_Configuration;
 import de.Keyle.MyPet.util.configuration.YAML_Configuration;
 import de.Keyle.MyPet.util.logger.DebugLogger;
 import de.Keyle.MyPet.util.logger.MyPetLogger;
-import net.minecraft.server.v1_5_R3.*;
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.boss.EntityWither;
+import net.minecraft.entity.monster.*;
+import net.minecraft.entity.passive.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_5_R3.CraftServer;
+import org.bukkit.craftbukkit.v1_5_R2.CraftServer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.mcstats.Metrics;
@@ -131,7 +132,7 @@ public class MyPetPlugin extends JavaPlugin implements IScheduler
 
         DebugLogger.setup(MyPetConfiguration.USE_DEBUG_LOGGER);
 
-        String minecraftVersion = ((CraftServer) getServer()).getHandle().getServer().getVersion();
+        String minecraftVersion = ((CraftServer) getServer()).getHandle().getServerInstance().getMinecraftVersion();
 
         if (!MyPetVersion.getMinecraftVersion().equalsIgnoreCase(minecraftVersion))
         {
@@ -256,62 +257,62 @@ public class MyPetPlugin extends JavaPlugin implements IScheduler
 
         try
         {
-            Method a = EntityTypes.class.getDeclaredMethod("a", Class.class, String.class, Integer.TYPE);
-            a.setAccessible(true);
+            Method addMapping = EntityList.class.getDeclaredMethod("addMapping", Class.class, String.class, Integer.TYPE);
+            addMapping.setAccessible(true);
 
             // https://github.com/Bukkit/mc-dev/blob/master/net/minecraft/server/EntityTypes.java
-            a.invoke(a, EntityMyCreeper.class, "Creeper", 50);
-            a.invoke(a, EntityCreeper.class, "Creeper", 50);
-            a.invoke(a, EntityMySkeleton.class, "Skeleton", 51);
-            a.invoke(a, EntitySkeleton.class, "Skeleton", 51);
-            a.invoke(a, EntityMySpider.class, "Spider", 52);
-            a.invoke(a, EntitySpider.class, "Spider", 52);
-            a.invoke(a, EntityMyGiant.class, "Giant", 53);
-            a.invoke(a, EntityGiantZombie.class, "Giant", 53);
-            a.invoke(a, EntityMyZombie.class, "Zombie", 54);
-            a.invoke(a, EntityZombie.class, "Zombie", 54);
-            a.invoke(a, EntityMySlime.class, "Slime", 55);
-            a.invoke(a, EntitySlime.class, "Slime", 55);
-            a.invoke(a, EntityMyGhast.class, "Ghast", 56);
-            a.invoke(a, EntityGhast.class, "Ghast", 56);
-            a.invoke(a, EntityMyPigZombie.class, "PigZombie", 57);
-            a.invoke(a, EntityPigZombie.class, "PigZombie", 57);
-            a.invoke(a, EntityMyEnderman.class, "Enderman", 58);
-            a.invoke(a, EntityEnderman.class, "Enderman", 58);
-            a.invoke(a, EntityMyCaveSpider.class, "CaveSpider", 59);
-            a.invoke(a, EntityCaveSpider.class, "CaveSpider", 59);
-            a.invoke(a, EntityMySilverfish.class, "Silverfish", 60);
-            a.invoke(a, EntitySilverfish.class, "Silverfish", 60);
-            a.invoke(a, EntityMyBlaze.class, "Blaze", 61);
-            a.invoke(a, EntityBlaze.class, "Blaze", 61);
-            a.invoke(a, EntityMyMagmaCube.class, "LavaSlime", 62);
-            a.invoke(a, EntityMagmaCube.class, "LavaSlime", 62);
-            a.invoke(a, EntityMyWither.class, "WitherBoss", 64);
-            a.invoke(a, EntityWither.class, "WitherBoss", 64);
-            a.invoke(a, EntityMyBat.class, "Bat", 65);
-            a.invoke(a, EntityBat.class, "Bat", 65);
-            a.invoke(a, EntityMyWitch.class, "Witch", 66);
-            a.invoke(a, EntityWitch.class, "Witch", 66);
-            a.invoke(a, EntityMyPig.class, "Pig", 90);
-            a.invoke(a, EntityPig.class, "Pig", 90);
-            a.invoke(a, EntityMySheep.class, "Sheep", 91);
-            a.invoke(a, EntitySheep.class, "Sheep", 91);
-            a.invoke(a, EntityMyCow.class, "Cow", 92);
-            a.invoke(a, EntityCow.class, "Cow", 92);
-            a.invoke(a, EntityMyChicken.class, "Chicken", 93);
-            a.invoke(a, EntityChicken.class, "Chicken", 93);
-            a.invoke(a, EntityMyWolf.class, "Wolf", 95);
-            a.invoke(a, EntityWolf.class, "Wolf", 95);
-            a.invoke(a, EntityMyMooshroom.class, "MushroomCow", 96);
-            a.invoke(a, EntityMushroomCow.class, "MushroomCow", 96);
-            a.invoke(a, EntityMySnowman.class, "SnowMan", 97);
-            a.invoke(a, EntitySnowman.class, "SnowMan", 97);
-            a.invoke(a, EntityMyOcelot.class, "Ozelot", 98);
-            a.invoke(a, EntityOcelot.class, "Ozelot", 98);
-            a.invoke(a, EntityMyIronGolem.class, "VillagerGolem", 99);
-            a.invoke(a, EntityIronGolem.class, "VillagerGolem", 99);
-            a.invoke(a, EntityMyVillager.class, "Villager", 120);
-            a.invoke(a, EntityVillager.class, "Villager", 120);
+            addMapping.invoke(addMapping, EntityMyCreeper.class, "Creeper", 50);
+            addMapping.invoke(addMapping, EntityCreeper.class, "Creeper", 50);
+            addMapping.invoke(addMapping, EntityMySkeleton.class, "Skeleton", 51);
+            addMapping.invoke(addMapping, EntitySkeleton.class, "Skeleton", 51);
+            addMapping.invoke(addMapping, EntityMySpider.class, "Spider", 52);
+            addMapping.invoke(addMapping, EntitySpider.class, "Spider", 52);
+            addMapping.invoke(addMapping, EntityMyGiant.class, "Giant", 53);
+            addMapping.invoke(addMapping, EntityGiantZombie.class, "Giant", 53);
+            addMapping.invoke(addMapping, EntityMyZombie.class, "Zombie", 54);
+            addMapping.invoke(addMapping, EntityZombie.class, "Zombie", 54);
+            addMapping.invoke(addMapping, EntityMySlime.class, "Slime", 55);
+            addMapping.invoke(addMapping, EntitySlime.class, "Slime", 55);
+            addMapping.invoke(addMapping, EntityMyGhast.class, "Ghast", 56);
+            addMapping.invoke(addMapping, EntityGhast.class, "Ghast", 56);
+            addMapping.invoke(addMapping, EntityMyPigZombie.class, "PigZombie", 57);
+            addMapping.invoke(addMapping, EntityPigZombie.class, "PigZombie", 57);
+            addMapping.invoke(addMapping, EntityMyEnderman.class, "Enderman", 58);
+            addMapping.invoke(addMapping, EntityEnderman.class, "Enderman", 58);
+            addMapping.invoke(addMapping, EntityMyCaveSpider.class, "CaveSpider", 59);
+            addMapping.invoke(addMapping, EntityCaveSpider.class, "CaveSpider", 59);
+            addMapping.invoke(addMapping, EntityMySilverfish.class, "Silverfish", 60);
+            addMapping.invoke(addMapping, EntitySilverfish.class, "Silverfish", 60);
+            addMapping.invoke(addMapping, EntityMyBlaze.class, "Blaze", 61);
+            addMapping.invoke(addMapping, EntityBlaze.class, "Blaze", 61);
+            addMapping.invoke(addMapping, EntityMyMagmaCube.class, "LavaSlime", 62);
+            addMapping.invoke(addMapping, EntityMagmaCube.class, "LavaSlime", 62);
+            addMapping.invoke(addMapping, EntityMyWither.class, "WitherBoss", 64);
+            addMapping.invoke(addMapping, EntityWither.class, "WitherBoss", 64);
+            addMapping.invoke(addMapping, EntityMyBat.class, "Bat", 65);
+            addMapping.invoke(addMapping, EntityBat.class, "Bat", 65);
+            addMapping.invoke(addMapping, EntityMyWitch.class, "Witch", 66);
+            addMapping.invoke(addMapping, EntityWitch.class, "Witch", 66);
+            addMapping.invoke(addMapping, EntityMyPig.class, "Pig", 90);
+            addMapping.invoke(addMapping, EntityPig.class, "Pig", 90);
+            addMapping.invoke(addMapping, EntityMySheep.class, "Sheep", 91);
+            addMapping.invoke(addMapping, EntitySheep.class, "Sheep", 91);
+            addMapping.invoke(addMapping, EntityMyCow.class, "Cow", 92);
+            addMapping.invoke(addMapping, EntityCow.class, "Cow", 92);
+            addMapping.invoke(addMapping, EntityMyChicken.class, "Chicken", 93);
+            addMapping.invoke(addMapping, EntityChicken.class, "Chicken", 93);
+            addMapping.invoke(addMapping, EntityMyWolf.class, "Wolf", 95);
+            addMapping.invoke(addMapping, EntityWolf.class, "Wolf", 95);
+            addMapping.invoke(addMapping, EntityMyMooshroom.class, "MushroomCow", 96);
+            addMapping.invoke(addMapping, EntityMooshroom.class, "MushroomCow", 96);
+            addMapping.invoke(addMapping, EntityMySnowman.class, "SnowMan", 97);
+            addMapping.invoke(addMapping, EntitySnowman.class, "SnowMan", 97);
+            addMapping.invoke(addMapping, EntityMyOcelot.class, "Ozelot", 98);
+            addMapping.invoke(addMapping, EntityOcelot.class, "Ozelot", 98);
+            addMapping.invoke(addMapping, EntityMyIronGolem.class, "VillagerGolem", 99);
+            addMapping.invoke(addMapping, EntityIronGolem.class, "VillagerGolem", 99);
+            addMapping.invoke(addMapping, EntityMyVillager.class, "Villager", 120);
+            addMapping.invoke(addMapping, EntityVillager.class, "Villager", 120);
 
             DebugLogger.info("registered MyPet entities.");
         }

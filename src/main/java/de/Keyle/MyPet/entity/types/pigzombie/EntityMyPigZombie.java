@@ -27,7 +27,12 @@ import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPet.PetState;
 import de.Keyle.MyPet.util.MyPetPermissions;
-import net.minecraft.server.v1_5_R3.*;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.*;
+import net.minecraft.network.packet.Packet5PlayerInventory;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 @EntitySize(width = 0.6F, height = 0.9F)
 public class EntityMyPigZombie extends EntityMyPet
@@ -67,7 +72,7 @@ public class EntityMyPigZombie extends EntityMyPet
 
     public void setPetEquipment(int slot, ItemStack itemStack)
     {
-        ((WorldServer) this.world).getTracker().a(this, new Packet5EntityEquipment(this.id, slot, itemStack));
+        ((WorldServer) this.worldObj).getEntityTracker().sendPacketToAllPlayersTrackingEntity(this, new Packet5PlayerInventory(this.entityId, slot, itemStack));
         ((MyPigZombie) myPet).equipment.put(EquipmentSlot.getSlotById(slot), itemStack);
     }
 
@@ -83,7 +88,7 @@ public class EntityMyPigZombie extends EntityMyPet
 
     public boolean checkForEquipment(ItemStack itemstack)
     {
-        int slot = b(itemstack);
+        int slot = getArmorPosition(itemstack);
         if (slot == 0)
         {
             if (itemstack.getItem() instanceof ItemSword)
@@ -122,18 +127,18 @@ public class EntityMyPigZombie extends EntityMyPet
      * true: there was a reaction on rightclick
      * false: no reaction on rightclick
      */
-    public boolean a_(EntityHuman entityhuman)
+    public boolean interact(EntityPlayer entityhuman)
     {
-        if (super.a_(entityhuman))
+        if (super.interact(entityhuman))
         {
             return true;
         }
 
-        ItemStack itemStack = entityhuman.inventory.getItemInHand();
+        ItemStack itemStack = entityhuman.inventory.getItemStack();
 
         if (getOwner().equals(entityhuman) && itemStack != null)
         {
-            if (itemStack.id == Item.SHEARS.id)
+            if (itemStack.itemID == Item.shears.itemID)
             {
                 if (!MyPetPermissions.hasExtended(myPet.getOwner().getPlayer(), "MyPet.user.extended.Equip"))
                 {
@@ -144,10 +149,10 @@ public class EntityMyPigZombie extends EntityMyPet
                     ItemStack itemInSlot = ((MyPigZombie) myPet).getEquipment(slot);
                     if (itemInSlot != null)
                     {
-                        EntityItem entityitem = this.a(itemInSlot.cloneItemStack(), 1.0F);
-                        entityitem.motY += (double) (this.random.nextFloat() * 0.05F);
-                        entityitem.motX += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
-                        entityitem.motZ += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
+                        EntityItem entityitem = this.entityDropItem(ItemStack.copyItemStack(itemInSlot), 1.0F);
+                        entityitem.motionY += (double) (this.rand.nextFloat() * 0.05F);
+                        entityitem.motionX += (double) ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.1F);
+                        entityitem.motionZ += (double) ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.1F);
                         setPetEquipment(slot.getSlotId(), null);
                     }
                 }
@@ -159,25 +164,25 @@ public class EntityMyPigZombie extends EntityMyPet
                 {
                     return false;
                 }
-                EquipmentSlot slot = EquipmentSlot.getSlotById(b(itemStack));
+                EquipmentSlot slot = EquipmentSlot.getSlotById(getArmorPosition(itemStack));
                 ItemStack itemInSlot = ((MyPigZombie) myPet).getEquipment(slot);
-                if (itemInSlot != null && !entityhuman.abilities.canInstantlyBuild)
+                if (itemInSlot != null && !entityhuman.capabilities.isCreativeMode)
                 {
-                    EntityItem entityitem = this.a(itemInSlot.cloneItemStack(), 1.0F);
-                    entityitem.motY += (double) (this.random.nextFloat() * 0.05F);
-                    entityitem.motX += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
-                    entityitem.motZ += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
+                    EntityItem entityitem = this.entityDropItem(ItemStack.copyItemStack(itemInSlot), 1.0F);
+                    entityitem.motionY += (double) (this.rand.nextFloat() * 0.05F);
+                    entityitem.motionX += (double) ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.1F);
+                    entityitem.motionZ += (double) ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.1F);
                 }
-                ItemStack itemStackClone = itemStack.cloneItemStack();
-                itemStackClone.count = 1;
-                setPetEquipment(b(itemStack), itemStackClone);
-                if (!entityhuman.abilities.canInstantlyBuild)
+                ItemStack itemStackClone = ItemStack.copyItemStack(itemStack);
+                itemStackClone.stackSize = 1;
+                setPetEquipment(getArmorPosition(itemStack), itemStackClone);
+                if (!entityhuman.capabilities.isCreativeMode)
                 {
-                    --itemStack.count;
+                    --itemStack.stackSize;
                 }
-                if (itemStack.count <= 0)
+                if (itemStack.stackSize <= 0)
                 {
-                    entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                    entityhuman.inventory.setInventorySlotContents(entityhuman.inventory.currentItem, null);
                 }
                 return true;
             }
@@ -188,7 +193,7 @@ public class EntityMyPigZombie extends EntityMyPet
     /**
      * Returns the default sound of the MyPet
      */
-    protected String bb()
+    protected String getLivingSound()
     {
         return !playIdleSound() ? "" : "mob.zombiepig.zpig";
     }
@@ -197,7 +202,7 @@ public class EntityMyPigZombie extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.zombiepig.zpighurt";
     }
@@ -206,7 +211,7 @@ public class EntityMyPigZombie extends EntityMyPet
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.zombiepig.zpigdeath";
     }

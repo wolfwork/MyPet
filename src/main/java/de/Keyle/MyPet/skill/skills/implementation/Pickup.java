@@ -31,9 +31,9 @@ import de.Keyle.MyPet.util.IScheduler;
 import de.Keyle.MyPet.util.MyPetBukkitUtil;
 import de.Keyle.MyPet.util.MyPetLanguage;
 import de.Keyle.MyPet.util.MyPetPermissions;
-import net.minecraft.server.v1_5_R3.Packet22Collect;
+import net.minecraft.network.packet.Packet22Collect;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -153,10 +153,10 @@ public class Pickup extends PickupInfo implements ISkillInstance, IScheduler, IS
                         {
                             if (p instanceof Player)
                             {
-                                ((CraftPlayer) p).getHandle().playerConnection.sendPacket(new Packet22Collect(entity.getEntityId(), myPet.getCraftPet().getEntityId()));
+                                ((CraftPlayer) p).getHandle().playerNetServerHandler.sendPacketToPlayer(new Packet22Collect(entity.getEntityId(), myPet.getCraftPet().getEntityId()));
                             }
                         }
-                        myPet.getCraftPet().getHandle().makeSound("random.pop", 0.2F, 1.0F);
+                        myPet.getCraftPet().getHandle().playSound("random.pop", 0.2F, 1.0F);
                         itemEntity.remove();
                     }
                     else

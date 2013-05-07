@@ -20,7 +20,8 @@
 
 package de.Keyle.MyPet.skill.skills.implementation.inventory;
 
-import net.minecraft.server.v1_5_R3.*;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.*;
 import org.spout.nbt.*;
 
 import java.lang.reflect.Field;
@@ -34,13 +35,13 @@ public class ItemStackNBTConverter
     {
         CompoundTag compound = new CompoundTag(null, new CompoundMap());
 
-        compound.getValue().put("id", new ShortTag("id", (short) itemStack.id));
-        compound.getValue().put("Count", new ByteTag("Count", (byte) itemStack.count));
-        compound.getValue().put("Damage", new ShortTag("Damage", (short) itemStack.getData()));
+        compound.getValue().put("id", new ShortTag("id", (short) itemStack.itemID));
+        compound.getValue().put("Count", new ByteTag("Count", (byte) itemStack.stackSize));
+        compound.getValue().put("Damage", new ShortTag("Damage", (short) itemStack.getItemDamage()));
 
-        if (itemStack.tag != null)
+        if (itemStack.getTagCompound() != null)
         {
-            compound.getValue().put("tag", VanillaCompoundToCompound(itemStack.tag.setName("tag")));
+            compound.getValue().put("tag", VanillaCompoundToCompound(itemStack.getTagCompound().setName("tag")));
         }
         return compound;
     }
@@ -55,7 +56,7 @@ public class ItemStackNBTConverter
         if (compound.getValue().containsKey("tag"))
         {
             CompoundTag compoundToConvert = (CompoundTag) compound.getValue().get("tag");
-            itemstack.tag = (NBTTagCompound) CompoundToVanillaCompound(compoundToConvert);
+            itemstack.setTagCompound((NBTTagCompound) CompoundToVanillaCompound(compoundToConvert));
         }
         return itemstack;
     }
@@ -96,7 +97,7 @@ public class ItemStackNBTConverter
                 NBTTagList tagList = new NBTTagList(listTag.getName());
                 for (Tag tagInList : listTag.getValue())
                 {
-                    tagList.add(CompoundToVanillaCompound(tagInList));
+                    tagList.appendTag(CompoundToVanillaCompound(tagInList));
                 }
                 return tagList;
             case TAG_COMPOUND:
@@ -104,7 +105,7 @@ public class ItemStackNBTConverter
                 NBTTagCompound tagCompound = new NBTTagCompound(tag.getName());
                 for (String name : compoundTag.getValue().keySet())
                 {
-                    tagCompound.set(name, CompoundToVanillaCompound(compoundTag.getValue().get(name)));
+                    tagCompound.setTag(name, CompoundToVanillaCompound(compoundTag.getValue().get(name)));
                 }
                 return tagCompound;
             case TAG_END:
@@ -116,7 +117,7 @@ public class ItemStackNBTConverter
     @SuppressWarnings("unchecked")
     public static Tag VanillaCompoundToCompound(NBTBase vanillaTag)
     {
-        switch (vanillaTag.getTypeId())
+        switch (vanillaTag.getId())
         {
             case 0:
                 return new EndTag();
@@ -133,19 +134,19 @@ public class ItemStackNBTConverter
             case 6:
                 return new DoubleTag(vanillaTag.getName(), ((NBTTagDouble) vanillaTag).data);
             case 7:
-                return new ByteArrayTag(vanillaTag.getName(), ((NBTTagByteArray) vanillaTag).data);
+                return new ByteArrayTag(vanillaTag.getName(), ((NBTTagByteArray) vanillaTag).byteArray);
             case 8:
                 return new StringTag(vanillaTag.getName(), ((NBTTagString) vanillaTag).data);
             case 9:
                 NBTTagList tagList = (NBTTagList) vanillaTag;
                 List<Tag<?>> compoundList = new ArrayList<Tag<?>>();
-                for (int i = 0 ; i < tagList.size() ; i++)
+                for (int i = 0 ; i < tagList.tagCount() ; i++)
                 {
-                    Tag<?> t = VanillaCompoundToCompound(tagList.get(i));
+                    Tag<?> t = VanillaCompoundToCompound(tagList.tagAt(i));
                     compoundList.add(t);
                 }
                 Class type;
-                if (tagList.size() > 0)
+                if (tagList.tagCount() > 0)
                 {
                     type = compoundList.get(compoundList.size() - 1).getClass();
                 }
@@ -177,7 +178,7 @@ public class ItemStackNBTConverter
                 }
                 return compound;
             case 11:
-                return new IntArrayTag(vanillaTag.getName(), ((NBTTagIntArray) vanillaTag).data);
+                return new IntArrayTag(vanillaTag.getName(), ((NBTTagIntArray) vanillaTag).intArray);
         }
         return null;
     }

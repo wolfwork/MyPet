@@ -24,7 +24,12 @@ import de.Keyle.MyPet.entity.ai.MyPetAIGoal;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.skill.skills.implementation.Ride;
-import net.minecraft.server.v1_5_R3.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockHalfSlab;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.pathfinding.PathFinder;
+import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.util.MathHelper;
 
 public class MyPetAIRide extends MyPetAIGoal
 {
@@ -48,11 +53,11 @@ public class MyPetAIRide extends MyPetAIGoal
         {
             return false;
         }
-        else if (!this.petEntity.isAlive())
+        else if (this.petEntity.isDead)
         {
             return false;
         }
-        else if (this.petEntity.passenger == null)
+        else if (!this.petEntity.hasRider())
         {
             return false;
         }
@@ -60,7 +65,7 @@ public class MyPetAIRide extends MyPetAIGoal
         {
             return false;
         }
-        else if (!(petEntity.passenger instanceof EntityPlayer))
+        else if (!(petEntity.riddenByEntity instanceof EntityPlayer))
         {
             return false;
         }
@@ -86,11 +91,11 @@ public class MyPetAIRide extends MyPetAIGoal
     @Override
     public void tick()
     {
-        EntityHuman petRider = (EntityHuman) this.petEntity.passenger;
+        EntityPlayer petRider = (EntityPlayer) this.petEntity.riddenByEntity;
 
         if (petRider.isSneaking() && this.petEntity.onGround)
         {
-            this.petEntity.motY += 0.5;
+            this.petEntity.motionY += 0.5;
         }
         if (stopRiding)
         {
@@ -99,7 +104,7 @@ public class MyPetAIRide extends MyPetAIGoal
 
         float totalSpeed = this.startSpeed + (((Ride) myPet.getSkills().getSkill("Ride")).getSpeed());
 
-        float rotationDiff = MathHelper.g(petRider.yaw - this.petEntity.yaw) * 0.5F;
+        float rotationDiff = MathHelper.wrapAngleTo180_float(petRider.rotationYaw - this.petEntity.rotationYaw) * 0.5F;
         if (rotationDiff > 5.0F)
         {
             rotationDiff = 5.0F;
@@ -109,7 +114,7 @@ public class MyPetAIRide extends MyPetAIGoal
             rotationDiff = -5.0F;
         }
 
-        this.petEntity.yaw = MathHelper.g(this.petEntity.yaw + rotationDiff);
+        this.petEntity.rotationYaw = MathHelper.wrapAngleTo180_float(this.petEntity.rotationYaw + rotationDiff);
         if (this.currentSpeed < totalSpeed)
         {
             this.currentSpeed += (totalSpeed - this.currentSpeed) * 0.01F;
@@ -119,25 +124,25 @@ public class MyPetAIRide extends MyPetAIGoal
             this.currentSpeed = totalSpeed;
         }
 
-        int x = MathHelper.floor(this.petEntity.locX);
-        int y = MathHelper.floor(this.petEntity.locY);
-        int z = MathHelper.floor(this.petEntity.locZ);
+        int x = MathHelper.floor_double(this.petEntity.posX);
+        int y = MathHelper.floor_double(this.petEntity.posY);
+        int z = MathHelper.floor_double(this.petEntity.posZ);
 
         // Calculation of new Pathpoint
         float f3 = 0.91F;
         if (this.petEntity.onGround)
         {
             f3 = 0.5460001F;
-            int belowEntityBlockID = this.petEntity.world.getTypeId(MathHelper.d(x), MathHelper.d(y) - 1, MathHelper.d(z));
+            int belowEntityBlockID = this.petEntity.worldObj.getBlockId(MathHelper.floor_float(x), MathHelper.floor_float(y) - 1, MathHelper.floor_float(z));
             if (belowEntityBlockID > 0)
             {
-                f3 = Block.byId[belowEntityBlockID].frictionFactor * 0.91F;
+                f3 = Block.blocksList[belowEntityBlockID].slipperiness * 0.91F;
             }
         }
         float f4 = 0.1627714F / (f3 * f3 * f3);
-        float f5 = MathHelper.sin(this.petEntity.yaw * 3.141593F / 180.0F);
-        float f6 = MathHelper.cos(this.petEntity.yaw * 3.141593F / 180.0F);
-        float f7 = this.petEntity.aI() * f4;
+        float f5 = MathHelper.sin(this.petEntity.rotationYaw * 3.141593F / 180.0F);
+        float f6 = MathHelper.cos(this.petEntity.rotationYaw * 3.141593F / 180.0F);
+        float f7 = this.petEntity.getAIMoveSpeed() * f4;
         float f8 = Math.max(this.currentSpeed, 1.0F);
         f8 = f7 / f8;
         float f9 = this.currentSpeed * f8;
@@ -169,29 +174,29 @@ public class MyPetAIRide extends MyPetAIGoal
             }
         }
 
-        int n = MathHelper.floor(this.petEntity.locX + f10);
-        int i1 = MathHelper.floor(this.petEntity.locZ + f11);
+        int n = MathHelper.floor_double(this.petEntity.posX + f10);
+        int i1 = MathHelper.floor_double(this.petEntity.posZ + f11);
 
-        PathPoint localPathPoint = new PathPoint(MathHelper.d(this.petEntity.width + 1.0F), MathHelper.d(this.petEntity.length + petRider.length + 1.0F), MathHelper.d(this.petEntity.width + 1.0F));
+        PathPoint localPathPoint = new PathPoint(MathHelper.floor_float(this.petEntity.width + 1.0F), MathHelper.floor_float(this.petEntity.height + petRider.height + 1.0F), MathHelper.floor_float(this.petEntity.width + 1.0F));
 
         if ((x != n) || (z != i1))
         {
-            int blockAtEntityPos = this.petEntity.world.getData(x, y, z);
-            int blockbelowEntityPos = this.petEntity.world.getData(x, y - 1, z);
-            boolean isStep = checkForStep(blockAtEntityPos) || ((Block.byId[blockAtEntityPos] == null) && checkForStep(blockbelowEntityPos));
+            int blockAtEntityPos = this.petEntity.worldObj.getBlockId(x, y, z);
+            int blockbelowEntityPos = this.petEntity.worldObj.getBlockId(x, y - 1, z);
+            boolean isStep = checkForStep(blockAtEntityPos) || ((Block.blocksList[blockAtEntityPos] == null) && checkForStep(blockbelowEntityPos));
 
-            if (!isStep && Pathfinder.a(this.petEntity, n, y, i1, localPathPoint, false, false, true) == 0 && Pathfinder.a(this.petEntity, x, y + 1, z, localPathPoint, false, false, true) == 1 && Pathfinder.a(this.petEntity, n, y + 1, i1, localPathPoint, false, false, true) == 1)
+            if (!isStep && PathFinder.func_82565_a(this.petEntity, n, y, i1, localPathPoint, false, false, true) == 0 && PathFinder.func_82565_a(this.petEntity, x, y + 1, z, localPathPoint, false, false, true) == 1 && PathFinder.func_82565_a(this.petEntity, n, y + 1, i1, localPathPoint, false, false, true) == 1)
             {
-                this.petEntity.getControllerJump().a();
+                this.petEntity.getJumpHelper().doJump();
             }
         }
 
-        this.petEntity.e(0.0F, this.currentSpeed);
+        this.petEntity.moveEntityWithHeading(0.0F, this.currentSpeed);
     }
 
     private boolean checkForStep(int blockId)
     {
-        return Block.byId[blockId] != null && (Block.byId[blockId].d() == 10 || Block.byId[blockId] instanceof BlockStepAbstract);
+        return Block.blocksList[blockId] != null && (Block.blocksList[blockId].getRenderType() == 10 || Block.blocksList[blockId] instanceof BlockHalfSlab);
     }
 
     public void stopRiding(boolean flag)
@@ -202,7 +207,7 @@ public class MyPetAIRide extends MyPetAIGoal
 
     public void toggleRiding()
     {
-        if (this.petEntity.passenger != null)
+        if (this.petEntity.riddenByEntity != null)
         {
             this.currentSpeed = 0.0F;
             this.stopRiding = !this.stopRiding;

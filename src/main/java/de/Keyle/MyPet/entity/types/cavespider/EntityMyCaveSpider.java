@@ -23,8 +23,7 @@ package de.Keyle.MyPet.entity.types.cavespider;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.EnumMonsterType;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.world.World;
 
 @EntitySize(width = 0.7F, height = 0.5F)
 public class EntityMyCaveSpider extends EntityMyPet
@@ -35,28 +34,23 @@ public class EntityMyCaveSpider extends EntityMyPet
         this.texture = "/mob/cavespider.png";
     }
 
-    public EnumMonsterType getMonsterType()
-    {
-        return EnumMonsterType.ARTHROPOD;
-    }
-
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a()
+    protected void entityInit()
     {
-        super.a();
-        this.datawatcher.a(16, new Byte((byte) 0)); // N/A
+        super.entityInit();
+        this.getDataWatcher().addObject(16, new Byte((byte) 0)); // N/A
     }
 
-    protected void a(int i, int j, int k, int l)
+    protected void playStepSound(int i, int j, int k, int l)
     {
-        makeSound("mob.spider.step", 0.15F, 1.0F);
+        playSound("mob.spider.step", 0.15F, 1.0F);
     }
 
     /**
      * Returns the default sound of the MyPet
      */
-    protected String bb()
+    protected String getLivingSound()
     {
         return !playIdleSound() ? "" : "mob.spider.say";
     }
@@ -65,7 +59,7 @@ public class EntityMyCaveSpider extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.spider.say";
     }
@@ -74,14 +68,14 @@ public class EntityMyCaveSpider extends EntityMyPet
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.spider.death";
     }
 
     public void a(boolean flag)
     {
-        byte b0 = this.datawatcher.getByte(16);
+        byte b0 = this.getDataWatcher().getWatchableObjectByte(16);
 
         if (flag)
         {
@@ -91,15 +85,6 @@ public class EntityMyCaveSpider extends EntityMyPet
         {
             b0 = (byte) (b0 & 0xFFFFFFFE);
         }
-        this.datawatcher.watch(16, b0);
-    }
-
-    public void l_()
-    {
-        super.l_();
-        if (!this.world.isStatic)
-        {
-            f(this.positionChanged);
-        }
+        this.getDataWatcher().updateObject(16, b0);
     }
 }

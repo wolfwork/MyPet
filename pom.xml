@@ -98,6 +98,10 @@
             <id>citizens-repo</id>
             <url>http://repo.citizensnpcs.com</url>
         </repository>
+        <repository>
+            <id>mcpcplus-repo</id>
+            <url>http://repo.md-5.net/content/groups/public</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
@@ -113,18 +117,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>bukkit</artifactId>
-            <version>${minecraft.version}-${bukkit.version}</version>
-            <type>jar</type>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>craftbukkit</artifactId>
-            <version>${minecraft.version}-${bukkit.version}</version>
-            <type>jar</type>
-            <scope>provided</scope>
+            <groupId>mcpc</groupId>
+            <artifactId>mcpc-plus</artifactId>
+            <version>1.5.1-R0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>net.citizensnpcs</groupId>

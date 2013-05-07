@@ -23,7 +23,7 @@ package de.Keyle.MyPet.entity.types.blaze;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.world.World;
 
 @EntitySize(width = 0.6F, height = 0.7F)
 public class EntityMyBlaze extends EntityMyPet
@@ -50,22 +50,22 @@ public class EntityMyBlaze extends EntityMyPet
 
     public void setOnFire(boolean flag)
     {
-        this.datawatcher.watch(16, (byte) (flag ? 1 : 0));
+        this.getDataWatcher().updateObject(16, (byte) (flag ? 1 : 0));
         ((MyBlaze) myPet).isOnFire = flag;
     }
 
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a()
+    protected void entityInit()
     {
-        super.a();
-        getDataWatcher().a(16, new Byte((byte) 0)); // burning
+        super.entityInit();
+        getDataWatcher().addObject(16, new Byte((byte) 0)); // burning
     }
 
     /**
      * Returns the default sound of the MyPet
      */
-    protected String bb()
+    protected String getLivingSound()
     {
         return !playIdleSound() ? "" : "mob.blaze.breathe";
     }
@@ -74,7 +74,7 @@ public class EntityMyBlaze extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.blaze.hit";
     }
@@ -83,7 +83,7 @@ public class EntityMyBlaze extends EntityMyPet
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.blaze.death";
     }

@@ -243,7 +243,7 @@ public class Behavior extends BehaviorInfo implements ISkillInstance, IScheduler
             myPet.sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLanguage.getString("Msg_BehaviorState")).replace("%petname%", myPet.petName).replace("%mode%", MyPetLanguage.getString("Name_" + behavior.name())));
             if (behavior == BehaviorState.Friendly)
             {
-                myPet.getCraftPet().getHandle().setGoalTarget(null);
+                myPet.getCraftPet().getHandle().setAttackTarget(null);
             }
         }
         else

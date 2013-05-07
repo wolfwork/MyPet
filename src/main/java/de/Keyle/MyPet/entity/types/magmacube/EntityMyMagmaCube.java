@@ -24,8 +24,8 @@ import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.ai.attack.MyPetAIMeleeAttack;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.PathEntity;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.pathfinding.PathEntity;
+import net.minecraft.world.World;
 
 @EntitySize(width = 0.6F, height = 0.6F)
 public class EntityMyMagmaCube extends EntityMyPet
@@ -57,11 +57,11 @@ public class EntityMyMagmaCube extends EntityMyPet
     @SuppressWarnings("boxing")
     public void setSize(int value)
     {
-        this.datawatcher.watch(16, new Byte((byte) value));
+        this.getDataWatcher().updateObject(16, new Byte((byte) value));
         EntitySize es = EntityMyMagmaCube.class.getAnnotation(EntitySize.class);
         if (es != null)
         {
-            this.a(es.height() * value, es.width() * value);
+            this.setSize(es.height() * value, es.width() * value);
         }
         if (petPathfinderSelector != null && petPathfinderSelector.hasGoal("MeleeAttack"))
         {
@@ -78,16 +78,16 @@ public class EntityMyMagmaCube extends EntityMyPet
 
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a()
+    protected void entityInit()
     {
-        super.a();
-        this.datawatcher.a(16, new Byte((byte) 1)); //size
+        super.entityInit();
+        this.getDataWatcher().addObject(16, new Byte((byte) 1)); //size
     }
 
     /**
      * Returns the default sound of the MyPet
      */
-    protected String bb()
+    protected String getLivingSound()
     {
         return "";
     }
@@ -96,16 +96,16 @@ public class EntityMyMagmaCube extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
-        return bd();
+        return getDeathSound();
     }
 
     /**
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.magmacube." + (getSize() > 1 ? "big" : "small");
     }
@@ -114,16 +114,16 @@ public class EntityMyMagmaCube extends EntityMyPet
      * Method is called when pet moves
      * Is used to create the hopping motion
      */
-    public void l_()
+    public void onUpdate()
     {
-        super.l_();
+        super.onUpdate();
 
-        if (this.onGround && jumpDelay-- <= 0 && lastPathEntity != getNavigation().d())
+        if (this.onGround && jumpDelay-- <= 0 && lastPathEntity != getNavigator().getPath())
         {
-            getControllerJump().a();
-            jumpDelay = (this.random.nextInt(20) + 10);
-            lastPathEntity = getNavigation().d();
-            makeSound("mob.magmacube." + (getSize() > 1 ? "big" : "small"), ba(), ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F) / 0.8F);
+            getJumpHelper().doJump();
+            jumpDelay = (this.rand.nextInt(20) + 10);
+            lastPathEntity = getNavigator().getPath();
+            playSound(getDeathSound(), getSoundVolume(), ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1.0F) / 0.8F);
         }
     }
 }

@@ -33,10 +33,15 @@ import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
 import de.Keyle.MyPet.util.IScheduler;
 import de.Keyle.MyPet.util.MyPetBukkitUtil;
 import de.Keyle.MyPet.util.MyPetLanguage;
-import net.minecraft.server.v1_5_R3.*;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.Container;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.Packet100OpenWindow;
+import net.minecraft.potion.PotionEffect;
 import org.bukkit.ChatColor;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_5_R3.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_5_R2.event.CraftEventFactory;
 import org.bukkit.entity.Player;
 import org.spout.nbt.*;
 
@@ -117,7 +122,7 @@ public class Beacon extends BeaconInfo implements ISkillInstance, IScheduler, IS
 
     public void setTributeItem(ItemStack itemStack)
     {
-        beaconInv.setItem(0, itemStack);
+        beaconInv.setInventorySlotContents(0, itemStack);
     }
 
     public void upgrade(ISkillInfo upgrade, boolean quiet)
@@ -304,14 +309,14 @@ public class Beacon extends BeaconInfo implements ISkillInstance, IScheduler, IS
                 amplification = 1;
             }
             double range = this.range * myPet.getHungerValue() / 100.;
-            for (Object entityObj : this.myPet.getCraftPet().getHandle().world.a(EntityHuman.class, myPet.getCraftPet().getHandle().boundingBox.grow(range, range, range)))
+            for (Object entityObj : this.myPet.getCraftPet().getHandle().worldObj.getEntitiesWithinAABB(EntityPlayer.class, myPet.getCraftPet().getHandle().boundingBox.expand(range, range, range)))
             {
-                EntityHuman entityHuman = (EntityHuman) entityObj;
-                entityHuman.addEffect(new MobEffect(this.primaryEffectId, duration * 20, amplification, true));
+                EntityPlayer entityHuman = (EntityPlayer) entityObj;
+                entityHuman.addPotionEffect(new PotionEffect(this.primaryEffectId, duration * 20, amplification, true));
 
                 if (level > 3 && this.primaryEffectId != this.secondaryEffectId && this.secondaryEffectId > 0)
                 {
-                    entityHuman.addEffect(new MobEffect(this.secondaryEffectId, duration * 20, 0, true));
+                    entityHuman.addPotionEffect(new PotionEffect(this.secondaryEffectId, duration * 20, 0, true));
                 }
             }
 
@@ -359,7 +364,7 @@ public class Beacon extends BeaconInfo implements ISkillInstance, IScheduler, IS
 
     public void openBeacon(Player p)
     {
-        EntityPlayer entityPlayer = ((CraftPlayer) p).getHandle();
+        EntityPlayerMP entityPlayer = ((CraftPlayer) p).getHandle();
 
         if (tileEntityBeacon == null)
         {
@@ -372,10 +377,10 @@ public class Beacon extends BeaconInfo implements ISkillInstance, IScheduler, IS
         }
 
         int containerCounter = entityPlayer.nextContainerCounter();
-        entityPlayer.playerConnection.sendPacket(new Packet100OpenWindow(containerCounter, 7, myPet.petName + "'s - Beacon", beaconInv.getSize(), true));
-        entityPlayer.activeContainer = container;
-        entityPlayer.activeContainer.windowId = containerCounter;
-        entityPlayer.activeContainer.addSlotListener(entityPlayer);
+        entityPlayer.playerNetServerHandler.sendPacketToPlayer(new Packet100OpenWindow(containerCounter, 7, myPet.petName + "'s - Beacon", beaconInv.getSizeInventory(), true));
+        entityPlayer.openContainer = container;
+        entityPlayer.openContainer.windowId = containerCounter;
+        entityPlayer.openContainer.addCraftingToCrafters(entityPlayer);
     }
 
 

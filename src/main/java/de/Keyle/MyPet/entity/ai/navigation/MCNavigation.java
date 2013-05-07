@@ -21,38 +21,38 @@
 package de.Keyle.MyPet.entity.ai.navigation;
 
 import de.Keyle.MyPet.entity.types.EntityMyPet;
-import net.minecraft.server.v1_5_R3.EntityLiving;
-import net.minecraft.server.v1_5_R3.Navigation;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftLivingEntity;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.pathfinding.PathNavigate;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 
 public class MCNavigation extends AbstractNavigation
 {
-    Navigation nav;
+    PathNavigate nav;
 
     public MCNavigation(EntityMyPet entityMyPet)
     {
         super(entityMyPet);
-        nav = entityMyPet.getNavigation();
+        nav = entityMyPet.getNavigator();
     }
 
     public MCNavigation(EntityMyPet entityMyPet, NavigationParameters parameters)
     {
         super(entityMyPet, parameters);
-        nav = entityMyPet.getNavigation();
+        nav = entityMyPet.getNavigator();
     }
 
     @Override
     public void stop()
     {
-        nav.g();
+        nav.clearPathEntity();
     }
 
     @Override
     public boolean navigateTo(double x, double y, double z)
     {
         applyNavigationParameters();
-        if (this.nav.a(x, y, z, parameters.speed() + parameters.speedModifier()))
+        if (this.nav.tryMoveToXYZ(x, y, z, parameters.speed() + parameters.speedModifier()))
         {
             applyNavigationParameters();
             return true;
@@ -63,7 +63,7 @@ public class MCNavigation extends AbstractNavigation
     @Override
     public boolean navigateTo(LivingEntity entity)
     {
-        if (this.nav.a(((CraftLivingEntity) entity).getHandle(), parameters.speed() + parameters.speedModifier()))
+        if (this.nav.tryMoveToEntityLiving(((CraftLivingEntity) entity).getHandle(), parameters.speed() + parameters.speedModifier()))
         {
             applyNavigationParameters();
             return true;
@@ -74,7 +74,7 @@ public class MCNavigation extends AbstractNavigation
     @Override
     public boolean navigateTo(EntityLiving entity)
     {
-        if (this.nav.a(entity, parameters.speed() + parameters.speedModifier()))
+        if (this.nav.tryMoveToEntityLiving(entity, parameters.speed() + parameters.speedModifier()))
         {
             applyNavigationParameters();
             return true;
@@ -85,12 +85,12 @@ public class MCNavigation extends AbstractNavigation
     @Override
     public void tick()
     {
-        nav.e();
+        nav.onUpdateNavigation();
     }
 
     public void applyNavigationParameters()
     {
-        this.nav.a(parameters.avoidWater());
-        this.nav.a(parameters.speed() + parameters.speedModifier());
+        this.nav.setAvoidsWater(parameters.avoidWater());
+        this.nav.setSpeed(parameters.speed() + parameters.speedModifier());
     }
 }

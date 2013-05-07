@@ -21,50 +21,54 @@
 package de.Keyle.MyPet.skill.skills.implementation.beacon;
 
 import de.Keyle.MyPet.skill.skills.implementation.Beacon;
-import net.minecraft.server.v1_5_R3.*;
-import org.bukkit.craftbukkit.v1_5_R3.inventory.CraftInventoryView;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
+import org.bukkit.craftbukkit.v1_5_R2.inventory.CraftInventoryView;
 import org.bukkit.entity.Player;
 
-public class ContainerBeacon extends net.minecraft.server.v1_5_R3.ContainerBeacon
+public class ContainerBeacon extends net.minecraft.inventory.ContainerBeacon
 {
     private final SlotBeacon slotBeacon;
     private CraftInventoryView bukkitEntity = null;
-    private PlayerInventory playerInventory;
+    private InventoryPlayer playerInventory;
     private TileEntityBeacon tileEntityBeacon;
     MyPetCustomBeaconInventory beaconInv;
     Beacon beaconSkill;
 
-    public ContainerBeacon(PlayerInventory playerInventory, MyPetCustomBeaconInventory beaconInv, TileEntityBeacon tileEntityBeacon, Beacon beaconSkill)
+    public ContainerBeacon(InventoryPlayer playerInventory, MyPetCustomBeaconInventory beaconInv, TileEntityBeacon tileEntityBeacon, Beacon beaconSkill)
     {
         super(playerInventory, tileEntityBeacon);
-        this.c.clear();
-        this.b.clear();
+        this.inventoryItemStacks.clear();
+        this.inventorySlots.clear();
         this.beaconInv = beaconInv;
         this.beaconSkill = beaconSkill;
         this.tileEntityBeacon = tileEntityBeacon;
         this.playerInventory = playerInventory;
-        a(this.slotBeacon = new SlotBeacon(beaconInv, 0, 136, 110));
+        addSlotToContainer(this.slotBeacon = new SlotBeacon(beaconInv, 0, 136, 110));
 
         for (int i = 0 ; i < 3 ; i++)
         {
             for (int j = 0 ; j < 9 ; j++)
             {
-                a(new Slot(playerInventory, j + i * 9 + 9, 36 + j * 18, 137 + i * 18));
+                addSlotToContainer(new Slot(playerInventory, j + i * 9 + 9, 36 + j * 18, 137 + i * 18));
             }
         }
 
         for (int i = 0 ; i < 9 ; i++)
         {
-            a(new Slot(playerInventory, i, 36 + i * 18, 195));
+            addSlotToContainer(new Slot(playerInventory, i, 36 + i * 18, 195));
         }
     }
 
     public void addSlotListener(ICrafting icrafting)
     {
-        super.addSlotListener(icrafting);
-        icrafting.setContainerData(this, 0, this.beaconSkill.getLevel());
-        icrafting.setContainerData(this, 1, this.beaconSkill.getPrimaryEffectId());
-        icrafting.setContainerData(this, 2, this.beaconSkill.getSecondaryEffectId());
+        super.addCraftingToCrafters(icrafting);
+        icrafting.sendProgressBarUpdate(this, 0, this.beaconSkill.getLevel());
+        icrafting.sendProgressBarUpdate(this, 1, this.beaconSkill.getPrimaryEffectId());
+        icrafting.sendProgressBarUpdate(this, 2, this.beaconSkill.getSecondaryEffectId());
     }
 
     public CraftInventoryView getBukkitView()
@@ -81,80 +85,78 @@ public class ContainerBeacon extends net.minecraft.server.v1_5_R3.ContainerBeaco
         return this.bukkitEntity;
     }
 
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    public boolean a(EntityHuman entityhuman)
+    public boolean canInteractWith(EntityPlayer entityhuman)
     {
         return true;
     }
 
-    public ItemStack b(EntityHuman entityhuman, int slotNumber)
+    public ItemStack transferStackInSlot(EntityPlayer entityhuman, int slotNumber)
     {
         ItemStack slotItemClone = null;
-        Slot slot = (Slot) this.c.get(slotNumber); // c -> List<Slot>
+        Slot slot = (Slot) this.inventorySlots.get(slotNumber); // c -> List<Slot>
 
-        if ((slot != null) && (slot.d())) // slot.d() -> Item in Slot != null
+        if ((slot != null) && (slot.getHasStack()))
         {
-            ItemStack slotItem = slot.getItem();
+            ItemStack slotItem = slot.getStack();
 
-            slotItemClone = slotItem.cloneItemStack();
+            slotItemClone = slotItem.copy();
             if (slotNumber == 0)
             {
-                if (!a(slotItem, 1, 37, true))
+                if (!mergeItemStack(slotItem, 1, 37, true))
                 {
                     return null;
                 }
 
-                slot.a(slotItem, slotItemClone);
+                slot.onSlotChange(slotItem, slotItemClone);
             }
-            else if ((!this.slotBeacon.d()) && (this.slotBeacon.isAllowed(slotItem)) && (slotItem.count == 1))
+            else if ((!this.slotBeacon.getHasStack()) && (this.slotBeacon.isAllowed(slotItem)) && (slotItem.stackSize == 1))
             {
-                if (!a(slotItem, 0, 1, false))
+                if (!mergeItemStack(slotItem, 0, 1, false))
                 {
                     return null;
                 }
             }
             else if ((slotNumber >= 1) && (slotNumber < 28))
             {
-                if (!a(slotItem, 28, 37, false))
+                if (!mergeItemStack(slotItem, 28, 37, false))
                 {
                     return null;
                 }
             }
             else if ((slotNumber >= 28) && (slotNumber < 37))
             {
-                if (!a(slotItem, 1, 28, false))
+                if (!mergeItemStack(slotItem, 1, 28, false))
                 {
                     return null;
                 }
             }
-            else if (!a(slotItem, 1, 37, false))
+            else if (!mergeItemStack(slotItem, 1, 37, false))
             {
                 return null;
             }
 
-            if (slotItem.count == 0)
+            if (slotItem.stackSize == 0)
             {
-                slot.set(null);
+                slot.putStack(null);
             }
             else
             {
-                slot.e();
+                slot.onSlotChanged();
             }
 
-            if (slotItem.count == slotItemClone.count)
+            if (slotItem.stackSize == slotItemClone.stackSize)
             {
                 return null;
             }
 
-            slot.a(entityhuman, slotItem);
+            slot.onPickupFromSlot(entityhuman, slotItem);
         }
 
         return slotItemClone;
     }
 
     @Override
-    public TileEntityBeacon e()
+    public TileEntityBeacon getBeacon()
     {
         return tileEntityBeacon;
     }

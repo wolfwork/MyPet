@@ -26,7 +26,7 @@ import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
 import de.Keyle.MyPet.skill.skills.implementation.inventory.ItemStackNBTConverter;
 import de.Keyle.MyPet.util.MyPetPlayer;
-import net.minecraft.server.v1_5_R3.ItemStack;
+import net.minecraft.item.ItemStack;
 import org.bukkit.ChatColor;
 import org.spout.nbt.ByteTag;
 import org.spout.nbt.CompoundTag;
@@ -54,7 +54,7 @@ public class MySkeleton extends MyPet
 
     public void setEquipment(EquipmentSlot slot, ItemStack item)
     {
-        item = item.cloneItemStack();
+        item = ItemStack.copyItemStack(item);
         equipment.put(slot, item);
         if (status == PetState.Here)
         {

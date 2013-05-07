@@ -29,9 +29,9 @@ import de.Keyle.MyPet.skill.skills.info.InventoryInfo;
 import de.Keyle.MyPet.util.MyPetBukkitUtil;
 import de.Keyle.MyPet.util.MyPetLanguage;
 import de.Keyle.MyPet.util.MyPetPermissions;
-import net.minecraft.server.v1_5_R3.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayer;
 import org.bukkit.GameMode;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.spout.nbt.ByteTag;
 import org.spout.nbt.CompoundMap;
@@ -75,7 +75,7 @@ public class Inventory extends InventoryInfo implements ISkillInstance, ISkillSt
                 inv.setSize(rows * 9);
                 if (!quiet)
                 {
-                    myPet.sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLanguage.getString("Msg_Inventory")).replace("%petname%", myPet.petName).replace("%size%", "" + inv.getSize()));
+                    myPet.sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLanguage.getString("Msg_Inventory")).replace("%petname%", myPet.petName).replace("%size%", "" + inv.getSizeInventory()));
                 }
             }
             if (upgrade.getProperties().getValue().containsKey("drop"))
@@ -127,12 +127,12 @@ public class Inventory extends InventoryInfo implements ISkillInstance, ISkillSt
     public void openInventory(Player p)
     {
         EntityPlayer eh = ((CraftPlayer) p).getHandle();
-        eh.openContainer(inv);
+        eh.displayGUIChest(inv);
     }
 
     public void closeInventory()
     {
-        inv.close();
+        inv.closeChest();
     }
 
     public void load(CompoundTag compound)

@@ -26,10 +26,10 @@ import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.skill.skills.implementation.Behavior;
 import de.Keyle.MyPet.skill.skills.implementation.Behavior.BehaviorState;
 import de.Keyle.MyPet.util.MyPetPvP;
-import net.minecraft.server.v1_5_R3.EntityLiving;
-import net.minecraft.server.v1_5_R3.EntityPlayer;
-import net.minecraft.server.v1_5_R3.EntityTameableAnimal;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.passive.EntityTameable;
+import net.minecraft.entity.player.EntityPlayer;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 public class MyPetAIAggressiveTarget extends MyPetAIGoal
@@ -68,16 +68,16 @@ public class MyPetAIAggressiveTarget extends MyPetAIGoal
         {
             return false;
         }
-        if (petEntity.getGoalTarget() != null && petEntity.getGoalTarget().isAlive())
+        if (petEntity.getAITarget() != null && !petEntity.getAITarget().isDead)
         {
             return false;
         }
 
-        for (Object entityObj : this.petEntity.world.a(EntityLiving.class, this.petOwnerEntity.boundingBox.grow((double) range, (double) range, (double) range)))
+        for (Object entityObj : this.petEntity.worldObj.getEntitiesWithinAABB(EntityLiving.class, this.petOwnerEntity.boundingBox.expand((double) range, (double) range, (double) range)))
         {
             EntityLiving entityLiving = (EntityLiving) entityObj;
 
-            if (petEntity.getEntitySenses().canSee(entityLiving) && entityLiving != petEntity && entityLiving.isAlive() && petEntity.e(entityLiving) <= 91)
+            if (petEntity.getEntitySenses().canSee(entityLiving) && entityLiving != petEntity && !entityLiving.isDead && petEntity.getDistanceSqToEntity(entityLiving) <= 91)
             {
                 if (entityLiving instanceof EntityPlayer)
                 {
@@ -99,9 +99,9 @@ public class MyPetAIAggressiveTarget extends MyPetAIGoal
                         continue;
                     }
                 }
-                else if (entityLiving instanceof EntityTameableAnimal)
+                else if (entityLiving instanceof EntityTameable)
                 {
-                    EntityTameableAnimal tameable = (EntityTameableAnimal) entityLiving;
+                    EntityTameable tameable = (EntityTameable) entityLiving;
                     if (tameable.isTamed() && tameable.getOwner() != null)
                     {
                         Player tameableOwner = (Player) tameable.getOwner().getBukkitEntity();
@@ -129,11 +129,11 @@ public class MyPetAIAggressiveTarget extends MyPetAIGoal
         {
             return true;
         }
-        else if (petEntity.getGoalTarget() == null)
+        else if (petEntity.getAITarget() == null)
         {
             return true;
         }
-        else if (!petEntity.getGoalTarget().isAlive())
+        else if (petEntity.getAITarget().isDead)
         {
             return true;
         }
@@ -151,13 +151,13 @@ public class MyPetAIAggressiveTarget extends MyPetAIGoal
     @Override
     public void start()
     {
-        petEntity.setGoalTarget(this.target);
+        petEntity.setAttackTarget(this.target);
     }
 
     @Override
     public void finish()
     {
-        petEntity.setGoalTarget(null);
+        petEntity.setAttackTarget(null);
         target = null;
     }
 }

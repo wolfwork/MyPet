@@ -38,11 +38,11 @@ public class MyPetAIRandomLookaround extends MyPetAIGoal
     @Override
     public boolean shouldStart()
     {
-        if (this.petEntity.getGoalTarget() != null && this.petEntity.getGoalTarget().isAlive())
+        if (this.petEntity.getAITarget() != null && !this.petEntity.getAITarget().isDead)
         {
             return false;
         }
-        return this.petEntity.aE().nextFloat() < 0.02F;
+        return this.petEntity.getRNG().nextFloat() < 0.02F;
     }
 
     @Override
@@ -54,16 +54,16 @@ public class MyPetAIRandomLookaround extends MyPetAIGoal
     @Override
     public void start()
     {
-        double circumference = 6.283185307179586D * this.petEntity.aE().nextDouble();
+        double circumference = 6.283185307179586D * this.petEntity.getRNG().nextDouble();
         this.directionX = Math.cos(circumference);
         this.directionZ = Math.sin(circumference);
-        this.ticksUntilStopLookingAround = (20 + this.petEntity.aE().nextInt(20));
+        this.ticksUntilStopLookingAround = (20 + this.petEntity.getRNG().nextInt(20));
     }
 
     @Override
     public void tick()
     {
         this.ticksUntilStopLookingAround--;
-        this.petEntity.getControllerLook().a(this.petEntity.locX + this.directionX, this.petEntity.locY + this.petEntity.getHeadHeight(), this.petEntity.locZ + this.directionZ, 10.0F, this.petEntity.bs());
+        this.petEntity.getLookHelper().setLookPosition(this.petEntity.posX + this.directionX, this.petEntity.posY + this.petEntity.getEyeHeight(), this.petEntity.posZ + this.directionZ, 10.0F, this.petEntity.getVerticalFaceSpeed());
     }
 }

@@ -20,10 +20,10 @@
 
 package de.Keyle.MyPet.skill.skills.implementation.beacon;
 
-import net.minecraft.server.v1_5_R3.IInventory;
-import net.minecraft.server.v1_5_R3.Item;
-import net.minecraft.server.v1_5_R3.ItemStack;
-import net.minecraft.server.v1_5_R3.Slot;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 
 public class SlotBeacon extends Slot
 {
@@ -35,7 +35,7 @@ public class SlotBeacon extends Slot
 
     public boolean isAllowed(ItemStack paramItemStack)
     {
-        return paramItemStack != null && (paramItemStack.id == Item.EMERALD.id || paramItemStack.id == Item.DIAMOND.id || paramItemStack.id == Item.GOLD_INGOT.id || paramItemStack.id == Item.IRON_INGOT.id);
+        return paramItemStack != null && (paramItemStack.itemID == Item.emerald.itemID || paramItemStack.itemID == Item.diamond.itemID || paramItemStack.itemID == Item.ingotGold.itemID || paramItemStack.itemID == Item.ingotIron.itemID);
     }
 
     public int a()

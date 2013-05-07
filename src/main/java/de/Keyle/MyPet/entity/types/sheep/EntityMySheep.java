@@ -24,7 +24,12 @@ import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.ai.movement.MyPetAIEatGrass;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.*;
+import net.minecraft.block.Block;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 
@@ -71,7 +76,7 @@ public class EntityMySheep extends EntityMyPet
 
     public void setColor(byte color)
     {
-        this.datawatcher.watch(16, color);
+        this.getDataWatcher().updateObject(16, color);
         ((MySheep) myPet).color = DyeColor.getByWoolData(color);
     }
 
@@ -83,21 +88,21 @@ public class EntityMySheep extends EntityMyPet
     public void setSheared(boolean flag)
     {
 
-        byte b0 = this.datawatcher.getByte(16);
+        byte b0 = this.getDataWatcher().getWatchableObjectByte(16);
         if (flag)
         {
-            this.datawatcher.watch(16, (byte) (b0 | 16));
+            this.getDataWatcher().updateObject(16, (byte) (b0 | 16));
         }
         else
         {
-            this.datawatcher.watch(16, (byte) (b0 & -17));
+            this.getDataWatcher().updateObject(16, (byte) (b0 & -17));
         }
         ((MySheep) myPet).isSheared = flag;
     }
 
     public boolean isBaby()
     {
-        return this.datawatcher.getInt(12) < 0;
+        return this.getDataWatcher().getWatchableObjectInt(12) < 0;
     }
 
     @SuppressWarnings("boxing")
@@ -105,22 +110,22 @@ public class EntityMySheep extends EntityMyPet
     {
         if (flag)
         {
-            this.datawatcher.watch(12, Integer.valueOf(Integer.MIN_VALUE));
+            this.getDataWatcher().updateObject(12, Integer.valueOf(Integer.MIN_VALUE));
         }
         else
         {
-            this.datawatcher.watch(12, new Integer(0));
+            this.getDataWatcher().updateObject(12, new Integer(0));
         }
         ((MySheep) myPet).isBaby = flag;
     }
 
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a()
+    protected void entityInit()
     {
-        super.a();
-        this.datawatcher.a(16, new Byte((byte) 0)); // color/sheared
-        this.datawatcher.a(12, new Integer(0));     // age
+        super.entityInit();
+        this.getDataWatcher().addObject(16, new Byte((byte) 0)); // color/sheared
+        this.getDataWatcher().addObject(12, new Integer(0));     // age
     }
 
     /**
@@ -129,63 +134,63 @@ public class EntityMySheep extends EntityMyPet
      * true: there was a reaction on rightclick
      * false: no reaction on rightclick
      */
-    public boolean a_(EntityHuman entityhuman)
+    public boolean interact(EntityPlayer entityhuman)
     {
-        if (super.a_(entityhuman))
+        if (super.interact(entityhuman))
         {
             return true;
         }
 
-        ItemStack itemStack = entityhuman.inventory.getItemInHand();
+        ItemStack itemStack = entityhuman.inventory.getItemStack();
 
         if (getOwner().equals(entityhuman) && itemStack != null)
         {
-            if (itemStack.id == 351 && itemStack.getData() != ((MySheep) myPet).getColor().getDyeData())
+            if (itemStack.itemID == 351 && itemStack.getItemDamage() != ((MySheep) myPet).getColor().getDyeData())
             {
-                if (itemStack.getData() <= 15)
+                if (itemStack.getItemDamage() <= 15)
                 {
-                    setColor(DyeColor.getByDyeData((byte) itemStack.getData()));
-                    if (!entityhuman.abilities.canInstantlyBuild)
+                    setColor(DyeColor.getByDyeData((byte) itemStack.getItemDamage()));
+                    if (!entityhuman.capabilities.isCreativeMode)
                     {
-                        if (--itemStack.count <= 0)
+                        if (--itemStack.stackSize <= 0)
                         {
-                            entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                            entityhuman.inventory.setInventorySlotContents(entityhuman.inventory.currentItem, null);
                         }
                     }
                     return true;
                 }
             }
-            else if (CAN_BE_SHEARED && itemStack.id == Item.SHEARS.id && !((MySheep) myPet).isSheared())
+            else if (CAN_BE_SHEARED && itemStack.itemID == Item.shears.itemID && !((MySheep) myPet).isSheared())
             {
-                if (!this.world.isStatic)
+                if (!this.worldObj.isRemote)
                 {
                     ((MySheep) myPet).setSheared(true);
-                    int i = 1 + this.random.nextInt(3);
+                    int i = 1 + this.rand.nextInt(3);
 
                     for (int j = 0 ; j < i ; ++j)
                     {
-                        EntityItem entityitem = this.a(new ItemStack(Block.WOOL.id, 1, ((MySheep) myPet).getColor().getDyeData()), 1.0F);
+                        EntityItem entityitem = this.entityDropItem(new ItemStack(Block.cloth.blockID, 1, ((MySheep) myPet).getColor().getDyeData()), 1.0F);
 
-                        entityitem.motY += (double) (this.random.nextFloat() * 0.05F);
-                        entityitem.motX += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
-                        entityitem.motZ += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
+                        entityitem.motionY += (double) (this.rand.nextFloat() * 0.05F);
+                        entityitem.motionX += (double) ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.1F);
+                        entityitem.motionZ += (double) ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.1F);
                     }
-                    makeSound("mob.sheep.shear", 1.0F, 1.0F);
+                    playSound("mob.sheep.shear", 1.0F, 1.0F);
                 }
-                itemStack.damage(1, entityhuman);
+                itemStack.damageItem(1, entityhuman);
                 return true;
             }
             else if (getOwner().equals(entityhuman))
             {
-                if (itemStack.id == GROW_UP_ITEM.getId())
+                if (itemStack.itemID == GROW_UP_ITEM.getId())
                 {
                     if (isBaby())
                     {
-                        if (!entityhuman.abilities.canInstantlyBuild)
+                        if (!entityhuman.capabilities.isCreativeMode)
                         {
-                            if (--itemStack.count <= 0)
+                            if (--itemStack.stackSize <= 0)
                             {
-                                entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                                entityhuman.inventory.setInventorySlotContents(entityhuman.inventory.currentItem, null);
                             }
                         }
                         this.setBaby(false);
@@ -197,15 +202,15 @@ public class EntityMySheep extends EntityMyPet
         return false;
     }
 
-    protected void a(int i, int j, int k, int l)
+    protected void playStepSound(int i, int j, int k, int l)
     {
-        makeSound("mob.sheep.step", 0.15F, 1.0F);
+        playSound("mob.sheep.step", 0.15F, 1.0F);
     }
 
     /**
      * Returns the default sound of the MyPet
      */
-    protected String bb()
+    protected String getLivingSound()
     {
         return !playIdleSound() ? "" : "mob.sheep.say";
     }
@@ -214,7 +219,7 @@ public class EntityMySheep extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.sheep.say";
     }
@@ -223,7 +228,7 @@ public class EntityMySheep extends EntityMyPet
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.sheep.say";
     }

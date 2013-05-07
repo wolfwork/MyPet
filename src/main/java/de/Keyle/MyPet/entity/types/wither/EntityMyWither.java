@@ -23,7 +23,7 @@ package de.Keyle.MyPet.entity.types.wither;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.world.World;
 
 @EntitySize(width = 0.9F, height = 4.0F)
 public class EntityMyWither extends EntityMyPet
@@ -37,20 +37,20 @@ public class EntityMyWither extends EntityMyPet
 
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a()
+    protected void entityInit()
     {
-        super.a();
-        this.datawatcher.a(16, new Integer(300));   // Healthbar
-        this.datawatcher.a(17, new Integer(0));     // target EntityID
-        this.datawatcher.a(18, new Integer(0));     // N/A
-        this.datawatcher.a(19, new Integer(0));     // N/A
-        this.datawatcher.a(20, new Integer(0));     // blue (1/0)
+        super.entityInit();
+        this.getDataWatcher().addObject(16, new Integer(300));   // Healthbar
+        this.getDataWatcher().addObject(17, new Integer(0));     // target EntityID
+        this.getDataWatcher().addObject(18, new Integer(0));     // N/A
+        this.getDataWatcher().addObject(19, new Integer(0));     // N/A
+        this.getDataWatcher().addObject(20, new Integer(0));     // blue (1/0)
     }
 
     /**
      * Returns the default sound of the MyPet
      */
-    protected String bb()
+    protected String getLivingSound()
     {
         return !playIdleSound() ? "" : "mob.wither.idle";
     }
@@ -59,7 +59,7 @@ public class EntityMyWither extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.wither.hurt";
     }
@@ -68,14 +68,14 @@ public class EntityMyWither extends EntityMyPet
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.wither.death";
     }
 
     @Override
-    protected void bp()
+    protected void updateAITick()
     {
-        this.datawatcher.watch(16, (int) (300. * getHealth() / getMaxHealth())); // update healthbar
+        this.getDataWatcher().updateObject(16, (int) (300. * getHealth() / getMaxHealth())); // update healthbar
     }
 }

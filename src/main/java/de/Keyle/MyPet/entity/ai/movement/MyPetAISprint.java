@@ -25,7 +25,7 @@ import de.Keyle.MyPet.entity.ai.MyPetAIGoal;
 import de.Keyle.MyPet.entity.ai.navigation.AbstractNavigation;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.EntityLiving;
+import net.minecraft.entity.EntityLiving;
 
 public class MyPetAISprint extends MyPetAIGoal
 {
@@ -54,13 +54,13 @@ public class MyPetAISprint extends MyPetAIGoal
         {
             return false;
         }
-        EntityLiving targetEntity = this.petEntity.getGoalTarget();
+        EntityLiving targetEntity = this.petEntity.getAITarget();
 
         if (targetEntity == null)
         {
             return false;
         }
-        if (!targetEntity.isAlive())
+        if (targetEntity.isDead)
         {
             return false;
         }
@@ -68,7 +68,7 @@ public class MyPetAISprint extends MyPetAIGoal
         {
             return false;
         }
-        if (petEntity.getMyPet().getRangedDamage() > 0 && this.petEntity.e(targetEntity.locX, targetEntity.boundingBox.b, targetEntity.locZ) >= 16)
+        if (petEntity.getMyPet().getRangedDamage() > 0 && this.petEntity.getDistanceSq(targetEntity.posX, targetEntity.boundingBox.minY, targetEntity.posZ) >= 16)
         {
             return false;
         }
@@ -83,7 +83,7 @@ public class MyPetAISprint extends MyPetAIGoal
         {
             return true;
         }
-        else if (this.petEntity.e(this.lastTarget) < 4)
+        else if (this.petEntity.getDistanceSqToEntity(this.lastTarget) < 4)
         {
             return true;
         }

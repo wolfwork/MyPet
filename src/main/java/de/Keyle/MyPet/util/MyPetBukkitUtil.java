@@ -21,16 +21,16 @@
 package de.Keyle.MyPet.util;
 
 import de.Keyle.MyPet.entity.types.CraftMyPet;
-import net.minecraft.server.v1_5_R3.AxisAlignedBB;
-import net.minecraft.server.v1_5_R3.Block;
-import net.minecraft.server.v1_5_R3.Entity;
-import net.minecraft.server.v1_5_R3.MathHelper;
+import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_5_R3.util.UnsafeList;
+import org.bukkit.craftbukkit.v1_5_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_5_R2.util.UnsafeList;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -74,27 +74,27 @@ public class MyPetBukkitUtil
 
     public static Boolean canSpawn(Location loc, Entity entity)
     {
-        return canSpawn(loc, entity.width, entity.height, entity.length);
+        return canSpawn(loc, entity.width, entity.height, entity.width);
     }
 
     public static Boolean canSpawn(Location loc, float width, float height, float length)
     {
-        net.minecraft.server.v1_5_R3.World mcWorld = ((CraftWorld) loc.getWorld()).getHandle();
+        net.minecraft.world.World mcWorld = ((CraftWorld) loc.getWorld()).getHandle();
         float halfEntityWidth = width / 2;
-        AxisAlignedBB bb = AxisAlignedBB.a(loc.getX() - halfEntityWidth, loc.getY() - height, loc.getZ() - halfEntityWidth, loc.getX() + halfEntityWidth, loc.getY() - height + length, loc.getZ() + halfEntityWidth);
+        AxisAlignedBB bb = AxisAlignedBB.getBoundingBox(loc.getX() - halfEntityWidth, loc.getY() - height, loc.getZ() - halfEntityWidth, loc.getX() + halfEntityWidth, loc.getY() - height + length, loc.getZ() + halfEntityWidth);
 
-        return getBlockBBsInBB(loc.getWorld(), bb).isEmpty() && !mcWorld.containsLiquid(bb);
+        return getBlockBBsInBB(loc.getWorld(), bb).isEmpty() && !mcWorld.isAnyLiquid(bb);
     }
 
     public static List getBlockBBsInBB(World world, AxisAlignedBB axisalignedbb)
     {
         UnsafeList unsafeList = new UnsafeList();
-        int minX = MathHelper.floor(axisalignedbb.a);
-        int maxX = MathHelper.floor(axisalignedbb.d + 1.0D);
-        int minY = MathHelper.floor(axisalignedbb.b);
-        int maxY = MathHelper.floor(axisalignedbb.e + 1.0D);
-        int minZ = MathHelper.floor(axisalignedbb.c);
-        int maxZ = MathHelper.floor(axisalignedbb.f + 1.0D);
+        int minX = MathHelper.floor_double(axisalignedbb.minX);
+        int maxX = MathHelper.floor_double(axisalignedbb.maxX + 1.0D);
+        int minY = MathHelper.floor_double(axisalignedbb.minY);
+        int maxY = MathHelper.floor_double(axisalignedbb.maxY + 1.0D);
+        int minZ = MathHelper.floor_double(axisalignedbb.minZ);
+        int maxZ = MathHelper.floor_double(axisalignedbb.maxZ + 1.0D);
 
         for (int x = minX ; x < maxX ; x++)
         {
@@ -104,11 +104,11 @@ public class MyPetBukkitUtil
                 {
                     for (int y = minY - 1 ; y < maxY ; y++)
                     {
-                        Block block = Block.byId[world.getBlockAt(x, y, z).getTypeId()];
+                        Block block = Block.blocksList[world.getBlockAt(x, y, z).getTypeId()];
 
                         if (block != null)
                         {
-                            block.a(((CraftWorld) world).getHandle(), x, y, z, axisalignedbb, unsafeList, null);
+                            block.addCollisionBoxesToList(((CraftWorld) world).getHandle(), x, y, z, axisalignedbb, unsafeList, null);
                         }
                     }
                 }

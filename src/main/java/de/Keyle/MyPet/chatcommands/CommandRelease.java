@@ -43,17 +43,17 @@ import de.Keyle.MyPet.skill.skills.implementation.Inventory;
 import de.Keyle.MyPet.skill.skills.implementation.inventory.MyPetCustomInventory;
 import de.Keyle.MyPet.util.*;
 import de.Keyle.MyPet.util.logger.DebugLogger;
-import net.minecraft.server.v1_5_R3.EntityItem;
-import net.minecraft.server.v1_5_R3.Item;
-import net.minecraft.server.v1_5_R3.ItemStack;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPigZombie;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftSkeleton;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPigZombie;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftSkeleton;
 import org.bukkit.entity.*;
 import org.bukkit.entity.Ocelot.Type;
 import org.bukkit.entity.Skeleton.SkeletonType;
@@ -234,15 +234,15 @@ public class CommandRelease implements CommandExecutor, TabCompleter
                         else if (myPet instanceof MyZombie)
                         {
                             ((Zombie) normalEntity).setBaby(((MyZombie) myPet).isBaby());
-                            World world = myPet.getCraftPet().getHandle().world;
+                            World world = myPet.getCraftPet().getHandle().worldObj;
                             Location petLocation = myPet.getLocation();
                             for (ItemStack is : ((MyZombie) myPet).getEquipment())
                             {
                                 if (is != null)
                                 {
                                     EntityItem itemEntity = new EntityItem(world, petLocation.getX(), petLocation.getY(), petLocation.getZ(), is);
-                                    itemEntity.pickupDelay = 10;
-                                    world.addEntity(itemEntity);
+                                    itemEntity.delayBeforeCanPickup = 20;
+                                    world.spawnEntityInWorld(itemEntity);
                                 }
                             }
                         }
@@ -251,36 +251,36 @@ public class CommandRelease implements CommandExecutor, TabCompleter
                             if (((MySkeleton) myPet).isWither())
                             {
                                 ((Skeleton) normalEntity).setSkeletonType(SkeletonType.WITHER);
-                                ((CraftSkeleton) normalEntity).getHandle().setEquipment(0, new ItemStack(Item.STONE_SWORD));
+                                ((CraftSkeleton) normalEntity).getHandle().setCurrentItemOrArmor(0, new ItemStack(Item.swordStone));
                             }
                             else
                             {
-                                ((CraftSkeleton) normalEntity).getHandle().setEquipment(0, new ItemStack(Item.BOW));
+                                ((CraftSkeleton) normalEntity).getHandle().setCurrentItemOrArmor(0, new ItemStack(Item.bow));
                             }
-                            World world = myPet.getCraftPet().getHandle().world;
+                            World world = myPet.getCraftPet().getHandle().worldObj;
                             Location petLocation = myPet.getLocation();
                             for (ItemStack is : ((MySkeleton) myPet).getEquipment())
                             {
                                 if (is != null)
                                 {
                                     EntityItem itemEntity = new EntityItem(world, petLocation.getX(), petLocation.getY(), petLocation.getZ(), is);
-                                    itemEntity.pickupDelay = 10;
-                                    world.addEntity(itemEntity);
+                                    itemEntity.delayBeforeCanPickup = 20;
+                                    world.spawnEntityInWorld(itemEntity);
                                 }
                             }
                         }
                         else if (myPet instanceof MyPigZombie)
                         {
-                            ((CraftPigZombie) normalEntity).getHandle().setEquipment(0, new ItemStack(Item.GOLD_SWORD));
-                            World world = myPet.getCraftPet().getHandle().world;
+                            ((CraftPigZombie) normalEntity).getHandle().setCurrentItemOrArmor(0, new ItemStack(Item.swordGold));
+                            World world = myPet.getCraftPet().getHandle().worldObj;
                             Location petLocation = myPet.getLocation();
                             for (ItemStack is : ((MyPigZombie) myPet).getEquipment())
                             {
                                 if (is != null)
                                 {
                                     EntityItem itemEntity = new EntityItem(world, petLocation.getX(), petLocation.getY(), petLocation.getZ(), is);
-                                    itemEntity.pickupDelay = 10;
-                                    world.addEntity(itemEntity);
+                                    itemEntity.delayBeforeCanPickup = 10;
+                                    world.spawnEntityInWorld(itemEntity);
                                 }
                             }
                         }

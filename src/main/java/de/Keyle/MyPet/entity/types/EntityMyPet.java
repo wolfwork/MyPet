@@ -31,18 +31,26 @@ import de.Keyle.MyPet.entity.ai.target.*;
 import de.Keyle.MyPet.skill.skills.implementation.Control;
 import de.Keyle.MyPet.skill.skills.implementation.Ride;
 import de.Keyle.MyPet.util.*;
-import net.minecraft.server.v1_5_R3.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.monster.IMob;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.projectile.EntityArrow;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
+import net.minecraft.world.World;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 
 import java.util.List;
 
-public abstract class EntityMyPet extends EntityCreature implements IMonster
+public abstract class EntityMyPet extends EntityCreature implements IMob
 {
     public MyPetAIGoalSelector petPathfinderSelector, petTargetSelector;
     public EntityLiving goalTarget = null;
@@ -85,8 +93,8 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
             isMyPet = true;
 
             ((LivingEntity) this.getBukkitEntity()).setMaxHealth(myPet.getMaxHealth());
-            this.setHealth(myPet.getHealth());
-            this.setCustomName("");
+            this.health = myPet.getHealth();
+            this.func_94058_c("");
         }
     }
 
@@ -120,7 +128,7 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
         EntitySize es = this.getClass().getAnnotation(EntitySize.class);
         if (es != null)
         {
-            this.a(es.width(), es.height());
+            this.setSize(es.width(), es.height());
         }
     }
 
@@ -129,7 +137,7 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
         EntitySize es = this.getClass().getAnnotation(EntitySize.class);
         if (es != null)
         {
-            this.a(es.width(), es.height() + extra);
+            this.setSize(es.width(), es.height() + extra);
         }
     }
 
@@ -145,29 +153,47 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
 
     public void setLocation(Location loc)
     {
-        this.setLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getPitch(), loc.getYaw());
+        this.setLocationAndAngles(loc.getX(), loc.getY(), loc.getZ(), loc.getPitch(), loc.getYaw());
     }
 
     @Override
-    public void setCustomName(String ignored)
+    //public void setCustomName(String ignored)
+    public void func_94058_c(String ignored)
     {
-        if (getCustomNameVisible())
+        if (MyPetConfiguration.PET_INFO_OVERHEAD_NAME)
         {
-            super.setCustomName(MyPetUtil.cutString(MyPetConfiguration.PET_INFO_OVERHEAD_PREFIX + myPet.getPetName() + MyPetConfiguration.PET_INFO_OVERHEAD_SUFFIX, 64));
-            this.setCustomNameVisible(false);
+            super.func_94058_c(MyPetUtil.cutString(MyPetConfiguration.PET_INFO_OVERHEAD_PREFIX + myPet.getPetName() + MyPetConfiguration.PET_INFO_OVERHEAD_SUFFIX, 64));
+            this.func_94061_f(false);
         }
     }
 
+    public void setCustomName(String ignored)
+    {
+        func_94058_c("");
+    }
+
     @Override
-    public boolean getCustomNameVisible()
+    //public boolean getCustomNameVisible()
+    public boolean func_94062_bN()
     {
         return MyPetConfiguration.PET_INFO_OVERHEAD_NAME;
     }
 
+    public boolean getCustomNameVisible()
+    {
+        return func_94062_bN();
+    }
+
     @Override
+    //public void setCustomNameVisible(boolean ignored)
+    public void func_94061_f(boolean ignored)
+    {
+        this.getDataWatcher().updateObject(6, Byte.valueOf((byte) (MyPetConfiguration.PET_INFO_OVERHEAD_NAME ? 1 : 0)));
+    }
+
     public void setCustomNameVisible(boolean ignored)
     {
-        this.datawatcher.watch(6, Byte.valueOf((byte) (MyPetConfiguration.PET_INFO_OVERHEAD_NAME ? 1 : 0)));
+        func_94062_bN();
     }
 
     public boolean canMove()
@@ -185,7 +211,7 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
         List<Material> foodList = MyPet.getFood(myPet.getClass());
         for (Material foodItem : foodList)
         {
-            if (itemstack.id == foodItem.getId())
+            if (itemstack.itemID == foodItem.getId())
             {
                 return true;
             }
@@ -208,15 +234,15 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
         return myPet.getOwner();
     }
 
-    public boolean damageEntity(DamageSource damagesource, int i)
+    public boolean attackEntityFrom(DamageSource damagesource, int i)
     {
         Entity entity = damagesource.getEntity();
 
-        if (entity != null && !(entity instanceof EntityHuman) && !(entity instanceof EntityArrow))
+        if (entity != null && !(entity instanceof EntityPlayer) && !(entity instanceof EntityArrow))
         {
             i = (i + 1) / 2;
         }
-        return super.damageEntity(damagesource, i);
+        return super.attackEntityFrom(damagesource, i);
     }
 
     /**
@@ -232,12 +258,12 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
             {
                 if (myPet.hasTarget())
                 {
-                    myPet.getCraftPet().getHandle().setGoalTarget(null);
+                    myPet.getCraftPet().getHandle().setRevengeTarget(null);
                 }
                 return false;
             }
         }
-        return entity.damageEntity(DamageSource.mobAttack(this), damage);
+        return entity.attackEntityFrom(DamageSource.causeMobDamage(this), damage);
     }
 
     @Override
@@ -251,10 +277,10 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
         String str = tamed ? "heart" : "smoke";
         for (int i = 0 ; i < 7 ; i++)
         {
-            double d1 = this.random.nextGaussian() * 0.02D;
-            double d2 = this.random.nextGaussian() * 0.02D;
-            double d3 = this.random.nextGaussian() * 0.02D;
-            this.world.addParticle(str, this.locX + this.random.nextFloat() * this.width * 2.0F - this.width, this.locY + 0.5D + this.random.nextFloat() * this.length, this.locZ + this.random.nextFloat() * this.width * 2.0F - this.width, d1, d2, d3);
+            double d1 = this.rand.nextGaussian() * 0.02D;
+            double d2 = this.rand.nextGaussian() * 0.02D;
+            double d3 = this.rand.nextGaussian() * 0.02D;
+            this.worldObj.spawnParticle(str, this.posX + this.rand.nextFloat() * this.width * 2.0F - this.width, this.posY + 0.5D + this.rand.nextFloat() * this.height, this.posZ + this.rand.nextFloat() * this.width * 2.0F - this.width, d1, d2, d3);
         }
     }
 
@@ -263,12 +289,10 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
     {
         if (this.bukkitEntity == null)
         {
-            this.bukkitEntity = new CraftMyPet(this.world.getServer(), this);
+            this.bukkitEntity = new CraftMyPet(this.worldObj.getServer(), this);
         }
         return this.bukkitEntity;
     }
-
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
 
     /**
      * Is called when player rightclicks this MyPet
@@ -276,14 +300,14 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
      * true: there was a reaction on rightclick
      * false: no reaction on rightclick
      */
-    public boolean a_(EntityHuman entityhuman)
+    public boolean interact(EntityPlayer entityhuman)
     {
-        if (super.a_(entityhuman))
+        if (super.interact(entityhuman))
         {
             return true;
         }
 
-        ItemStack itemStack = entityhuman.inventory.getItemInHand();
+        ItemStack itemStack = entityhuman.inventory.getCurrentItem();
 
         if (itemStack == null)
         {
@@ -296,16 +320,16 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
         {
             if (this.hasRider())
             {
-                ((CraftPlayer) owner).getHandle().mount(null);
+                ((CraftPlayer) owner).getHandle().mountEntity(null);
                 return true;
             }
             if (myPet.getSkills().isSkillActive("Ride"))
             {
-                if (itemStack.id == Ride.ITEM.getId() && canMove())
+                if (itemStack.itemID == Ride.ITEM.getId() && canMove())
                 {
                     if (MyPetPermissions.hasExtended(owner, "MyPet.user.extended.Ride"))
                     {
-                        ((CraftPlayer) owner).getHandle().mount(this);
+                        ((CraftPlayer) owner).getHandle().mountEntity(this);
                         return true;
                     }
                     else
@@ -316,7 +340,7 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
             }
             if (myPet.getSkills().isSkillActive("Control"))
             {
-                if (itemStack.id == Control.ITEM.getId())
+                if (itemStack.itemID == Control.ITEM.getId())
                 {
                     return true;
                 }
@@ -339,27 +363,27 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
             int addHunger = MyPetConfiguration.HUNGER_SYSTEM_POINTS_PER_FEED;
             if (getHealth() < getMaxHealth())
             {
-                if (!entityhuman.abilities.canInstantlyBuild)
+                if (!entityhuman.capabilities.isCreativeMode)
                 {
-                    --itemStack.count;
+                    --itemStack.stackSize;
                 }
                 addHunger -= Math.min(3, getMaxHealth() - getHealth()) * 2;
                 this.heal(Math.min(3, getMaxHealth() - getHealth()), RegainReason.EATING);
-                if (itemStack.count <= 0)
+                if (itemStack.stackSize <= 0)
                 {
-                    entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                    entityhuman.inventory.setInventorySlotContents(entityhuman.inventory.currentItem, null);
                 }
                 this.tamedEffect(true);
             }
             else if (myPet.getHungerValue() < 100)
             {
-                if (!entityhuman.abilities.canInstantlyBuild)
+                if (!entityhuman.capabilities.isCreativeMode)
                 {
-                    --itemStack.count;
+                    --itemStack.stackSize;
                 }
-                if (itemStack.count <= 0)
+                if (itemStack.stackSize <= 0)
                 {
-                    entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                    entityhuman.inventory.setInventorySlotContents(entityhuman.inventory.currentItem, null);
                 }
                 this.tamedEffect(true);
             }
@@ -379,22 +403,22 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
     /**
      * Returns the default sound of the MyPet
      */
-    protected abstract String bb();
+    protected abstract String getLivingSound();
 
     /**
      * Returns the sound that is played when the MyPet get hurt
      */
-    protected abstract String bc();
+    protected abstract String getHurtSound();
 
     /**
      * Returns the sound that is played when the MyPet dies
      */
-    protected abstract String bd();
+    protected abstract String getDeathSound();
 
     /**
      * Set weather the "new" AI is used
      */
-    public boolean bh()
+    public boolean isAIEnabled()
     {
         return true;
     }
@@ -404,19 +428,19 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
      * Entity AI tick method
      */
     @Override
-    protected void bo()
+    protected void updateAITasks()
     {
-        bC += 1; // N/A
+        entityAge += 1;
 
-        getEntitySenses().a(); // sensing
+        getEntitySenses().clearSensingCache(); // sensing
         petTargetSelector.tick(); // target selector
         petPathfinderSelector.tick(); // pathfinder selector
         petNavigation.tick(); // navigation
-        bp(); // "mob tick"
+        updateAITick(); // "mob tick"
 
         // controls
-        getControllerMove().c(); // move
-        getControllerLook().a(); // look
-        getControllerJump().b(); // jump
+        getMoveHelper().onUpdateMoveHelper(); // move
+        getLookHelper().onUpdateLook(); // look
+        getJumpHelper().doJump(); // jump
     }
 }

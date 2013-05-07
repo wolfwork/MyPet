@@ -23,8 +23,8 @@ package de.Keyle.MyPet.entity.types.irongolem;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.Entity;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.entity.Entity;
+import net.minecraft.world.World;
 
 @EntitySize(width = 1.4F, height = 2.9F)
 public class EntityMyIronGolem extends EntityMyPet
@@ -45,36 +45,36 @@ public class EntityMyIronGolem extends EntityMyPet
 
     protected void setPlayerCreated(boolean flag)
     {
-        byte b0 = this.datawatcher.getByte(16);
+        byte b0 = this.getDataWatcher().getWatchableObjectByte(16);
 
         if (flag)
         {
-            this.datawatcher.watch(16, (byte) (b0 | 0x1));
+            this.getDataWatcher().updateObject(16, (byte) (b0 | 0x1));
         }
         else
         {
-            this.datawatcher.watch(16, (byte) (b0 & 0xFFFFFFFE));
+            this.getDataWatcher().updateObject(16, (byte) (b0 & 0xFFFFFFFE));
         }
     }
 
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a()
+    protected void entityInit()
     {
-        super.a();
-        this.datawatcher.a(16, new Byte((byte) 0)); // flower???
+        super.entityInit();
+        this.getDataWatcher().addObject(16, new Byte((byte) 0)); // flower???
     }
 
     @Override
-    protected void a(int i, int j, int k, int l)
+    protected void playStepSound(int i, int j, int k, int l)
     {
-        makeSound("mob.irongolem.walk", 1.0F, 1.0F);
+        playSound("mob.irongolem.walk", 1.0F, 1.0F);
     }
 
     /**
      * Returns the default sound of the MyPet
      */
-    protected String bb()
+    protected String getLivingSound()
     {
         return "";
     }
@@ -83,7 +83,7 @@ public class EntityMyIronGolem extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.irongolem.hit";
     }
@@ -92,19 +92,19 @@ public class EntityMyIronGolem extends EntityMyPet
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.irongolem.death";
     }
 
     public boolean attack(Entity entity)
     {
-        this.world.broadcastEntityEffect(this, (byte) 4);
+        this.worldObj.setEntityState(this, (byte) 4);
         boolean flag = super.attack(entity);
         if (CAN_THROW_UP && flag)
         {
-            entity.motY += 0.4000000059604645D;
-            this.world.makeSound(this, "mob.irongolem.throw", 1.0F, 1.0F);
+            entity.posY += 0.4000000059604645D;
+            this.worldObj.playSoundAtEntity(this, "mob.irongolem.throw", 1.0F, 1.0F);
         }
         return flag;
     }

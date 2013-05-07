@@ -23,7 +23,7 @@ package de.Keyle.MyPet.entity.ai.attack;
 import de.Keyle.MyPet.entity.ai.MyPetAIGoal;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.EntityLiving;
+import net.minecraft.entity.EntityLiving;
 
 public class MyPetAIMeleeAttack extends MyPetAIGoal
 {
@@ -52,16 +52,16 @@ public class MyPetAIMeleeAttack extends MyPetAIGoal
         {
             return false;
         }
-        EntityLiving targetEntity = this.petEntity.getGoalTarget();
+        EntityLiving targetEntity = this.petEntity.getAITarget();
         if (targetEntity == null)
         {
             return false;
         }
-        if (!targetEntity.isAlive())
+        if (targetEntity.isDead)
         {
             return false;
         }
-        if (petEntity.getMyPet().getRangedDamage() > 0 && this.petEntity.e(targetEntity.locX, targetEntity.boundingBox.b, targetEntity.locZ) >= 16)
+        if (petEntity.getMyPet().getRangedDamage() > 0 && this.petEntity.getDistanceSq(targetEntity.posX, targetEntity.boundingBox.minY, targetEntity.posZ) >= 16)
         {
             return false;
         }
@@ -72,15 +72,15 @@ public class MyPetAIMeleeAttack extends MyPetAIGoal
     @Override
     public boolean shouldFinish()
     {
-        if (this.petEntity.getGoalTarget() == null || !this.targetEntity.isAlive())
+        if (this.petEntity.getAITarget() == null || this.targetEntity.isDead)
         {
             return true;
         }
-        else if (this.targetEntity != this.petEntity.getGoalTarget())
+        else if (this.targetEntity != this.petEntity.getAITarget())
         {
             return true;
         }
-        if (petEntity.getMyPet().getRangedDamage() > 0 && this.petEntity.e(targetEntity.locX, targetEntity.boundingBox.b, targetEntity.locZ) >= 16)
+        if (petEntity.getMyPet().getRangedDamage() > 0 && this.petEntity.getDistanceSq(targetEntity.posX, targetEntity.boundingBox.minY, targetEntity.posZ) >= 16)
         {
             return true;
         }
@@ -106,18 +106,18 @@ public class MyPetAIMeleeAttack extends MyPetAIGoal
     @Override
     public void tick()
     {
-        this.petEntity.getControllerLook().a(targetEntity, 30.0F, 30.0F);
+        this.petEntity.getLookHelper().setLookPositionWithEntity(targetEntity, 30.0F, 30.0F);
         if (((this.petEntity.getEntitySenses().canSee(targetEntity))) && (--this.timeUntilNextNavigationUpdate <= 0))
         {
-            this.timeUntilNextNavigationUpdate = (4 + this.petEntity.aE().nextInt(7));
+            this.timeUntilNextNavigationUpdate = (4 + this.petEntity.getRNG().nextInt(7));
             this.petEntity.petNavigation.navigateTo(targetEntity);
         }
-        if ((this.petEntity.e(targetEntity.locX, targetEntity.boundingBox.b, targetEntity.locZ) <= this.range) && (this.ticksUntilNextHitLeft-- <= 0))
+        if ((this.petEntity.getDistanceSq(targetEntity.posX, targetEntity.boundingBox.minY, targetEntity.posZ) <= this.range) && (this.ticksUntilNextHitLeft-- <= 0))
         {
             this.ticksUntilNextHitLeft = ticksUntilNextHit;
-            if (this.petEntity.bG() != null)
+            if (this.petEntity.getHeldItem() != null)
             {
-                this.petEntity.bK();
+                this.petEntity.swingItem();
             }
             this.petEntity.attack(targetEntity);
         }

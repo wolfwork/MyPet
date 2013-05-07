@@ -25,10 +25,10 @@ import de.Keyle.MyPet.skill.skills.implementation.Behavior;
 import de.Keyle.MyPet.util.MyPetBukkitUtil;
 import de.Keyle.MyPet.util.MyPetLanguage;
 import de.Keyle.MyPet.util.MyPetPlayer;
-import net.minecraft.server.v1_5_R3.EntityCreature;
-import org.bukkit.craftbukkit.v1_5_R3.CraftServer;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftCreature;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftLivingEntity;
+import net.minecraft.entity.EntityCreature;
+import org.bukkit.craftbukkit.v1_5_R2.CraftServer;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftCreature;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftLivingEntity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 
@@ -48,7 +48,7 @@ public class CraftMyPet extends CraftCreature
         EntityCreature entity = getHandle();
         if (target == null)
         {
-            entity.target = null;
+            entity.setTarget(null);
         }
         else if (target instanceof CraftLivingEntity)
         {
@@ -64,7 +64,7 @@ public class CraftMyPet extends CraftCreature
                     return;
                 }
             }
-            petEntity.setGoalTarget(((CraftLivingEntity) target).getHandle());
+            petEntity.setRevengeTarget(((CraftLivingEntity) target).getHandle());
         }
     }
 
@@ -93,7 +93,7 @@ public class CraftMyPet extends CraftCreature
         {
             health = getMaxHealth();
         }
-        petEntity.setHealth(health);
+        petEntity.setEntityHealth(health);
     }
 
     public MyPetPlayer getOwner()

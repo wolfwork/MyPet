@@ -82,7 +82,7 @@ public class Ranged extends RangedInfo implements ISkillInstance
                     getMyPet().getCraftPet().getHandle().setPathfinder();
                     if (damage == 0)
                     {
-                        getMyPet().getCraftPet().getHandle().setGoalTarget(null);
+                        getMyPet().getCraftPet().getHandle().setAttackTarget(null);
                     }
                 }
             }
@@ -102,7 +102,7 @@ public class Ranged extends RangedInfo implements ISkillInstance
             getMyPet().getCraftPet().getHandle().petPathfinderSelector.clearGoals();
             getMyPet().getCraftPet().getHandle().petTargetSelector.clearGoals();
             getMyPet().getCraftPet().getHandle().setPathfinder();
-            getMyPet().getCraftPet().getHandle().setGoalTarget(null);
+            getMyPet().getCraftPet().getHandle().setAttackTarget(null);
         }
     }
 

@@ -37,7 +37,7 @@ import de.Keyle.MyPet.util.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_5_R2.CraftWorld;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.spout.nbt.CompoundMap;
@@ -237,7 +237,7 @@ public abstract class MyPet implements IMyPet
         {
             if (respawnTime <= 0)
             {
-                net.minecraft.server.v1_5_R3.World mcWorld = ((CraftWorld) petLocation.getWorld()).getHandle();
+                net.minecraft.world.World mcWorld = ((CraftWorld) petLocation.getWorld()).getHandle();
                 EntityMyPet petEntity = getPetType().getNewEntityInstance(mcWorld, this);
                 craftMyPet = (CraftMyPet) petEntity.getBukkitEntity();
                 petEntity.setLocation(petLocation);
@@ -550,7 +550,7 @@ public abstract class MyPet implements IMyPet
 
     public static boolean hasLeashFlag(Class<? extends MyPet> myPetClass, LeashFlag flag)
     {
-        if(leashFlags.containsKey(myPetClass))
+        if (leashFlags.containsKey(myPetClass))
         {
             return leashFlags.get(myPetClass).contains(flag);
         }
@@ -592,7 +592,7 @@ public abstract class MyPet implements IMyPet
 
     public boolean hasTarget()
     {
-        return this.getStatus() == PetState.Here && craftMyPet.getHandle().getGoalTarget() != null && craftMyPet.getHandle().getGoalTarget().isAlive();
+        return this.getStatus() == PetState.Here && craftMyPet.getHandle().getAITarget() != null && craftMyPet.getHandle().getAITarget().isEntityAlive();
     }
 
     public abstract MyPetType getPetType();

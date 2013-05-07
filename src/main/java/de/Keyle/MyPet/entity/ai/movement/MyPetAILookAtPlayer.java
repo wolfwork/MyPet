@@ -22,7 +22,7 @@ package de.Keyle.MyPet.entity.ai.movement;
 
 import de.Keyle.MyPet.entity.ai.MyPetAIGoal;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
-import net.minecraft.server.v1_5_R3.Entity;
+import net.minecraft.entity.Entity;
 
 public class MyPetAILookAtPlayer extends MyPetAIGoal
 {
@@ -49,26 +49,26 @@ public class MyPetAILookAtPlayer extends MyPetAIGoal
     @Override
     public boolean shouldStart()
     {
-        if (this.petEntity.aE().nextFloat() >= this.lookAtPlayerChance)
+        if (this.petEntity.getRNG().nextFloat() >= this.lookAtPlayerChance)
         {
             return false;
         }
-        if (this.petEntity.getGoalTarget() != null && this.petEntity.getGoalTarget().isAlive())
+        if (this.petEntity.getAITarget() != null && !this.petEntity.getAITarget().isDead)
         {
             return false;
         }
-        this.targetPlayer = this.petEntity.world.findNearbyPlayer(this.petEntity, this.range);
+        this.targetPlayer = this.petEntity.worldObj.getClosestPlayerToEntity(this.petEntity, this.range);
         return this.targetPlayer != null;
     }
 
     @Override
     public boolean shouldFinish()
     {
-        if (!this.targetPlayer.isAlive())
+        if (this.targetPlayer.isDead)
         {
             return true;
         }
-        if (this.petEntity.e(this.targetPlayer) > this.range * this.range)
+        if (this.petEntity.getDistanceSqToEntity(this.targetPlayer) > this.range * this.range)
         {
             return true;
         }
@@ -78,7 +78,7 @@ public class MyPetAILookAtPlayer extends MyPetAIGoal
     @Override
     public void start()
     {
-        this.ticksUntilStopLooking = (40 + this.petEntity.aE().nextInt(40));
+        this.ticksUntilStopLooking = (40 + this.petEntity.getRNG().nextInt(40));
     }
 
     @Override
@@ -90,7 +90,7 @@ public class MyPetAILookAtPlayer extends MyPetAIGoal
     @Override
     public void tick()
     {
-        this.petEntity.getControllerLook().a(this.targetPlayer.locX, this.targetPlayer.locY + this.targetPlayer.getHeadHeight(), this.targetPlayer.locZ, 10.0F, this.petEntity.bs());
+        this.petEntity.getLookHelper().setLookPosition(this.targetPlayer.posX, this.targetPlayer.posY + this.targetPlayer.getEyeHeight(), this.targetPlayer.posZ, 10.0F, this.petEntity.getVerticalFaceSpeed());
         this.ticksUntilStopLooking -= 1;
     }
 }

@@ -25,8 +25,8 @@ import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.skill.skills.implementation.Behavior;
 import de.Keyle.MyPet.skill.skills.implementation.Behavior.BehaviorState;
-import net.minecraft.server.v1_5_R3.EntityPlayer;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
+import net.minecraft.entity.player.EntityPlayer;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
 
 public class MyPetAIDuelTarget extends MyPetAIGoal
 {
@@ -65,7 +65,7 @@ public class MyPetAIDuelTarget extends MyPetAIGoal
         {
             return false;
         }
-        if (petEntity.getGoalTarget() != null && petEntity.getGoalTarget().isAlive())
+        if (petEntity.getAITarget() != null && !petEntity.getAITarget().isDead)
         {
             return false;
         }
@@ -75,12 +75,12 @@ public class MyPetAIDuelTarget extends MyPetAIGoal
             return true;
         }
 
-        for (Object entityObj : this.petEntity.world.a(EntityMyPet.class, this.petOwnerEntity.boundingBox.grow((double) range, (double) range, (double) range)))
+        for (Object entityObj : this.petEntity.worldObj.getEntitiesWithinAABB(EntityMyPet.class, this.petOwnerEntity.boundingBox.expand((double) range, (double) range, (double) range)))
         {
             EntityMyPet entityMyPet = (EntityMyPet) entityObj;
             MyPet targetMyPet = entityMyPet.getMyPet();
 
-            if (petEntity.getEntitySenses().canSee(entityMyPet) && entityMyPet != petEntity && entityMyPet.isAlive())
+            if (petEntity.getEntitySenses().canSee(entityMyPet) && entityMyPet != petEntity && !entityMyPet.isDead)
             {
                 if (!targetMyPet.getSkills().isSkillActive("Behavior") || !targetMyPet.getCraftPet().canMove())
                 {
@@ -109,11 +109,11 @@ public class MyPetAIDuelTarget extends MyPetAIGoal
         {
             return true;
         }
-        else if (petEntity.getGoalTarget() == null)
+        else if (petEntity.getAITarget() == null)
         {
             return true;
         }
-        else if (!petEntity.getGoalTarget().isAlive())
+        else if (petEntity.getAITarget().isDead)
         {
             return true;
         }
@@ -131,7 +131,7 @@ public class MyPetAIDuelTarget extends MyPetAIGoal
     @Override
     public void start()
     {
-        petEntity.setGoalTarget(this.target);
+        petEntity.setRevengeTarget(this.target);
         setDuelOpponent(this.target);
         if (target.petTargetSelector.hasGoal("DuelTarget"))
         {
@@ -143,7 +143,7 @@ public class MyPetAIDuelTarget extends MyPetAIGoal
     @Override
     public void finish()
     {
-        petEntity.setGoalTarget(null);
+        petEntity.setAttackTarget(null);
         duelOpponent = null;
         target = null;
     }

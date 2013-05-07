@@ -42,7 +42,7 @@ public class MyPetAISit extends MyPetAIGoal
         {
             return false;
         }
-        else if (this.entityMyPet.H())
+        else if (this.entityMyPet.isInWater())
         {
             return false;
         }
@@ -65,7 +65,7 @@ public class MyPetAISit extends MyPetAIGoal
         {
             ((EntityMyWolf) this.entityMyPet).applySitting(true);
         }
-        entityMyPet.setGoalTarget(null);
+        entityMyPet.setAttackTarget(null);
     }
 
     @Override

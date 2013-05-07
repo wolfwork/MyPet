@@ -23,7 +23,7 @@ package de.Keyle.MyPet.entity.types.bat;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.world.World;
 
 
 @EntitySize(width = 0.5F, height = 0.9F)
@@ -47,14 +47,14 @@ public class EntityMyBat extends EntityMyPet
 
     public void setHanging(boolean flags)
     {
-        int i = this.datawatcher.getByte(16);
+        int i = this.getDataWatcher().getWatchableObjectByte(16);
         if (flags)
         {
-            this.datawatcher.watch(16, (byte) (i | 0x1));
+            this.getDataWatcher().updateObject(16, (byte) (i | 0x1));
         }
         else
         {
-            this.datawatcher.watch(16, (byte) (i & 0xFFFFFFFE));
+            this.getDataWatcher().updateObject(16, (byte) (i & 0xFFFFFFFE));
         }
         ((MyBat) myPet).hanging = flags;
     }
@@ -66,22 +66,22 @@ public class EntityMyBat extends EntityMyPet
 
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a()
+    protected void entityInit()
     {
-        super.a();
-        this.datawatcher.a(16, new Byte((byte) 0)); // hanging
+        super.entityInit();
+        this.getDataWatcher().addObject(16, new Byte((byte) 0)); // hanging
     }
 
     /**
      * Returns the speed of played sounds
      */
-    protected float aY()
+    protected float getSoundPitch()
     {
-        return super.aY() * 0.95F;
+        return super.getSoundPitch() * 0.95F;
     }
 
     @Override
-    protected String bb()
+    protected String getLivingSound()
     {
         return !playIdleSound() ? "" : "mob.bat.idle";
     }
@@ -90,7 +90,7 @@ public class EntityMyBat extends EntityMyPet
      * Returns the sound that is played when the MyPet get hurt
      */
     @Override
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.bat.hurt";
     }
@@ -99,27 +99,27 @@ public class EntityMyBat extends EntityMyPet
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.bat.death";
     }
 
-    public void c()
+    public void onLivingUpdate()
     {
-        super.c();
+        super.onLivingUpdate();
 
-        if (!this.onGround && this.motY < 0.0D)
+        if (!this.onGround && this.motionY < 0.0D)
         {
-            this.motY *= 0.6D;
+            this.motionY *= 0.6D;
         }
     }
 
-    public void l_()
+    public void onUpdate()
     {
-        super.l_();
-        if (!world.getMaterial((int) locX, (int) locY, (int) locZ).isLiquid() && !world.getMaterial((int) locX, (int) (locY + 1.), (int) locZ).isSolid())
+        super.onUpdate();
+        if (!worldObj.getBlockMaterial((int) posX, (int) posY, (int) posZ).isLiquid() && !worldObj.getBlockMaterial((int) posX, (int) (posY + 1.), (int) posZ).isSolid())
         {
-            this.locY += 0.65;
+            this.posY += 0.65;
         }
     }
 }

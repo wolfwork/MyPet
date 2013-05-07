@@ -21,10 +21,10 @@
 package de.Keyle.MyPet.skill.skills.implementation.beacon;
 
 import de.Keyle.MyPet.skill.skills.implementation.Beacon;
-import net.minecraft.server.v1_5_R3.EntityHuman;
-import net.minecraft.server.v1_5_R3.IInventory;
-import net.minecraft.server.v1_5_R3.ItemStack;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftHumanEntity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 
@@ -37,8 +37,6 @@ public class MyPetCustomBeaconInventory implements IInventory
     private int maxStack = 64;
     private ItemStack tributeItem;
     Beacon beaconSkill;
-
-    // Inventory Methods --------------------------------------------------------------------------------------------
 
     public MyPetCustomBeaconInventory(Beacon beaconSkill)
     {
@@ -70,34 +68,34 @@ public class MyPetCustomBeaconInventory implements IInventory
         return null;
     }
 
-    public int getSize()
+    public int getSizeInventory()
     {
         return 1;
     }
 
-    public ItemStack getItem(int slot)
+    public ItemStack getStackInSlot(int slot)
     {
         return slot == 0 ? this.tributeItem : null;
     }
 
-    public ItemStack splitStack(int slot, int amount)
+    public ItemStack decrStackSize(int slot, int amount)
     {
         if (slot == 0 && this.tributeItem != null)
         {
-            if (amount >= this.tributeItem.count)
+            if (amount >= this.tributeItem.stackSize)
             {
                 ItemStack itemstack = this.tributeItem;
 
                 this.tributeItem = null;
                 return itemstack;
             }
-            this.tributeItem.count -= amount;
-            return new ItemStack(this.tributeItem.id, amount, this.tributeItem.getData());
+            this.tributeItem.stackSize -= amount;
+            return new ItemStack(this.tributeItem.itemID, amount, this.tributeItem.getItemDamage());
         }
         return null;
     }
 
-    public ItemStack splitWithoutUpdate(int i)
+    public ItemStack getStackInSlotOnClosing(int i)
     {
         if (i == 0 && this.tributeItem != null)
         {
@@ -110,13 +108,13 @@ public class MyPetCustomBeaconInventory implements IInventory
         return null;
     }
 
-    public void setItem(int i, ItemStack itemStack)
+    public void setInventorySlotContents(int i, ItemStack itemStack)
     {
         if (i == 0)
         {
             if (itemStack != null)
             {
-                beaconSkill.tributeItem = itemStack.cloneItemStack();
+                beaconSkill.tributeItem = ItemStack.copyItemStack(itemStack);
             }
             else
             {
@@ -126,12 +124,12 @@ public class MyPetCustomBeaconInventory implements IInventory
         }
     }
 
-    public String getName()
+    public String getInvName()
     {
         return "inventory.mypet.beacon";
     }
 
-    public int getMaxStackSize()
+    public int getInventoryStackLimit()
     {
         return this.maxStack;
     }
@@ -141,32 +139,30 @@ public class MyPetCustomBeaconInventory implements IInventory
         this.maxStack = size;
     }
 
-    public void update()
+    public void onInventoryChanged()
     {
     }
 
-    public void startOpen()
+    public void openChest()
     {
     }
 
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
+    public void closeChest()
+    {
+    }
 
-    public boolean a(EntityHuman entityHuman)
+    public boolean isUseableByPlayer(EntityPlayer entityHuman)
     {
         return true;
     }
 
-    public boolean b(int paramInt, ItemStack paramItemStack)
+    public boolean isStackValidForSlot(int i, ItemStack itemStack)
     {
         return true;
     }
 
-    public boolean c()
+    public boolean isInvNameLocalized()
     {
         return true;
-    }
-
-    public void g()
-    {
     }
 }

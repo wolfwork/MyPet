@@ -23,7 +23,7 @@ package de.Keyle.MyPet.util;
 import de.Keyle.MyPet.entity.types.InactiveMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPet.PetState;
-import net.minecraft.server.v1_5_R3.EntityHuman;
+import net.minecraft.entity.player.EntityPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.AnimalTamer;
@@ -284,10 +284,10 @@ public class MyPetPlayer implements IScheduler
         {
             return ((OfflinePlayer) obj).getName().equals(playerName);
         }
-        else if (obj instanceof EntityHuman)
+        else if (obj instanceof EntityPlayer)
         {
-            EntityHuman entityHuman = (EntityHuman) obj;
-            return playerName.equals(entityHuman.getName());
+            EntityPlayer entityHuman = (EntityPlayer) obj;
+            return playerName.equals(entityHuman.username);
         }
         else if (obj instanceof AnimalTamer)
         {

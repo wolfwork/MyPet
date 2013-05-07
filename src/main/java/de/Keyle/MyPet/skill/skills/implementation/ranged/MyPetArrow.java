@@ -21,10 +21,10 @@
 package de.Keyle.MyPet.skill.skills.implementation.ranged;
 
 import de.Keyle.MyPet.entity.types.EntityMyPet;
-import net.minecraft.server.v1_5_R3.EntityArrow;
-import net.minecraft.server.v1_5_R3.EntityLiving;
-import net.minecraft.server.v1_5_R3.NBTTagCompound;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.projectile.EntityArrow;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 
 import java.lang.reflect.Field;
 
@@ -38,18 +38,18 @@ public class MyPetArrow extends EntityArrow
     }
 
     @Override
-    public void a(NBTTagCompound nbtTagCompound)
+    public void writeEntityToNBT(NBTTagCompound nbtTagCompound)
     {
     }
 
     @Override
-    public void b(NBTTagCompound nbtTagCompound)
+    public void readEntityFromNBT(NBTTagCompound nbtTagCompound)
     {
     }
 
-    public void l_()
+    public void onUpdate()
     {
-        super.l_();
+        super.onUpdate();
         if (inGround == null)
         {
             try
@@ -68,7 +68,7 @@ public class MyPetArrow extends EntityArrow
             {
                 if (inGround.getBoolean(this))
                 {
-                    die();
+                    setDead();
                 }
             }
         }

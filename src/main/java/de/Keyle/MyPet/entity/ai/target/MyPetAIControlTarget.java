@@ -27,9 +27,9 @@ import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.skill.skills.implementation.Behavior;
 import de.Keyle.MyPet.skill.skills.implementation.Behavior.BehaviorState;
 import de.Keyle.MyPet.util.MyPetPvP;
-import net.minecraft.server.v1_5_R3.EntityLiving;
-import net.minecraft.server.v1_5_R3.EntityPlayer;
-import net.minecraft.server.v1_5_R3.EntityTameableAnimal;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.passive.EntityTameable;
+import net.minecraft.entity.player.EntityPlayer;
 import org.bukkit.entity.Player;
 
 public class MyPetAIControlTarget extends MyPetAIGoal
@@ -76,7 +76,7 @@ public class MyPetAIControlTarget extends MyPetAIGoal
                     return false;
                 }
             }
-            for (Object entityObj : this.petEntity.world.a(EntityLiving.class, this.petEntity.boundingBox.grow((double) this.range, 4.0D, (double) this.range)))
+            for (Object entityObj : this.petEntity.worldObj.getEntitiesWithinAABB(EntityLiving.class, this.petEntity.boundingBox.expand((double) this.range, 4.0D, (double) this.range)))
             {
                 EntityLiving entityLiving = (EntityLiving) entityObj;
 
@@ -94,9 +94,9 @@ public class MyPetAIControlTarget extends MyPetAIGoal
                             continue;
                         }
                     }
-                    else if (entityLiving instanceof EntityTameableAnimal)
+                    else if (entityLiving instanceof EntityTameable)
                     {
-                        EntityTameableAnimal tameable = (EntityTameableAnimal) entityLiving;
+                        EntityTameable tameable = (EntityTameable) entityLiving;
                         if (tameable.isTamed() && tameable.getOwner() != null)
                         {
                             Player tameableOwner = (Player) tameable.getOwner().getBukkitEntity();
@@ -122,7 +122,7 @@ public class MyPetAIControlTarget extends MyPetAIGoal
                     {
                         if (behaviorSkill.getBehavior() == BehaviorState.Raid)
                         {
-                            if (entityLiving instanceof EntityTameableAnimal)
+                            if (entityLiving instanceof EntityTameable)
                             {
                                 continue;
                             }
@@ -148,7 +148,7 @@ public class MyPetAIControlTarget extends MyPetAIGoal
     @Override
     public boolean shouldFinish()
     {
-        EntityLiving entityliving = petEntity.getGoalTarget();
+        EntityLiving entityliving = petEntity.getAITarget();
 
         if (!petEntity.canMove())
         {
@@ -158,7 +158,7 @@ public class MyPetAIControlTarget extends MyPetAIGoal
         {
             return true;
         }
-        else if (!entityliving.isAlive())
+        else if (entityliving.isDead)
         {
             return true;
         }
@@ -168,12 +168,12 @@ public class MyPetAIControlTarget extends MyPetAIGoal
     @Override
     public void start()
     {
-        petEntity.setGoalTarget(this.target);
+        petEntity.setAttackTarget(this.target);
     }
 
     @Override
     public void finish()
     {
-        petEntity.setGoalTarget(null);
+        petEntity.setAttackTarget(null);
     }
 }

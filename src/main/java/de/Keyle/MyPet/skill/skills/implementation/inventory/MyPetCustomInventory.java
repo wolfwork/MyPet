@@ -20,11 +20,15 @@
 
 package de.Keyle.MyPet.skill.skills.implementation.inventory;
 
-import net.minecraft.server.v1_5_R3.*;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v1_5_R3.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_5_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v1_5_R2.inventory.CraftItemStack;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.spout.nbt.ByteTag;
@@ -48,7 +52,7 @@ public class MyPetCustomInventory implements IInventory
         setSize(size);
     }
 
-    public int getSize()
+    public int getSizeInventory()
     {
         return size;
     }
@@ -62,7 +66,7 @@ public class MyPetCustomInventory implements IInventory
         }
     }
 
-    public String getName()
+    public String getInvName()
     {
         return inventroyName;
     }
@@ -76,7 +80,7 @@ public class MyPetCustomInventory implements IInventory
         this.inventroyName = name;
     }
 
-    public ItemStack getItem(int i)
+    public ItemStack getStackInSlot(int i)
     {
         if (i <= size)
         {
@@ -85,7 +89,7 @@ public class MyPetCustomInventory implements IInventory
         return null;
     }
 
-    public void setItem(int i, ItemStack itemStack)
+    public void setInventorySlotContents(int i, ItemStack itemStack)
     {
         if (i < items.size())
         {
@@ -99,7 +103,7 @@ public class MyPetCustomInventory implements IInventory
             }
             items.add(i, itemStack);
         }
-        update();
+        onInventoryChanged();
     }
 
     public int addItem(org.bukkit.inventory.ItemStack itemAdd)
@@ -110,9 +114,9 @@ public class MyPetCustomInventory implements IInventory
         }
         itemAdd = itemAdd.clone();
 
-        for (int i = 0 ; i < this.getSize() ; i++)
+        for (int i = 0 ; i < this.getSizeInventory() ; i++)
         {
-            CraftItemStack craftItem = CraftItemStack.asCraftMirror(getItem(i));
+            CraftItemStack craftItem = CraftItemStack.asCraftMirror(getStackInSlot(i));
 
             if (ItemStackComparator.compareItem(itemAdd, craftItem))
             {
@@ -133,13 +137,13 @@ public class MyPetCustomInventory implements IInventory
         }
         if (itemAdd.getAmount() > 0)
         {
-            for (int i = 0 ; i < this.getSize() ; i++)
+            for (int i = 0 ; i < this.getSizeInventory() ; i++)
             {
-                if (getItem(i) == null)
+                if (getStackInSlot(i) == null)
                 {
                     if (itemAdd.getAmount() <= itemAdd.getMaxStackSize())
                     {
-                        setItem(i, CraftItemStack.asNMSCopy(itemAdd.clone()));
+                        setInventorySlotContents(i, CraftItemStack.asNMSCopy(itemAdd.clone()));
                         itemAdd.setAmount(0);
                         break;
                     }
@@ -147,7 +151,7 @@ public class MyPetCustomInventory implements IInventory
                     {
                         CraftItemStack itemStack = (CraftItemStack) itemAdd.clone();
                         itemStack.setAmount(itemStack.getMaxStackSize());
-                        setItem(i, CraftItemStack.asNMSCopy(itemStack));
+                        setInventorySlotContents(i, CraftItemStack.asNMSCopy(itemStack));
                         itemAdd.setAmount(itemAdd.getAmount() - itemStack.getMaxStackSize());
                     }
                     if (itemAdd.getAmount() == 0)
@@ -163,25 +167,25 @@ public class MyPetCustomInventory implements IInventory
     public void dropContentAt(Location loc)
     {
         World world = ((CraftWorld) loc.getWorld()).getHandle();
-        for (int i = 0 ; i < this.getSize() ; i++)
+        for (int i = 0 ; i < this.getSizeInventory() ; i++)
         {
-            ItemStack is = this.splitWithoutUpdate(i);
+            ItemStack is = this.getStackInSlotOnClosing(i);
             if (is != null)
             {
-                is = is.cloneItemStack();
+                is = is.copy();
                 EntityItem itemEntity = new EntityItem(world, loc.getX(), loc.getY(), loc.getZ(), is);
-                itemEntity.pickupDelay = 20;
-                world.addEntity(itemEntity);
+                itemEntity.delayBeforeCanPickup = 20;
+                world.spawnEntityInWorld(itemEntity);
             }
         }
     }
 
-    public ItemStack splitStack(int i, int j)
+    public ItemStack decrStackSize(int i, int j)
     {
         if (i <= size && items.get(i) != null)
         {
             ItemStack itemStack;
-            if (items.get(i).count <= j)
+            if (items.get(i).stackSize <= j)
             {
                 itemStack = items.get(i);
                 items.set(i, null);
@@ -189,8 +193,8 @@ public class MyPetCustomInventory implements IInventory
             }
             else
             {
-                itemStack = items.get(i).a(j);
-                if (items.get(i).count == 0)
+                itemStack = items.get(i).splitStack(j);
+                if (items.get(i).stackSize == 0)
                 {
                     items.set(i, null);
                 }
@@ -202,8 +206,8 @@ public class MyPetCustomInventory implements IInventory
 
     public ItemStack[] getContents()
     {
-        ItemStack[] itemStack = new ItemStack[getSize()];
-        for (int i = 0 ; i < getSize() ; i++)
+        ItemStack[] itemStack = new ItemStack[getSizeInventory()];
+        for (int i = 0 ; i < getSizeInventory() ; i++)
         {
             itemStack[i] = items.get(i);
         }
@@ -236,16 +240,16 @@ public class MyPetCustomInventory implements IInventory
             CompoundTag itemCompound = (CompoundTag) items.getValue().get(i);
 
             ItemStack itemStack = ItemStackNBTConverter.CompundToItemStack(itemCompound);
-            setItem(((ByteTag) itemCompound.getValue().get("Slot")).getValue(), itemStack);
+            setInventorySlotContents(((ByteTag) itemCompound.getValue().get("Slot")).getValue(), itemStack);
         }
     }
 
-    public boolean a(EntityHuman entityHuman)
+    public boolean isUseableByPlayer(EntityPlayer entityHuman)
     {
         return true;
     }
 
-    public void startOpen()
+    public void openChest()
     {
     }
 
@@ -280,7 +284,7 @@ public class MyPetCustomInventory implements IInventory
         }
     }
 
-    public void close()
+    public void closeChest()
     {
         for (HumanEntity humanEntity : transaction)
         {
@@ -298,7 +302,7 @@ public class MyPetCustomInventory implements IInventory
         return null;
     }
 
-    public int getMaxStackSize()
+    public int getInventoryStackLimit()
     {
         return stackSize;
     }
@@ -308,7 +312,7 @@ public class MyPetCustomInventory implements IInventory
         this.stackSize = i;
     }
 
-    public ItemStack splitWithoutUpdate(int i)
+    public ItemStack getStackInSlotOnClosing(int i)
     {
         if (items.get(i) != null)
         {
@@ -320,21 +324,17 @@ public class MyPetCustomInventory implements IInventory
         return null;
     }
 
-    public void update()
+    public void onInventoryChanged()
     {
     }
 
-    public boolean b(int paramInt, ItemStack paramItemStack)
+    public boolean isStackValidForSlot(int paramInt, ItemStack paramItemStack)
     {
         return true;
     }
 
-    public boolean c()
+    public boolean isInvNameLocalized()
     {
         return true;
-    }
-
-    public void g()
-    {
     }
 }

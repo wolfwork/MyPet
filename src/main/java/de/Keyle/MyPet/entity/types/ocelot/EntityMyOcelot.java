@@ -24,9 +24,9 @@ import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.ai.movement.MyPetAISit;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_5_R3.EntityHuman;
-import net.minecraft.server.v1_5_R3.ItemStack;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import org.bukkit.entity.Ocelot.Type;
 
 @EntitySize(width = 0.6F, height = 0.8F)
@@ -79,14 +79,14 @@ public class EntityMyOcelot extends EntityMyPet
 
     public void applySitting(boolean flag)
     {
-        int i = this.datawatcher.getByte(16);
+        int i = this.getDataWatcher().getWatchableObjectByte(16);
         if (flag)
         {
-            this.datawatcher.watch(16, (byte) (i | 0x1));
+            this.getDataWatcher().updateObject(16, (byte) (i | 0x1));
         }
         else
         {
-            this.datawatcher.watch(16, (byte) (i & 0xFFFFFFFE));
+            this.getDataWatcher().updateObject(16, (byte) (i & 0xFFFFFFFE));
         }
         ((MyOcelot) myPet).isSitting = flag;
     }
@@ -98,7 +98,7 @@ public class EntityMyOcelot extends EntityMyPet
 
     public void setCatType(int value)
     {
-        this.datawatcher.watch(18, (byte) value);
+        this.getDataWatcher().updateObject(18, (byte) value);
         ((MyOcelot) myPet).catType = Type.getType(value);
     }
 
@@ -112,23 +112,23 @@ public class EntityMyOcelot extends EntityMyPet
     {
         if (flag)
         {
-            this.datawatcher.watch(12, Integer.valueOf(Integer.MIN_VALUE));
+            this.getDataWatcher().updateObject(12, Integer.valueOf(Integer.MIN_VALUE));
         }
         else
         {
-            this.datawatcher.watch(12, new Integer(0));
+            this.getDataWatcher().updateObject(12, new Integer(0));
         }
         ((MyOcelot) myPet).isBaby = flag;
     }
 
     // Obfuscated Methods -------------------------------------------------------------------------------------------
 
-    protected void a()
+    protected void entityInit()
     {
-        super.a();
-        this.datawatcher.a(12, new Integer(0));     // age
-        this.datawatcher.a(16, new Byte((byte) 0)); // tamed/sitting
-        this.datawatcher.a(18, new Byte((byte) 0)); // cat type
+        super.entityInit();
+        this.getDataWatcher().addObject(12, new Integer(0));     // age
+        this.getDataWatcher().addObject(16, new Byte((byte) 0)); // tamed/sitting
+        this.getDataWatcher().addObject(18, new Byte((byte) 0)); // cat type
 
     }
 
@@ -138,51 +138,51 @@ public class EntityMyOcelot extends EntityMyPet
      * true: there was a reaction on rightclick
      * false: no reaction on rightclick
      */
-    public boolean a_(EntityHuman entityhuman)
+    public boolean interact(EntityPlayer entityhuman)
     {
-        if (super.a_(entityhuman))
+        if (super.interact(entityhuman))
         {
             return true;
         }
 
-        ItemStack itemStack = entityhuman.inventory.getItemInHand();
+        ItemStack itemStack = entityhuman.inventory.getItemStack();
 
         if (getOwner().equals(entityhuman))
         {
             if (itemStack != null)
             {
-                if (itemStack.id == 351)
+                if (itemStack.itemID == 351)
                 {
-                    if (itemStack.getData() == 11)
+                    if (itemStack.getItemDamage() == 11)
                     {
                         ((MyOcelot) myPet).setCatType(Type.WILD_OCELOT);
                         return true;
                     }
-                    else if (itemStack.getData() == 0)
+                    else if (itemStack.getItemDamage() == 0)
                     {
                         ((MyOcelot) myPet).setCatType(Type.BLACK_CAT);
                         return true;
                     }
-                    else if (itemStack.getData() == 14)
+                    else if (itemStack.getItemDamage() == 14)
                     {
                         ((MyOcelot) myPet).setCatType(Type.RED_CAT);
                         return true;
                     }
-                    else if (itemStack.getData() == 7)
+                    else if (itemStack.getItemDamage() == 7)
                     {
                         ((MyOcelot) myPet).setCatType(Type.SIAMESE_CAT);
                         return true;
                     }
                 }
-                else if (itemStack.id == GROW_UP_ITEM.getId())
+                else if (itemStack.itemID == GROW_UP_ITEM.getId())
                 {
                     if (isBaby())
                     {
-                        if (!entityhuman.abilities.canInstantlyBuild)
+                        if (!entityhuman.capabilities.isCreativeMode)
                         {
-                            if (--itemStack.count <= 0)
+                            if (--itemStack.stackSize <= 0)
                             {
-                                entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                                entityhuman.inventory.setInventorySlotContents(entityhuman.inventory.currentItem, null);
                             }
                         }
                         this.setBaby(false);
@@ -199,15 +199,15 @@ public class EntityMyOcelot extends EntityMyPet
     /**
      * Returns the default sound of the MyPet
      */
-    protected String bb()
+    protected String getLivingSound()
     {
-        return !playIdleSound() ? "" : this.random.nextInt(4) == 0 ? "mob.cat.purreow" : "mob.cat.meow";
+        return !playIdleSound() ? "" : this.rand.nextInt(4) == 0 ? "mob.cat.purreow" : "mob.cat.meow";
     }
 
     /**
      * Returns the sound that is played when the MyPet get hurt
      */
-    protected String bc()
+    protected String getHurtSound()
     {
         return "mob.cat.hitt";
     }
@@ -215,7 +215,7 @@ public class EntityMyOcelot extends EntityMyPet
     /**
      * Returns the sound that is played when the MyPet dies
      */
-    protected String bd()
+    protected String getDeathSound()
     {
         return "mob.cat.hitt";
     }

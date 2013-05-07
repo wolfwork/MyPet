@@ -24,9 +24,9 @@ import de.Keyle.MyPet.entity.ai.MyPetAIGoal;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.skill.skills.implementation.ranged.MyPetArrow;
-import net.minecraft.server.v1_5_R3.EntityArrow;
-import net.minecraft.server.v1_5_R3.EntityLiving;
-import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.projectile.EntityArrow;
+import net.minecraft.world.World;
 
 public class MyPetAIRangedAttack extends MyPetAIGoal
 {
@@ -57,13 +57,13 @@ public class MyPetAIRangedAttack extends MyPetAIGoal
         {
             return false;
         }
-        EntityLiving goalTarget = this.entityMyPet.getGoalTarget();
+        EntityLiving goalTarget = this.entityMyPet.getAITarget();
 
-        if (goalTarget == null || !goalTarget.isAlive() || !entityMyPet.canMove())
+        if (goalTarget == null || goalTarget.isDead || !entityMyPet.canMove())
         {
             return false;
         }
-        double space = this.entityMyPet.e(goalTarget.locX, goalTarget.boundingBox.b, goalTarget.locZ);
+        double space = this.entityMyPet.getDistanceSq(goalTarget.posX, goalTarget.boundingBox.minY, goalTarget.posZ);
         if (myPet.getDamage() > 0 && space < 16)
         {
             return false;
@@ -75,11 +75,11 @@ public class MyPetAIRangedAttack extends MyPetAIGoal
     @Override
     public boolean shouldFinish()
     {
-        if (target == null || !target.isAlive() || myPet.getRangedDamage() <= 0 || !entityMyPet.canMove())
+        if (target == null || target.isDead || myPet.getRangedDamage() <= 0 || !entityMyPet.canMove())
         {
             return true;
         }
-        if (myPet.getDamage() > 0 && this.entityMyPet.e(target.locX, target.boundingBox.b, target.locZ) < 16)
+        if (myPet.getDamage() > 0 && this.entityMyPet.getDistanceSqToEntity(target) < 16)
         {
             return true;
         }
@@ -97,7 +97,7 @@ public class MyPetAIRangedAttack extends MyPetAIGoal
     @Override
     public void tick()
     {
-        double distanceToTarget = this.entityMyPet.e(this.target.locX, this.target.boundingBox.b, this.target.locZ);
+        double distanceToTarget = this.entityMyPet.getDistanceSqToEntity(this.target);
         boolean canSee = this.entityMyPet.getEntitySenses().canSee(this.target);
 
         if (canSee)
@@ -120,7 +120,7 @@ public class MyPetAIRangedAttack extends MyPetAIGoal
             this.entityMyPet.petNavigation.navigateTo(this.target);
         }
 
-        this.entityMyPet.getControllerLook().a(this.target, 30.0F, 30.0F);
+        this.entityMyPet.getLookHelper().setLookPositionWithEntity(this.target, 30.0F, 30.0F);
 
         if (--this.shootTimer <= 0)
         {
@@ -134,10 +134,10 @@ public class MyPetAIRangedAttack extends MyPetAIGoal
 
     public void shootProjectile(EntityLiving target, float damage)
     {
-        World world = target.world;
+        World world = target.worldObj;
         EntityArrow entityArrow = new MyPetArrow(world, entityMyPet, target, 1.6F, 1);
-        entityArrow.b(damage);
-        entityMyPet.makeSound("random.bow", 1.0F, 1.0F / (entityMyPet.aE().nextFloat() * 0.4F + 0.8F));
-        world.addEntity(entityArrow);
+        entityArrow.setDamage(damage);
+        entityMyPet.playSound("random.bow", 1.0F, 1.0F / (entityMyPet.getRNG().nextFloat() * 0.4F + 0.8F));
+        world.spawnEntityInWorld(entityArrow);
     }
 }

@@ -53,7 +53,7 @@ public class CommandStop implements CommandExecutor
                 }
                 sender.sendMessage(MyPetBukkitUtil.setColors(MyPetLanguage.getString("Msg_StopAttack")).replace("%petname%", myPet.petName));
                 myPet.getCraftPet().getHandle().setTarget(null);
-                myPet.getCraftPet().getHandle().setGoalTarget(null);
+                myPet.getCraftPet().getHandle().setAttackTarget(null);
                 myPet.getCraftPet().getHandle().goalTarget = null;
             }
             else

@@ -25,10 +25,10 @@ import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.skill.skills.implementation.Behavior;
 import de.Keyle.MyPet.skill.skills.implementation.Behavior.BehaviorState;
-import net.minecraft.server.v1_5_R3.EntityLiving;
-import net.minecraft.server.v1_5_R3.EntityMonster;
-import net.minecraft.server.v1_5_R3.EntityPlayer;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.player.EntityPlayer;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
 
 public class MyPetAIFarmTarget extends MyPetAIGoal
 {
@@ -66,15 +66,15 @@ public class MyPetAIFarmTarget extends MyPetAIGoal
         {
             return false;
         }
-        if (petEntity.getGoalTarget() != null && petEntity.getGoalTarget().isAlive())
+        if (petEntity.getAITarget() != null && !petEntity.getAITarget().isDead)
         {
             return false;
         }
 
-        for (Object entityObj : this.petEntity.world.a(EntityMonster.class, this.petOwnerEntity.boundingBox.grow((double) range, (double) range, (double) range)))
+        for (Object entityObj : this.petEntity.worldObj.getEntitiesWithinAABB(EntityMob.class, this.petOwnerEntity.boundingBox.expand((double) range, (double) range, (double) range)))
         {
-            EntityMonster entityMonster = (EntityMonster) entityObj;
-            if (!entityMonster.isAlive() || petEntity.e(entityMonster) > 91 || !petEntity.getEntitySenses().canSee(entityMonster))
+            EntityMob entityMonster = (EntityMob) entityObj;
+            if (entityMonster.isDead || petEntity.getDistanceSqToEntity(entityMonster) > 91 || !petEntity.getEntitySenses().canSee(entityMonster))
             {
                 continue;
             }
@@ -87,7 +87,7 @@ public class MyPetAIFarmTarget extends MyPetAIGoal
     @Override
     public boolean shouldFinish()
     {
-        EntityLiving entityliving = petEntity.getGoalTarget();
+        EntityLiving entityliving = petEntity.getAITarget();
 
         if (!petEntity.canMove())
         {
@@ -97,7 +97,7 @@ public class MyPetAIFarmTarget extends MyPetAIGoal
         {
             return true;
         }
-        else if (!entityliving.isAlive())
+        else if (entityliving.isDead)
         {
             return true;
         }
@@ -115,13 +115,13 @@ public class MyPetAIFarmTarget extends MyPetAIGoal
     @Override
     public void start()
     {
-        petEntity.setGoalTarget(this.target);
+        petEntity.setAttackTarget(this.target);
     }
 
     @Override
     public void finish()
     {
-        petEntity.setGoalTarget(null);
+        petEntity.setAttackTarget(null);
         target = null;
     }
 }

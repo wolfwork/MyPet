@@ -29,8 +29,8 @@ import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
 import de.Keyle.MyPet.util.IScheduler;
 import de.Keyle.MyPet.util.MyPetBukkitUtil;
 import de.Keyle.MyPet.util.MyPetLanguage;
-import net.minecraft.server.v1_5_R3.EntityLiving;
-import net.minecraft.server.v1_5_R3.PotionBrewer;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.potion.PotionHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.spout.nbt.IntTag;
@@ -143,18 +143,18 @@ public class HPregeneration extends HPregenerationInfo implements ISkillInstance
     public void addPotionGraphicalEffect(CraftMyPet entity, int color, int duration)
     {
         final EntityLiving entityLiving = entity.getHandle();
-        entityLiving.getDataWatcher().watch(8, new Integer(color));
+        entityLiving.getDataWatcher().updateObject(8, new Integer(color));
 
         Bukkit.getScheduler().scheduleSyncDelayedTask(MyPetPlugin.getPlugin(), new Runnable()
         {
             public void run()
             {
                 int potionEffects = 0;
-                if (!entityLiving.effects.isEmpty())
+                if (!entityLiving.getActivePotionEffects().isEmpty())
                 {
-                    potionEffects = PotionBrewer.a(entityLiving.effects.values());
+                    potionEffects = PotionHelper.calcPotionLiquidColor(entityLiving.activePotionsMap.values());
                 }
-                entityLiving.getDataWatcher().watch(8, new Integer(potionEffects));
+                entityLiving.getDataWatcher().updateObject(8, new Integer(potionEffects));
             }
         }, duration);
     }
