@@ -443,4 +443,10 @@ public abstract class EntityMyPet extends EntityCreature implements IMob
         getLookHelper().onUpdateLook(); // look
         getJumpHelper().doJump(); // jump
     }
+
+    @Override
+    public boolean shouldRiderFaceForward(EntityPlayer player)
+    {
+        return true;
+    }
 }
