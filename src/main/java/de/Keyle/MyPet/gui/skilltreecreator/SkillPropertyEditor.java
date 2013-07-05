@@ -26,7 +26,7 @@ import de.Keyle.MyPet.skill.SkillProperties.NBTdatatypes;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
 import de.Keyle.MyPet.util.MyPetUtil;
 import de.Keyle.MyPet.util.MyPetVersion;
-import org.spout.nbt.*;
+import de.Keyle.nbt.*;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;

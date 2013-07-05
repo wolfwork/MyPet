@@ -26,8 +26,8 @@ import de.Keyle.MyPet.skill.skills.info.RideInfo;
 import de.Keyle.MyPet.util.MyPetBukkitUtil;
 import de.Keyle.MyPet.util.locale.MyPetLocales;
 import org.bukkit.Material;
-import org.spout.nbt.FloatTag;
-import org.spout.nbt.StringTag;
+import de.Keyle.nbt.FloatTag;
+import de.Keyle.nbt.StringTag;
 
 public class Ride extends RideInfo implements ISkillInstance
 {

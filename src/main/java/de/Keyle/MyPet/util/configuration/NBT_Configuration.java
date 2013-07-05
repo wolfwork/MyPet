@@ -22,12 +22,13 @@ package de.Keyle.MyPet.util.configuration;
 
 import de.Keyle.MyPet.util.logger.DebugLogger;
 import de.Keyle.MyPet.util.logger.MyPetLogger;
+import de.Keyle.nbt.CompoundMap;
+import de.Keyle.nbt.CompoundTag;
+import de.Keyle.nbt.Tag;
+import de.Keyle.nbt.stream.NBTInputStream;
+import de.Keyle.nbt.stream.NBTOutputStream;
 import org.bukkit.ChatColor;
-import org.spout.nbt.CompoundMap;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.Tag;
-import org.spout.nbt.stream.NBTInputStream;
-import org.spout.nbt.stream.NBTOutputStream;
+
 
 import java.io.*;
 import java.util.ArrayList;

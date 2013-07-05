@@ -29,9 +29,9 @@ import de.Keyle.MyPet.skill.skills.implementation.inventory.ItemStackNBTConverte
 import de.Keyle.MyPet.util.MyPetPlayer;
 import net.minecraft.server.v1_6_R1.ItemStack;
 import org.bukkit.ChatColor;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.ListTag;
+import de.Keyle.nbt.CompoundTag;
+import de.Keyle.nbt.IntTag;
+import de.Keyle.nbt.ListTag;
 
 import java.util.ArrayList;
 import java.util.HashMap;

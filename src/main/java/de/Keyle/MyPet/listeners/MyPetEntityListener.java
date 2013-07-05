@@ -62,7 +62,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.spout.nbt.*;
+import de.Keyle.nbt.*;
 
 import java.util.ArrayList;
 import java.util.List;

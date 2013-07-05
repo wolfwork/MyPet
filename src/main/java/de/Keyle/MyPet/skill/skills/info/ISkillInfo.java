@@ -20,7 +20,7 @@
 
 package de.Keyle.MyPet.skill.skills.info;
 
-import org.spout.nbt.CompoundTag;
+import de.Keyle.nbt.CompoundTag;
 
 public interface ISkillInfo
 {

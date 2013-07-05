@@ -31,9 +31,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
+import de.Keyle.nbt.DoubleTag;
+import de.Keyle.nbt.IntTag;
+import de.Keyle.nbt.StringTag;
 
 import java.util.Random;
 

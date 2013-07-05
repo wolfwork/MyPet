@@ -33,7 +33,7 @@ import de.Keyle.MyPet.util.logger.MyPetLogger;
 import org.bukkit.ChatColor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.spout.nbt.*;
+import de.Keyle.nbt.*;
 
 import java.io.File;
 import java.util.Arrays;

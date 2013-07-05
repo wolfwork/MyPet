@@ -34,10 +34,10 @@ import net.minecraft.server.v1_6_R1.EntityPlayer;
 import org.bukkit.GameMode;
 import org.bukkit.craftbukkit.v1_6_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundMap;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.IntTag;
+import de.Keyle.nbt.ByteTag;
+import de.Keyle.nbt.CompoundMap;
+import de.Keyle.nbt.CompoundTag;
+import de.Keyle.nbt.IntTag;
 
 public class Inventory extends InventoryInfo implements ISkillInstance, ISkillStorage, ISkillActive
 {

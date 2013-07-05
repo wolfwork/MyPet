@@ -31,7 +31,7 @@ import de.Keyle.MyPet.util.configuration.SnakeYAML_Configuration;
 import de.Keyle.MyPet.util.logger.DebugLogger;
 import de.Keyle.MyPet.util.logger.MyPetLogger;
 import org.bukkit.ChatColor;
-import org.spout.nbt.*;
+import de.Keyle.nbt.*;
 
 import java.io.File;
 import java.util.Map;

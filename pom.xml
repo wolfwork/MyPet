@@ -257,12 +257,12 @@
             <version>${forms_rt.version}</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.spout</groupId>
+        <!--<dependency>
+            <groupId>de.Keyle</groupId>
             <artifactId>simplenbt</artifactId>
             <version>${simplenbt.version}</version>
             <scope>compile</scope>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>org.mcstats.bukkit</groupId>
             <artifactId>metrics</artifactId>
@@ -274,6 +274,12 @@
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.Keyle</groupId>
+            <artifactId>ssnbt</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -401,7 +407,7 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <artifactSet>
                                 <includes>
-                                    <include>org.spout:simplenbt:jar:*</include>
+                                    <include>de.Keyle:ssnbt:jar:*</include>
                                     <include>org.yaml:snakeyaml:*</include>
                                     <include>com.googlecode.json-simple:json-simple:*</include>
                                     <include>org.mcstats.bukkit:metrics:*</include>
@@ -414,7 +420,7 @@
                                     <shadedPattern>de.Keyle.MyPet.util</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.spout.nbt</pattern>
+                                    <pattern>de.Keyle.nbt</pattern>
                                     <shadedPattern>de.Keyle.MyPet.util.configuration.nbt</shadedPattern>
                                 </relocation>
                                 <relocation>
@@ -424,10 +430,8 @@
                             </relocations>
                             <filters>
                                 <filter>
-                                    <artifact>org.spout:simplenbt</artifact>
+                                    <artifact>de.Keyle:ssnbt</artifact>
                                     <excludes>
-                                        <exclude>org/spout/nbt/gui/*.class</exclude>
-                                        <exclude>org/spout/nbt/util/*.class</exclude>
                                         <exclude>LICENSE.txt</exclude>
                                     </excludes>
                                 </filter>

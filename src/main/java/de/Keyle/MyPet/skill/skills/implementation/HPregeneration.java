@@ -33,9 +33,9 @@ import net.minecraft.server.v1_6_R1.EntityLiving;
 import net.minecraft.server.v1_6_R1.PotionBrewer;
 import org.bukkit.Bukkit;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
+import de.Keyle.nbt.DoubleTag;
+import de.Keyle.nbt.IntTag;
+import de.Keyle.nbt.StringTag;
 
 public class HPregeneration extends HPregenerationInfo implements ISkillInstance, IScheduler
 {

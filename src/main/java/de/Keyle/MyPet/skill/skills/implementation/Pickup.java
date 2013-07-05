@@ -39,7 +39,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.spout.nbt.*;
+import de.Keyle.nbt.*;
 
 public class Pickup extends PickupInfo implements ISkillInstance, IScheduler, ISkillStorage, ISkillActive
 {

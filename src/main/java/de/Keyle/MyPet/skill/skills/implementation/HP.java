@@ -26,9 +26,9 @@ import de.Keyle.MyPet.skill.skills.info.HPInfo;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
 import de.Keyle.MyPet.util.MyPetBukkitUtil;
 import de.Keyle.MyPet.util.locale.MyPetLocales;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
+import de.Keyle.nbt.DoubleTag;
+import de.Keyle.nbt.IntTag;
+import de.Keyle.nbt.StringTag;
 
 public class HP extends HPInfo implements ISkillInstance
 {

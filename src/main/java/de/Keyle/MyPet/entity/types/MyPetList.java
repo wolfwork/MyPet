@@ -29,7 +29,7 @@ import de.Keyle.MyPet.util.MyPetConfiguration;
 import de.Keyle.MyPet.util.MyPetPlayer;
 import de.Keyle.MyPet.util.logger.DebugLogger;
 import org.bukkit.entity.Player;
-import org.spout.nbt.CompoundTag;
+import de.Keyle.nbt.CompoundTag;
 
 import java.util.*;
 

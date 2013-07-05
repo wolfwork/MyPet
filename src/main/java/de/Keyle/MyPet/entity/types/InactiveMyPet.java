@@ -24,11 +24,10 @@ import de.Keyle.MyPet.skill.ISkillStorage;
 import de.Keyle.MyPet.skill.MyPetSkillTree;
 import de.Keyle.MyPet.skill.MyPetSkillTreeMobType;
 import de.Keyle.MyPet.skill.skills.implementation.ISkillInstance;
-import de.Keyle.MyPet.util.MyPetConfiguration;
 import de.Keyle.MyPet.util.MyPetMySQL;
 import de.Keyle.MyPet.util.MyPetPlayer;
 import de.Keyle.MyPet.util.NBTStorage;
-import org.spout.nbt.*;
+import de.Keyle.nbt.*;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -47,8 +46,8 @@ public class InactiveMyPet implements IMyPet, NBTStorage, Serializable
     private MyPetType petType = MyPetType.Wolf;
     private MyPetSkillTree skillTree = null;
 
-    private transient CompoundTag NBTSkills;
-    private transient CompoundTag NBTextendetInfo;
+    private CompoundTag NBTSkills;
+    private CompoundTag NBTextendetInfo;
 
     public InactiveMyPet(MyPetPlayer petOwner)
     {

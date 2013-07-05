@@ -27,8 +27,8 @@ import de.Keyle.MyPet.entity.types.MyPetType;
 import de.Keyle.MyPet.util.MyPetPlayer;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundTag;
+import de.Keyle.nbt.ByteTag;
+import de.Keyle.nbt.CompoundTag;
 
 import static de.Keyle.MyPet.entity.types.MyPet.LeashFlag.Tamed;
 import static org.bukkit.Material.RAW_BEEF;

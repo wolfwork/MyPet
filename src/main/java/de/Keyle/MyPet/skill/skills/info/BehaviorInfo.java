@@ -26,7 +26,7 @@ import de.Keyle.MyPet.skill.SkillProperties;
 import de.Keyle.MyPet.skill.SkillProperties.NBTdatatypes;
 import de.Keyle.MyPet.skill.skills.implementation.Behavior.BehaviorState;
 import de.Keyle.MyPet.util.MyPetUtil;
-import org.spout.nbt.ByteTag;
+import de.Keyle.nbt.ByteTag;
 
 import java.io.InputStream;
 import java.io.Serializable;

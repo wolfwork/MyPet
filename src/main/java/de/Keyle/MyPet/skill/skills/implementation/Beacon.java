@@ -39,7 +39,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.craftbukkit.v1_6_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_6_R1.event.CraftEventFactory;
 import org.bukkit.entity.Player;
-import org.spout.nbt.*;
+import de.Keyle.nbt.*;
 
 import java.util.HashMap;
 import java.util.Map;

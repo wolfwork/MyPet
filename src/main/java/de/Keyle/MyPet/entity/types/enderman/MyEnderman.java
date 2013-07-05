@@ -26,10 +26,10 @@ import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
 import de.Keyle.MyPet.util.MyPetPlayer;
 import org.bukkit.ChatColor;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.ShortTag;
-import org.spout.nbt.TagType;
+import de.Keyle.nbt.CompoundTag;
+import de.Keyle.nbt.IntTag;
+import de.Keyle.nbt.ShortTag;
+import de.Keyle.nbt.TagType;
 
 import static org.bukkit.Material.SOUL_SAND;
 

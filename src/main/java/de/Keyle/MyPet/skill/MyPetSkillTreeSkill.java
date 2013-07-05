@@ -21,14 +21,14 @@
 package de.Keyle.MyPet.skill;
 
 import de.Keyle.MyPet.skill.SkillProperties.NBTdatatypes;
-import org.spout.nbt.*;
+import de.Keyle.nbt.*;
 
 import java.io.Serializable;
 
 public abstract class MyPetSkillTreeSkill implements Serializable
 {
     private boolean addedByInheritance = false;
-    private transient CompoundTag propertiesCompound;
+    private  CompoundTag propertiesCompound;
 
     public MyPetSkillTreeSkill(boolean addedByInheritance)
     {

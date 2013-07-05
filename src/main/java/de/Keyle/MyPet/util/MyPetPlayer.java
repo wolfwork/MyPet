@@ -27,13 +27,14 @@ import de.Keyle.MyPet.entity.types.MyPet.PetState;
 import de.Keyle.MyPet.entity.types.MyPetList;
 import de.Keyle.MyPet.util.locale.MyPetLocales;
 import de.Keyle.MyPet.util.logger.DebugLogger;
+import de.Keyle.nbt.*;
 import net.minecraft.server.v1_6_R1.EntityHuman;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Player;
-import org.spout.nbt.*;
+
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -51,7 +52,7 @@ public class MyPetPlayer implements IScheduler, NBTStorage, Serializable
     private boolean autoRespawn = false;
     private int autoRespawnMin = 1;
     private Map<String, UUID> petWorlds = new HashMap<String, UUID>();
-    private transient CompoundTag extendedInfo = new CompoundTag("ExtendedInfo", new CompoundMap());
+    private CompoundTag extendedInfo = new CompoundTag("ExtendedInfo", new CompoundMap());
 
     private MyPetPlayer(String playerName)
     {

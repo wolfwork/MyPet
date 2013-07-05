@@ -20,7 +20,8 @@
 
 package de.Keyle.MyPet.util;
 
-import org.spout.nbt.CompoundTag;
+
+import de.Keyle.nbt.CompoundTag;
 
 public interface NBTStorage
 {

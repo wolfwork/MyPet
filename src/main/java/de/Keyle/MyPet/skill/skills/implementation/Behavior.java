@@ -31,10 +31,10 @@ import de.Keyle.MyPet.util.MyPetBukkitUtil;
 import de.Keyle.MyPet.util.MyPetPermissions;
 import de.Keyle.MyPet.util.locale.MyPetLocales;
 import org.bukkit.ChatColor;
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundMap;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.StringTag;
+import de.Keyle.nbt.ByteTag;
+import de.Keyle.nbt.CompoundMap;
+import de.Keyle.nbt.CompoundTag;
+import de.Keyle.nbt.StringTag;
 
 public class Behavior extends BehaviorInfo implements ISkillInstance, IScheduler, ISkillStorage, ISkillActive
 {

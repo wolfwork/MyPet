@@ -27,9 +27,9 @@ import org.bukkit.craftbukkit.v1_6_R1.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v1_6_R1.inventory.CraftItemStack;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.ListTag;
+import de.Keyle.nbt.ByteTag;
+import de.Keyle.nbt.CompoundTag;
+import de.Keyle.nbt.ListTag;
 
 import java.util.ArrayList;
 import java.util.List;
