@@ -613,7 +613,7 @@ public class MyPetPlugin extends JavaPlugin implements IScheduler
         {
             for (MyPet myPet : MyPetList.getAllActiveMyPets())
             {
-                MyPetList.setMyPetInactive(myPet.getOwner()).save_SQL();
+                MyPetList.getInactiveMyPetFromMyPet(myPet).save_SQL();
                 petCount++;
             }
             for (InactiveMyPet inactiveMyPet : MyPetList.getAllInactiveMyPets())

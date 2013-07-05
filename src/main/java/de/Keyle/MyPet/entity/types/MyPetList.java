@@ -169,7 +169,7 @@ public class MyPetList
         return MyPetPlayer.isMyPetPlayer(name) && mInctivePets.containsKey(MyPetPlayer.getMyPetPlayer(name));
     }
 
-    private static InactiveMyPet getInactiveMyPetFromMyPet(MyPet activeMyPet)
+    public static InactiveMyPet getInactiveMyPetFromMyPet(MyPet activeMyPet)
     {
         InactiveMyPet inactiveMyPet = new InactiveMyPet(activeMyPet.getOwner());
         inactiveMyPet.setUUID(activeMyPet.getUUID());
