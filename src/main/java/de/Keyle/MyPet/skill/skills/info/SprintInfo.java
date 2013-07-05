@@ -23,8 +23,10 @@ package de.Keyle.MyPet.skill.skills.info;
 import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
 import de.Keyle.MyPet.skill.SkillName;
 
+import java.io.Serializable;
+
 @SkillName("Sprint")
-public class SprintInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class SprintInfo extends MyPetSkillTreeSkill implements ISkillInfo, Serializable
 {
     public SprintInfo(boolean addedByInheritance)
     {

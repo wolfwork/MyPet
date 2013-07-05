@@ -24,14 +24,17 @@ import de.Keyle.MyPet.skill.ISkillStorage;
 import de.Keyle.MyPet.skill.MyPetSkillTree;
 import de.Keyle.MyPet.skill.MyPetSkillTreeMobType;
 import de.Keyle.MyPet.skill.skills.implementation.ISkillInstance;
+import de.Keyle.MyPet.util.MyPetConfiguration;
+import de.Keyle.MyPet.util.MyPetMySQL;
 import de.Keyle.MyPet.util.MyPetPlayer;
 import de.Keyle.MyPet.util.NBTStorage;
 import org.spout.nbt.*;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.UUID;
 
-public class InactiveMyPet implements IMyPet, NBTStorage
+public class InactiveMyPet implements IMyPet, NBTStorage, Serializable
 {
     private UUID uuid = null;
     private String petName = "";
@@ -44,8 +47,8 @@ public class InactiveMyPet implements IMyPet, NBTStorage
     private MyPetType petType = MyPetType.Wolf;
     private MyPetSkillTree skillTree = null;
 
-    private CompoundTag NBTSkills;
-    private CompoundTag NBTextendetInfo;
+    private transient CompoundTag NBTSkills;
+    private transient CompoundTag NBTextendetInfo;
 
     public InactiveMyPet(MyPetPlayer petOwner)
     {
@@ -301,6 +304,16 @@ public class InactiveMyPet implements IMyPet, NBTStorage
         setInfo((CompoundTag) myPetNBT.getValue().get("Info"));
 
     }
+
+    public void save_SQL()
+    {
+        try {
+            MyPetMySQL.writeInactiveMyPet(petOwner.getName(), this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     @Override
     public String toString()

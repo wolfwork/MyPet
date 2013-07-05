@@ -140,6 +140,11 @@ public class MyPetPlugin extends JavaPlugin implements IScheduler
         MyPetConfiguration.setDefault();
         MyPetConfiguration.loadConfiguration();
 
+        if(MyPetConfiguration.USE_MYSQL)
+        {
+            MyPetMySQL.setupMySQL();
+        }
+
         DebugLogger.setup(MyPetConfiguration.USE_DEBUG_LOGGER);
 
         String minecraftVersion = ((CraftServer) getServer()).getHandle().getServer().getVersion();
@@ -535,21 +540,44 @@ public class MyPetPlugin extends JavaPlugin implements IScheduler
         }
         DebugLogger.info("-----------------------------------------");
 
-        DebugLogger.info("loading Pets: -----------------------------");
-        for (int i = 0 ; i < petList.getValue().size() ; i++)
+        if(!MyPetConfiguration.USE_MYSQL)
         {
-            CompoundTag myPetNBT = (CompoundTag) petList.getValue().get(i);
-            String petOwner = ((StringTag) myPetNBT.getValue().get("Owner")).getValue();
-            InactiveMyPet inactiveMyPet = new InactiveMyPet(MyPetPlayer.getMyPetPlayer(petOwner));
-            inactiveMyPet.load(myPetNBT);
+            DebugLogger.info("loading Pets: -----------------------------");
+            for (int i = 0 ; i < petList.getValue().size() ; i++)
+            {
+                CompoundTag myPetNBT = (CompoundTag) petList.getValue().get(i);
+                String petOwner = ((StringTag) myPetNBT.getValue().get("Owner")).getValue();
+                InactiveMyPet inactiveMyPet = new InactiveMyPet(MyPetPlayer.getMyPetPlayer(petOwner));
+                inactiveMyPet.load(myPetNBT);
 
-            MyPetList.addInactiveMyPet(inactiveMyPet);
+                MyPetList.addInactiveMyPet(inactiveMyPet);
 
-            DebugLogger.info("   " + inactiveMyPet.toString());
+                DebugLogger.info("   " + inactiveMyPet.toString());
 
-            petCount++;
+                petCount++;
+            }
+            MyPetLogger.write("" + ChatColor.YELLOW + petCount + ChatColor.RESET + " pet(s) loaded");
         }
-        MyPetLogger.write("" + ChatColor.YELLOW + petCount + ChatColor.RESET + " pet(s) loaded");
+        else
+        {
+            try {
+                DebugLogger.info("loading Pets(SQL): -----------------------------");
+                List<InactiveMyPet> tmpList = MyPetMySQL.readAllInactiveMyPets();
+
+                for (InactiveMyPet aTmpList : tmpList) {
+
+                    MyPetList.addInactiveMyPet(aTmpList);
+
+                    DebugLogger.info("   " + aTmpList.toString());
+
+                    petCount++;
+                }
+                MyPetLogger.write("" + ChatColor.YELLOW + petCount + ChatColor.RESET + " pet(s) loaded");
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return petCount;
     }
 
@@ -557,27 +585,43 @@ public class MyPetPlugin extends JavaPlugin implements IScheduler
     {
         autoSaveTimer = MyPetConfiguration.AUTOSAVE_TIME;
         int petCount = 0;
-        NBT_Configuration nbtConfiguration = new NBT_Configuration(NBTPetFile);
-        List<CompoundTag> petList = new ArrayList<CompoundTag>();
+        if(!MyPetConfiguration.USE_MYSQL)
+        {
+            NBT_Configuration nbtConfiguration = new NBT_Configuration(NBTPetFile);
+            List<CompoundTag> petList = new ArrayList<CompoundTag>();
 
-        for (MyPet myPet : MyPetList.getAllActiveMyPets())
-        {
-            CompoundTag petNBT = myPet.save();
-            petList.add(petNBT);
-            petCount++;
+            for (MyPet myPet : MyPetList.getAllActiveMyPets())
+            {
+                CompoundTag petNBT = myPet.save();
+                petList.add(petNBT);
+                petCount++;
+            }
+            for (InactiveMyPet inactiveMyPet : MyPetList.getAllInactiveMyPets())
+            {
+                CompoundTag petNBT = inactiveMyPet.save();
+                petList.add(petNBT);
+                petCount++;
+            }
+            nbtConfiguration.getNBTCompound().getValue().put("Version", new StringTag("Version", MyPetVersion.getMyPetVersion()));
+            nbtConfiguration.getNBTCompound().getValue().put("Build", new StringTag("Build", MyPetVersion.getMyPetBuild()));
+            nbtConfiguration.getNBTCompound().getValue().put("CleanShutdown", new ByteTag("CleanShutdown", shutdown));
+            nbtConfiguration.getNBTCompound().getValue().put("Pets", new ListTag<CompoundTag>("Pets", CompoundTag.class, petList));
+            nbtConfiguration.getNBTCompound().getValue().put("Players", savePlayers());
+            nbtConfiguration.save();
         }
-        for (InactiveMyPet inactiveMyPet : MyPetList.getAllInactiveMyPets())
+        else
         {
-            CompoundTag petNBT = inactiveMyPet.save();
-            petList.add(petNBT);
-            petCount++;
+            for (MyPet myPet : MyPetList.getAllActiveMyPets())
+            {
+                MyPetList.setMyPetInactive(myPet.getOwner()).save_SQL();
+                petCount++;
+            }
+            for (InactiveMyPet inactiveMyPet : MyPetList.getAllInactiveMyPets())
+            {
+                inactiveMyPet.save_SQL();
+                petCount++;
+            }
         }
-        nbtConfiguration.getNBTCompound().getValue().put("Version", new StringTag("Version", MyPetVersion.getMyPetVersion()));
-        nbtConfiguration.getNBTCompound().getValue().put("Build", new StringTag("Build", MyPetVersion.getMyPetBuild()));
-        nbtConfiguration.getNBTCompound().getValue().put("CleanShutdown", new ByteTag("CleanShutdown", shutdown));
-        nbtConfiguration.getNBTCompound().getValue().put("Pets", new ListTag<CompoundTag>("Pets", CompoundTag.class, petList));
-        nbtConfiguration.getNBTCompound().getValue().put("Players", savePlayers());
-        nbtConfiguration.save();
         return petCount;
     }
 

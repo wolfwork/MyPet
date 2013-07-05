@@ -30,13 +30,14 @@ import org.spout.nbt.IntTag;
 import org.spout.nbt.StringTag;
 
 import java.io.InputStream;
+import java.io.Serializable;
 
 @SkillName("Lightning")
 @SkillProperties(
         parameterNames = {"chance", "addset_chance", "damage_double", "addset_damage"},
         parameterTypes = {NBTdatatypes.Int, NBTdatatypes.String, NBTdatatypes.Double, NBTdatatypes.String},
         parameterDefaultValues = {"5", "add", "3.0", "add"})
-public class LightningInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class LightningInfo extends MyPetSkillTreeSkill implements ISkillInfo, Serializable
 {
     private static String defaultHTML = null;
 

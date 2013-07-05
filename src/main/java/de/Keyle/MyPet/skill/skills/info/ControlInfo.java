@@ -23,8 +23,10 @@ package de.Keyle.MyPet.skill.skills.info;
 import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
 import de.Keyle.MyPet.skill.SkillName;
 
+import java.io.Serializable;
+
 @SkillName("Control")
-public class ControlInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class ControlInfo extends MyPetSkillTreeSkill implements ISkillInfo , Serializable
 {
     public ControlInfo(boolean addedByInheritance)
     {

@@ -23,11 +23,12 @@ package de.Keyle.MyPet.skill;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
 import de.Keyle.MyPet.util.logger.MyPetLogger;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MyPetSkillTreeLevel
+public class MyPetSkillTreeLevel implements Serializable
 {
     int level;
     List<ISkillInfo> skillList = new ArrayList<ISkillInfo>();

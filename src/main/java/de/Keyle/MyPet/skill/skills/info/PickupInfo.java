@@ -29,6 +29,7 @@ import org.spout.nbt.DoubleTag;
 import org.spout.nbt.StringTag;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Locale;
 
 @SkillName("Pickup")
@@ -36,7 +37,7 @@ import java.util.Locale;
         parameterNames = {"range", "addset_range"},
         parameterTypes = {NBTdatatypes.Double, NBTdatatypes.String},
         parameterDefaultValues = {"1.0", "add"})
-public class PickupInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class PickupInfo extends MyPetSkillTreeSkill implements ISkillInfo, Serializable
 {
     private static String defaultHTML = null;
 

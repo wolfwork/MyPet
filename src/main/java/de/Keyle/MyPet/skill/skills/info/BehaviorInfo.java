@@ -29,6 +29,7 @@ import de.Keyle.MyPet.util.MyPetUtil;
 import org.spout.nbt.ByteTag;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ import java.util.Map;
         parameterNames = {"friend", "aggro", "farm", "raid", "duel"},
         parameterTypes = {NBTdatatypes.Boolean, NBTdatatypes.Boolean, NBTdatatypes.Boolean, NBTdatatypes.Boolean, NBTdatatypes.Boolean},
         parameterDefaultValues = {"true", "true", "true", "true", "true"})
-public class BehaviorInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class BehaviorInfo extends MyPetSkillTreeSkill implements ISkillInfo, Serializable
 {
     private static String defaultHTML = null;
 

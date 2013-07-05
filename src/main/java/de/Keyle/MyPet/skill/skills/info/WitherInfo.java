@@ -29,13 +29,14 @@ import org.spout.nbt.IntTag;
 import org.spout.nbt.StringTag;
 
 import java.io.InputStream;
+import java.io.Serializable;
 
 @SkillName("Wither")
 @SkillProperties(
         parameterNames = {"chance", "duration", "addset_chance", "addset_duration"},
         parameterTypes = {NBTdatatypes.Int, NBTdatatypes.Int, NBTdatatypes.String, NBTdatatypes.String},
         parameterDefaultValues = {"5", "3", "add", "add"})
-public class WitherInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class WitherInfo extends MyPetSkillTreeSkill implements ISkillInfo, Serializable
 {
     private static String defaultHTML = null;
 

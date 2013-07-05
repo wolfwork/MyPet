@@ -23,12 +23,13 @@ package de.Keyle.MyPet.skill;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
 import de.Keyle.MyPet.util.logger.MyPetLogger;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class MyPetSkillTree
+public class MyPetSkillTree implements Serializable
 {
     private String skillTreeName;
     protected String inheritance = null;

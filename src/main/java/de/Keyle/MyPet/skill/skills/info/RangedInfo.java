@@ -30,13 +30,14 @@ import org.spout.nbt.IntTag;
 import org.spout.nbt.StringTag;
 
 import java.io.InputStream;
+import java.io.Serializable;
 
 @SkillName("Ranged")
 @SkillProperties(
         parameterNames = {"damage_double", "addset_damage", "projectile"},
         parameterTypes = {NBTdatatypes.Double, NBTdatatypes.String, NBTdatatypes.String},
         parameterDefaultValues = {"1.0", "add", "Arrow"})
-public class RangedInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class RangedInfo extends MyPetSkillTreeSkill implements ISkillInfo, Serializable
 {
     private static String defaultHTML = null;
 

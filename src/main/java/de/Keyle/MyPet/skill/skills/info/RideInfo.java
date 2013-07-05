@@ -29,6 +29,7 @@ import org.spout.nbt.FloatTag;
 import org.spout.nbt.StringTag;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Locale;
 
 @SkillName("Ride")
@@ -36,7 +37,7 @@ import java.util.Locale;
         parameterNames = {"speed", "addset_speed"},
         parameterTypes = {NBTdatatypes.Float, NBTdatatypes.String},
         parameterDefaultValues = {"0.01", "add"})
-public class RideInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class RideInfo extends MyPetSkillTreeSkill implements ISkillInfo, Serializable
 {
     private static String defaultHTML = null;
 

@@ -30,13 +30,14 @@ import org.spout.nbt.IntTag;
 import org.spout.nbt.StringTag;
 
 import java.io.InputStream;
+import java.io.Serializable;
 
 @SkillName("HPregeneration")
 @SkillProperties(
         parameterNames = {"hp_double", "time", "addset_hp", "addset_time"},
         parameterTypes = {NBTdatatypes.Double, NBTdatatypes.Int, NBTdatatypes.String, NBTdatatypes.String},
         parameterDefaultValues = {"1.0", "60", "add", "add"})
-public class HPregenerationInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class HPregenerationInfo extends MyPetSkillTreeSkill implements ISkillInfo, Serializable
 {
     private static String defaultHTML = null;
 

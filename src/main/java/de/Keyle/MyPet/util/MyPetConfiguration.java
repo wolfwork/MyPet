@@ -57,6 +57,9 @@ public class MyPetConfiguration
     public static Material LEASH_ITEM = Material.LEASH;
     public static String PET_INFO_OVERHEAD_PREFIX = "" + ChatColor.AQUA;
     public static String PET_INFO_OVERHEAD_SUFFIX = "";
+    public static String MYSQL_USER = "";
+    public static String MYSQL_PASSWORD = "";
+    public static String MYSQL_DATABASE = "localhost/MyPet";
     public static int PASSIVE_PERCENT_PER_MONSTER = 25;
     public static int RESPAWN_TIME_FACTOR = 5;
     public static int RESPAWN_TIME_PLAYER_FACTOR = 5;
@@ -89,6 +92,8 @@ public class MyPetConfiguration
     public static boolean STORE_PETS_ON_PET_LEASH = true;
     public static boolean STORE_PETS_ON_PET_RELEASE = true;
     public static boolean DONATOR_EFFECT = true;
+    public static boolean USE_MYSQL = false;
+
 
     public static void setDefault()
     {
@@ -207,6 +212,11 @@ public class MyPetConfiguration
         config.addDefault("MyPet.Info.OverHead.Prefix", "%aqua%");
         config.addDefault("MyPet.Info.OverHead.Suffix", "");
 
+        config.addDefault("MyPet.MySQL.Use", false);
+        config.addDefault("MyPet.MySQL.User", "");
+        config.addDefault("MyPet.MySQL.Password", "");
+        config.addDefault("MyPet.MySQL.Database", "localhost/MyPet");
+
         for (MyPetType petType : MyPetType.values())
         {
             MyPetInfo pi = petType.getMyPetClass().getAnnotation(MyPetInfo.class);
@@ -296,6 +306,11 @@ public class MyPetConfiguration
         PET_INFO_OVERHEAD_NAME = config.getBoolean("MyPet.Info.OverHead.Name", true);
         PET_INFO_OVERHEAD_PREFIX = MyPetBukkitUtil.setColors(config.getString("MyPet.Info.OverHead.Prefix", "%aqua%"));
         PET_INFO_OVERHEAD_SUFFIX = MyPetBukkitUtil.setColors(config.getString("MyPet.Info.OverHead.Suffix", ""));
+
+        USE_MYSQL = config.getBoolean("MyPet.MySQL.Use", false);
+        MYSQL_USER = config.getString("MyPet.MySQL.User", "");
+        MYSQL_PASSWORD = config.getString("MyPet.MySQL.Password", "");
+        MYSQL_DATABASE = config.getString("MyPet.MySQL.Database", "localhost/MyPet");
 
         MyPetPermissions.USE_EXTENDET_PERMISSIONS = config.getBoolean("MyPet.Permissions.UseExtendedPermissions", false);
         MyPetPermissions.ENABLED = config.getBoolean("MyPet.Permissions.Enabled", true);

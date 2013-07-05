@@ -29,12 +29,13 @@ import org.spout.nbt.ByteTag;
 import org.spout.nbt.IntTag;
 
 import java.io.InputStream;
+import java.io.Serializable;
 
 @SkillName("Inventory")
 @SkillProperties(parameterNames = {"add", "drop"},
         parameterTypes = {NBTdatatypes.Int, NBTdatatypes.Boolean},
         parameterDefaultValues = {"1", "false"})
-public class InventoryInfo extends MyPetSkillTreeSkill implements ISkillInfo
+public class InventoryInfo extends MyPetSkillTreeSkill implements ISkillInfo, Serializable
 {
     private static String defaultHTML = null;
 
