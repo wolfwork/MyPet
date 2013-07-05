@@ -533,12 +533,28 @@ public class MyPetPlugin extends JavaPlugin implements IScheduler
             DebugLogger.info("Clean shutdown: " + ((ByteTag) nbtConfiguration.getNBTCompound().getValue().get("CleanShutdown")).getBooleanValue());
         }
 
-        DebugLogger.info("Loading players -------------------------");
-        if (nbtConfiguration.getNBTCompound().getValue().containsKey("Players"))
+        if(!MyPetConfiguration.USE_MYSQL)
         {
-            DebugLogger.info(loadPlayers(nbtConfiguration) + " PetPlayer(s) loaded");
+            DebugLogger.info("Loading players -------------------------");
+            if (nbtConfiguration.getNBTCompound().getValue().containsKey("Players"))
+            {
+                DebugLogger.info(loadPlayers(nbtConfiguration) + " PetPlayer(s) loaded");
+            }
+            DebugLogger.info("-----------------------------------------");
         }
-        DebugLogger.info("-----------------------------------------");
+        else
+        {
+            DebugLogger.info("Loading players(SQL) -------------------------");
+            if (nbtConfiguration.getNBTCompound().getValue().containsKey("Players"))
+            {
+                try {
+                    DebugLogger.info(MyPetMySQL.readAllMyPetPlayers() + " PetPlayer(s) loaded");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            DebugLogger.info("-----------------------------------------");
+        }
 
         if(!MyPetConfiguration.USE_MYSQL)
         {
@@ -620,6 +636,12 @@ public class MyPetPlugin extends JavaPlugin implements IScheduler
             {
                 inactiveMyPet.save_SQL();
                 petCount++;
+            }
+
+            try {
+                MyPetMySQL.writeAllMyPetPlayers();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         return petCount;

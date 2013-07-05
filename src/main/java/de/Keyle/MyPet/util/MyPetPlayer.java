@@ -65,6 +65,11 @@ public class MyPetPlayer implements IScheduler, NBTStorage, Serializable
         return playerName;
     }
 
+    public static void insertMyPetPlayer(MyPetPlayer myPetPlayer)
+    {
+        playerList.add(myPetPlayer);
+    }
+
     public boolean hasCustomData()
     {
         if (autoRespawn || autoRespawnMin != 1)

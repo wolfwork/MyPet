@@ -112,6 +112,9 @@ public class MyPetPlayerListener implements Listener
                 UUID groupMyPetUUID = joinedPlayer.getMyPetForWorldGroup(joinGroup.getName());
                 for (InactiveMyPet inactiveMyPet : joinedPlayer.getInactiveMyPets())
                 {
+                    System.out.println("I UUID " + inactiveMyPet.getUUID());
+                    System.out.println("G UUID " + groupMyPetUUID);
+
                     if (inactiveMyPet.getUUID().equals(groupMyPetUUID))
                     {
                         MyPetList.setMyPetActive(inactiveMyPet);
