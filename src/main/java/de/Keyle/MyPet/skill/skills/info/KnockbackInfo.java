@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -22,38 +22,33 @@ package de.Keyle.MyPet.skill.skills.info;
 
 import de.Keyle.MyPet.gui.skilltreecreator.skills.Knockback;
 import de.Keyle.MyPet.gui.skilltreecreator.skills.SkillPropertiesPanel;
-import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
-import de.Keyle.MyPet.skill.SkillName;
-import de.Keyle.MyPet.skill.SkillProperties;
-import de.Keyle.MyPet.skill.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skills.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillProperties;
+import de.Keyle.MyPet.skill.skills.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeSkill;
 
-@SkillName("Knockback")
+@SkillName(value = "Knockback", translationNode = "Name.Skill.Knockback")
 @SkillProperties(
         parameterNames = {"chance", "addset_chance"},
         parameterTypes = {NBTdatatypes.Int, NBTdatatypes.String},
         parameterDefaultValues = {"5", "add"})
-public class KnockbackInfo extends MyPetSkillTreeSkill implements ISkillInfo
-{
+public class KnockbackInfo extends SkillTreeSkill implements ISkillInfo {
     private SkillPropertiesPanel panel = null;
 
     protected int chance = 0;
 
-    public KnockbackInfo(boolean addedByInheritance)
-    {
+    public KnockbackInfo(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public SkillPropertiesPanel getGuiPanel()
-    {
-        if (panel == null)
-        {
+    public SkillPropertiesPanel getGuiPanel() {
+        if (panel == null) {
             panel = new Knockback(this.getProperties());
         }
         return panel;
     }
 
-    public ISkillInfo cloneSkill()
-    {
+    public ISkillInfo cloneSkill() {
         KnockbackInfo newSkill = new KnockbackInfo(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,40 +21,34 @@
 package de.Keyle.MyPet.entity.ai.navigation;
 
 import de.Keyle.MyPet.entity.types.EntityMyPet;
-import net.minecraft.server.v1_6_R1.EntityLiving;
-import net.minecraft.server.v1_6_R1.GenericAttributes;
-import net.minecraft.server.v1_6_R1.Navigation;
-import org.bukkit.craftbukkit.v1_6_R1.entity.CraftLivingEntity;
+import net.minecraft.server.v1_7_R4.EntityLiving;
+import net.minecraft.server.v1_7_R4.GenericAttributes;
+import net.minecraft.server.v1_7_R4.Navigation;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 
-public class VanillaNavigation extends AbstractNavigation
-{
+public class VanillaNavigation extends AbstractNavigation {
     Navigation nav;
 
-    public VanillaNavigation(EntityMyPet entityMyPet)
-    {
+    public VanillaNavigation(EntityMyPet entityMyPet) {
         super(entityMyPet);
         nav = entityMyPet.getNavigation();
     }
 
-    public VanillaNavigation(EntityMyPet entityMyPet, NavigationParameters parameters)
-    {
+    public VanillaNavigation(EntityMyPet entityMyPet, NavigationParameters parameters) {
         super(entityMyPet, parameters);
         nav = entityMyPet.getNavigation();
     }
 
     @Override
-    public void stop()
-    {
+    public void stop() {
         nav.h();
     }
 
     @Override
-    public boolean navigateTo(double x, double y, double z)
-    {
+    public boolean navigateTo(double x, double y, double z) {
         applyNavigationParameters();
-        if (this.nav.a(x, y, z, 1.D))
-        {
+        if (this.nav.a(x, y, z, 1.D)) {
             applyNavigationParameters();
             return true;
         }
@@ -62,16 +56,13 @@ public class VanillaNavigation extends AbstractNavigation
     }
 
     @Override
-    public boolean navigateTo(LivingEntity entity)
-    {
+    public boolean navigateTo(LivingEntity entity) {
         return navigateTo(((CraftLivingEntity) entity).getHandle());
     }
 
     @Override
-    public boolean navigateTo(EntityLiving entity)
-    {
-        if (this.nav.a(entity, 1.D))
-        {
+    public boolean navigateTo(EntityLiving entity) {
+        if (this.nav.a(entity, 1.D)) {
             applyNavigationParameters();
             return true;
         }
@@ -79,14 +70,12 @@ public class VanillaNavigation extends AbstractNavigation
     }
 
     @Override
-    public void tick()
-    {
+    public void tick() {
         nav.f();
     }
 
-    public void applyNavigationParameters()
-    {
+    public void applyNavigationParameters() {
         this.nav.a(parameters.avoidWater());
-        this.entityMyPet.a(GenericAttributes.d).a(parameters.speed() + parameters.speedModifier());
+        this.entityMyPet.getAttributeInstance(GenericAttributes.d).setValue(parameters.speed() + parameters.speedModifier());
     }
 }

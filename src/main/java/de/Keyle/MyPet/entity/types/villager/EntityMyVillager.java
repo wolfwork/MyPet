@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,129 +23,77 @@ package de.Keyle.MyPet.entity.types.villager;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.EntityHuman;
-import net.minecraft.server.v1_6_R1.ItemStack;
-import net.minecraft.server.v1_6_R1.World;
-import org.bukkit.Material;
+import net.minecraft.server.v1_7_R4.EntityHuman;
+import net.minecraft.server.v1_7_R4.ItemStack;
+import net.minecraft.server.v1_7_R4.World;
 
-@EntitySize(width = 0.6F, height = 0.8F)
-public class EntityMyVillager extends EntityMyPet
-{
-    public static Material GROW_UP_ITEM = Material.POTION;
-
-    public EntityMyVillager(World world, MyPet myPet)
-    {
+@EntitySize(width = 0.6F, height = 1.9F)
+public class EntityMyVillager extends EntityMyPet {
+    public EntityMyVillager(World world, MyPet myPet) {
         super(world, myPet);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
-        if (myPet != null)
-        {
-            super.setMyPet(myPet);
-
-            this.setProfession(((MyVillager) myPet).getProfession());
-            this.setBaby(((MyVillager) myPet).isBaby());
-        }
+    protected String getDeathSound() {
+        return "mob.villager.defaultdeath";
     }
 
-    public int getProfession()
-    {
-        return ((MyVillager) myPet).profession;
+    protected String getHurtSound() {
+        return "mob.villager.defaulthurt";
     }
 
-    public void setProfession(int value)
-    {
+    protected String getLivingSound() {
+        return "mob.villager.default";
+    }
+
+    public void setProfession(int value) {
         this.datawatcher.watch(16, value);
-        ((MyVillager) myPet).profession = value;
     }
 
-    public boolean isBaby()
-    {
-        return ((MyVillager) myPet).isBaby;
-    }
-
-    @SuppressWarnings("boxing")
-    public void setBaby(boolean flag)
-    {
-        if (flag)
-        {
-            this.datawatcher.watch(12, Integer.valueOf(Integer.MIN_VALUE));
+    public boolean handlePlayerInteraction(EntityHuman entityhuman) {
+        if (super.handlePlayerInteraction(entityhuman)) {
+            return true;
         }
-        else
-        {
-            this.datawatcher.watch(12, new Integer(0));
-        }
-        ((MyVillager) myPet).isBaby = flag;
-    }
 
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
+        ItemStack itemStack = entityhuman.inventory.getItemInHand();
 
-    protected void a()
-    {
-        super.a();
-        this.datawatcher.a(12, new Integer(0)); // age
-        this.datawatcher.a(16, new Integer(0)); // profession
-    }
-
-    public boolean a(EntityHuman entityhuman)
-    {
-        try
-        {
-            if (super.a(entityhuman))
-            {
-                return true;
-            }
-
-            ItemStack itemStack = entityhuman.inventory.getItemInHand();
-
-            if (getOwner().equals(entityhuman) && itemStack != null)
-            {
-                if (itemStack.id == GROW_UP_ITEM.getId())
-                {
-                    if (isBaby())
-                    {
-                        if (!entityhuman.abilities.canInstantlyBuild)
-                        {
-                            if (--itemStack.count <= 0)
-                            {
-                                entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
-                            }
-                        }
-                        this.setBaby(false);
-                        return true;
+        if (getOwner().equals(entityhuman) && itemStack != null && canUseItem()) {
+            if (MyVillager.GROW_UP_ITEM.compare(itemStack) && getMyPet().isBaby() && getOwner().getPlayer().isSneaking()) {
+                if (!entityhuman.abilities.canInstantlyBuild) {
+                    if (--itemStack.count <= 0) {
+                        entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
                     }
                 }
+                getMyPet().setBaby(false);
+                return true;
             }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
         }
         return false;
     }
 
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
-    protected String aK()
-    {
-        return "mob.villager.defaulthurt";
+    protected void initDatawatcher() {
+        super.initDatawatcher();
+        this.datawatcher.a(12, new Integer(0)); // age
+        this.datawatcher.a(16, new Integer(0)); // profession
     }
 
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    protected String aL()
-    {
-        return "mob.villager.defaultdeath";
+    public void setBaby(boolean flag) {
+        if (flag) {
+            this.datawatcher.watch(12, Integer.valueOf(Integer.MIN_VALUE));
+        } else {
+            this.datawatcher.watch(12, new Integer(0));
+        }
     }
 
-    /**
-     * Returns the default sound of the MyPet
-     */
-    protected String r()
-    {
-        return !playIdleSound() ? "" : "mob.villager.default";
+    public void setMyPet(MyPet myPet) {
+        if (myPet != null) {
+            super.setMyPet(myPet);
+
+            this.setProfession(getMyPet().getProfession());
+            this.setBaby(getMyPet().isBaby());
+        }
+    }
+
+    public MyVillager getMyPet() {
+        return (MyVillager) myPet;
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,22 +21,19 @@
 package de.Keyle.MyPet.test.skill.skills;
 
 import de.Keyle.MyPet.MyPetPlugin;
-import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
-import de.Keyle.MyPet.skill.MyPetSkills;
-import de.Keyle.MyPet.skill.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillName;
+import de.Keyle.MyPet.skill.skills.Skills;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeSkill;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class SkillNameTest
-{
+public class SkillNameTest {
     @Test
-    public void testSkillNames()
-    {
+    public void testSkillNames() {
         MyPetPlugin.registerSkills();
-        for (Class<? extends MyPetSkillTreeSkill> registeredSkills : MyPetSkills.getRegisteredSkills())
-        {
+        for (Class<? extends SkillTreeSkill> registeredSkills : Skills.getRegisteredSkills()) {
             SkillName sn = registeredSkills.getAnnotation(SkillName.class);
             assertNotNull(sn);
             assertNotNull(sn.value());

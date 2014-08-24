@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -24,89 +24,71 @@ import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPet.PetState;
 import de.Keyle.MyPet.skill.skills.info.HPInfo;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
-import de.Keyle.MyPet.util.MyPetBukkitUtil;
-import de.Keyle.MyPet.util.locale.MyPetLocales;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
+import de.Keyle.MyPet.util.Util;
+import de.Keyle.MyPet.util.locale.Locales;
+import de.keyle.knbt.TagDouble;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagString;
 
-public class HP extends HPInfo implements ISkillInstance
-{
+public class HP extends HPInfo implements ISkillInstance {
     private MyPet myPet;
 
-    public HP(boolean addedByInheritance)
-    {
+    public HP(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
+    public void setMyPet(MyPet myPet) {
         this.myPet = myPet;
     }
 
-    public MyPet getMyPet()
-    {
+    public MyPet getMyPet() {
         return myPet;
     }
 
-    public boolean isActive()
-    {
+    public boolean isActive() {
         return hpIncrease > 0;
     }
 
-    public void upgrade(ISkillInfo upgrade, boolean quiet)
-    {
-        if (upgrade instanceof HPInfo)
-        {
-            if (getProperties().getValue().containsKey("hp"))
-            {
-                int hp = ((IntTag) getProperties().getValue().get("hp")).getValue();
-                getProperties().getValue().remove("hp");
-                DoubleTag doubleTag = new DoubleTag("hp_double", hp);
-                getProperties().getValue().put("hp_double", doubleTag);
+    public void upgrade(ISkillInfo upgrade, boolean quiet) {
+        if (upgrade instanceof HPInfo) {
+            if (upgrade.getProperties().getCompoundData().containsKey("hp")) {
+                int hp = upgrade.getProperties().getAs("hp", TagInt.class).getIntData();
+                upgrade.getProperties().getCompoundData().remove("hp");
+                TagDouble TagDouble = new TagDouble(hp);
+                upgrade.getProperties().getCompoundData().put("hp_double", TagDouble);
             }
-            if (upgrade.getProperties().getValue().containsKey("hp_double"))
-            {
-                if (!upgrade.getProperties().getValue().containsKey("addset_hp") || ((StringTag) upgrade.getProperties().getValue().get("addset_hp")).getValue().equals("add"))
-                {
-                    hpIncrease += ((DoubleTag) upgrade.getProperties().getValue().get("hp_double")).getValue();
-                }
-                else
-                {
-                    hpIncrease = ((DoubleTag) upgrade.getProperties().getValue().get("hp_double")).getValue();
+            if (upgrade.getProperties().getCompoundData().containsKey("hp_double")) {
+                if (!upgrade.getProperties().getCompoundData().containsKey("addset_hp") || ((TagString) upgrade.getProperties().getAs("addset_hp", TagString.class)).getStringData().equals("add")) {
+                    hpIncrease += upgrade.getProperties().getAs("hp_double", TagDouble.class).getDoubleData();
+                } else {
+                    hpIncrease = upgrade.getProperties().getAs("hp_double", TagDouble.class).getDoubleData();
                 }
 
-                if (getMyPet().getStatus() == PetState.Here)
-                {
+                if (getMyPet().getStatus() == PetState.Here) {
                     getMyPet().getCraftPet().setMaxHealth(getMyPet().getMaxHealth());
                 }
 
-                if (!quiet)
-                {
-                    myPet.sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.Skill.Hp.Upgrade", myPet.getOwner().getLanguage())).replace("%petname%", myPet.getPetName()).replace("%maxhealth%", "" + (MyPet.getStartHP(myPet.getClass()) + hpIncrease)));
+                if (!quiet) {
+                    myPet.sendMessageToOwner(Util.formatText(Locales.getString("Message.Skill.Hp.Upgrade", myPet.getOwner().getLanguage()), myPet.getPetName(), myPet.getMaxHealth()));
                 }
             }
         }
     }
 
-    public String getFormattedValue()
-    {
+    public String getFormattedValue() {
         return "+" + hpIncrease;
     }
 
-    public void reset()
-    {
+    public void reset() {
         hpIncrease = 0;
     }
 
-    public double getHpIncrease()
-    {
+    public double getHpIncrease() {
         return hpIncrease;
     }
 
     @Override
-    public ISkillInstance cloneSkill()
-    {
+    public ISkillInstance cloneSkill() {
         HP newSkill = new HP(isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

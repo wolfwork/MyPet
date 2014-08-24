@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -64,6 +64,8 @@ import de.Keyle.MyPet.entity.types.snowman.EntityMySnowman;
 import de.Keyle.MyPet.entity.types.snowman.MySnowman;
 import de.Keyle.MyPet.entity.types.spider.EntityMySpider;
 import de.Keyle.MyPet.entity.types.spider.MySpider;
+import de.Keyle.MyPet.entity.types.squid.EntityMySquid;
+import de.Keyle.MyPet.entity.types.squid.MySquid;
 import de.Keyle.MyPet.entity.types.villager.EntityMyVillager;
 import de.Keyle.MyPet.entity.types.villager.MyVillager;
 import de.Keyle.MyPet.entity.types.witch.EntityMyWitch;
@@ -74,18 +76,17 @@ import de.Keyle.MyPet.entity.types.wolf.EntityMyWolf;
 import de.Keyle.MyPet.entity.types.wolf.MyWolf;
 import de.Keyle.MyPet.entity.types.zombie.EntityMyZombie;
 import de.Keyle.MyPet.entity.types.zombie.MyZombie;
-import de.Keyle.MyPet.util.MyPetPlayer;
 import de.Keyle.MyPet.util.logger.DebugLogger;
 import de.Keyle.MyPet.util.logger.MyPetLogger;
-import net.minecraft.server.v1_6_R1.EntityCreature;
-import net.minecraft.server.v1_6_R1.World;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
+import net.minecraft.server.v1_7_R4.EntityCreature;
+import net.minecraft.server.v1_7_R4.World;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.EntityType;
 
 import java.lang.reflect.Constructor;
 
-public enum MyPetType
-{
+public enum MyPetType {
     Bat(EntityType.BAT, "Bat", EntityMyBat.class, MyBat.class),
     Blaze(EntityType.BLAZE, "Blaze", EntityMyBlaze.class, MyBlaze.class),
     CaveSpider(EntityType.CAVE_SPIDER, "CaveSpider", EntityMyCaveSpider.class, MyCaveSpider.class),
@@ -108,6 +109,7 @@ public enum MyPetType
     Slime(EntityType.SLIME, "Slime", EntityMySlime.class, MySlime.class),
     Snowman(EntityType.SNOWMAN, "Snowman", EntityMySnowman.class, MySnowman.class),
     Spider(EntityType.SPIDER, "Spider", EntityMySpider.class, MySpider.class),
+    Squid(EntityType.SQUID, "Squid", EntityMySquid.class, MySquid.class),
     Witch(EntityType.WITCH, "Witch", EntityMyWitch.class, MyWitch.class),
     Wither(EntityType.WITHER, "Wither", EntityMyWither.class, MyWither.class),
     Wolf(EntityType.WOLF, "Wolf", EntityMyWolf.class, MyWolf.class),
@@ -119,97 +121,62 @@ public enum MyPetType
     private Class<? extends EntityMyPet> entityClass;
     private Class<? extends MyPet> myPetClass;
 
-    private MyPetType(EntityType bukkitType, String typeName, Class<? extends EntityMyPet> entityClass, Class<? extends MyPet> myPetClass)
-    {
+    private MyPetType(EntityType bukkitType, String typeName, Class<? extends EntityMyPet> entityClass, Class<? extends MyPet> myPetClass) {
         this.bukkitType = bukkitType;
         this.name = typeName;
         this.entityClass = entityClass;
         this.myPetClass = myPetClass;
     }
 
-    public static MyPetType getMyPetTypeByEntityType(EntityType type)
-    {
-        for (MyPetType myPetType : MyPetType.values())
-        {
-            if (myPetType.bukkitType == type)
-            {
-                return myPetType;
-            }
-        }
-        return null;
-    }
-
-    public static MyPetType getMyPetTypeByEntityClass(Class<? extends EntityCreature> entityClass)
-    {
-        for (MyPetType myPetType : MyPetType.values())
-        {
-            if (myPetType.entityClass == entityClass)
-            {
-                return myPetType;
-            }
-        }
-        return null;
-    }
-
-    public static MyPetType getMyPetTypeByName(String name)
-    {
-        for (MyPetType myPetType : MyPetType.values())
-        {
-            if (myPetType.name.equalsIgnoreCase(name))
-            {
-                return myPetType;
-            }
-        }
-        return null;
-    }
-
-    public static boolean isLeashableEntityType(EntityType type)
-    {
-        for (MyPetType myPetType : MyPetType.values())
-        {
-            if (myPetType.bukkitType == type)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public EntityType getEntityType()
-    {
-        return bukkitType;
-    }
-
-    public Class<? extends EntityMyPet> getEntityClass()
-    {
+    public Class<? extends EntityMyPet> getEntityClass() {
         return entityClass;
     }
 
-    public Class<? extends MyPet> getMyPetClass()
-    {
+    public EntityType getEntityType() {
+        return bukkitType;
+    }
+
+    public Class<? extends MyPet> getMyPetClass() {
         return myPetClass;
     }
 
-    public String getTypeName()
-    {
-        return name;
-    }
-
-    public EntityMyPet getNewEntityInstance(World world, MyPet myPet)
-    {
-        EntityMyPet petEntity = null;
-
-        try
-        {
-            Constructor<?> ctor = entityClass.getConstructor(World.class, MyPet.class);
-            Object obj = ctor.newInstance(world, myPet);
-            if (obj instanceof EntityMyPet)
-            {
-                petEntity = (EntityMyPet) obj;
+    public static MyPetType getMyPetTypeByEntityClass(Class<? extends EntityCreature> entityClass) {
+        for (MyPetType myPetType : MyPetType.values()) {
+            if (myPetType.entityClass == entityClass) {
+                return myPetType;
             }
         }
-        catch (Exception e)
-        {
+        return null;
+    }
+
+    public static MyPetType getMyPetTypeByEntityType(EntityType type) {
+        for (MyPetType myPetType : MyPetType.values()) {
+            if (myPetType.bukkitType == type) {
+                return myPetType;
+            }
+        }
+        return null;
+    }
+
+    public static MyPetType getMyPetTypeByName(String name) {
+        for (MyPetType myPetType : MyPetType.values()) {
+            if (myPetType.name.equalsIgnoreCase(name)) {
+                return myPetType;
+            }
+        }
+        return null;
+    }
+
+    public EntityMyPet getNewEntityInstance(World world, MyPet myPet) {
+        EntityMyPet petEntity = null;
+
+        try {
+            Constructor<?> ctor = entityClass.getConstructor(World.class, MyPet.class);
+            Object obj = ctor.newInstance(world, myPet);
+            if (obj instanceof EntityMyPet) {
+                petEntity = (EntityMyPet) obj;
+            }
+        } catch (Exception e) {
             MyPetLogger.write(ChatColor.RED + entityClass.getName() + " is no valid MyPet(Entity)!");
             DebugLogger.warning(entityClass.getName() + " is no valid MyPet(Entity)!");
             e.printStackTrace();
@@ -217,25 +184,33 @@ public enum MyPetType
         return petEntity;
     }
 
-    public MyPet getNewMyPetInstance(MyPetPlayer owner)
-    {
+    public MyPet getNewMyPetInstance(MyPetPlayer owner) {
         MyPet pet = null;
 
-        try
-        {
+        try {
             Constructor<?> ctor = myPetClass.getConstructor(MyPetPlayer.class);
             Object obj = ctor.newInstance(owner);
-            if (obj instanceof MyPet)
-            {
+            if (obj instanceof MyPet) {
                 pet = (MyPet) obj;
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             MyPetLogger.write(ChatColor.RED + myPetClass.getName() + " is no valid MyPet!");
             DebugLogger.warning(myPetClass.getName() + " is no valid MyPet!");
         }
         return pet;
+    }
+
+    public String getTypeName() {
+        return name;
+    }
+
+    public static boolean isLeashableEntityType(EntityType type) {
+        for (MyPetType myPetType : MyPetType.values()) {
+            if (myPetType.bukkitType == type) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,102 +21,88 @@
 package de.Keyle.MyPet.skill.skills.implementation;
 
 import de.Keyle.MyPet.entity.types.MyPet;
-import de.Keyle.MyPet.skill.ISkillActive;
+import de.Keyle.MyPet.skill.skills.ISkillActive;
 import de.Keyle.MyPet.skill.skills.info.FireInfo;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
-import de.Keyle.MyPet.util.MyPetBukkitUtil;
-import de.Keyle.MyPet.util.locale.MyPetLocales;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
+import de.Keyle.MyPet.util.Util;
+import de.Keyle.MyPet.util.locale.Locales;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagString;
+import org.bukkit.Effect;
+import org.bukkit.entity.LivingEntity;
 
 import java.util.Random;
 
-public class Fire extends FireInfo implements ISkillInstance, ISkillActive
-{
+public class Fire extends FireInfo implements ISkillInstance, ISkillActive {
     private static Random random = new Random();
     private MyPet myPet;
 
-    public Fire(boolean addedByInheritance)
-    {
+    public Fire(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
+    public void setMyPet(MyPet myPet) {
         this.myPet = myPet;
     }
 
-    public MyPet getMyPet()
-    {
+    public MyPet getMyPet() {
         return myPet;
     }
 
-    public boolean isActive()
-    {
+    public boolean isActive() {
         return chance > 0 && duration > 0;
     }
 
-    public void upgrade(ISkillInfo upgrade, boolean quiet)
-    {
-        if (upgrade instanceof FireInfo)
-        {
+    public void upgrade(ISkillInfo upgrade, boolean quiet) {
+        if (upgrade instanceof FireInfo) {
             boolean valuesEdit = false;
-            if (upgrade.getProperties().getValue().containsKey("chance"))
-            {
-                if (!upgrade.getProperties().getValue().containsKey("addset_chance") || ((StringTag) upgrade.getProperties().getValue().get("addset_chance")).getValue().equals("add"))
-                {
-                    chance += ((IntTag) upgrade.getProperties().getValue().get("chance")).getValue();
-                }
-                else
-                {
-                    chance = ((IntTag) upgrade.getProperties().getValue().get("chance")).getValue();
+            if (upgrade.getProperties().getCompoundData().containsKey("chance")) {
+                if (!upgrade.getProperties().getCompoundData().containsKey("addset_chance") || upgrade.getProperties().getAs("addset_chance", TagString.class).getStringData().equals("add")) {
+                    chance += upgrade.getProperties().getAs("chance", TagInt.class).getIntData();
+                } else {
+                    chance = upgrade.getProperties().getAs("chance", TagInt.class).getIntData();
                 }
                 valuesEdit = true;
             }
-            if (upgrade.getProperties().getValue().containsKey("duration"))
-            {
-                if (!upgrade.getProperties().getValue().containsKey("addset_duration") || ((StringTag) upgrade.getProperties().getValue().get("addset_duration")).getValue().equals("add"))
-                {
-                    duration += ((IntTag) upgrade.getProperties().getValue().get("duration")).getValue();
-                }
-                else
-                {
-                    duration = ((IntTag) upgrade.getProperties().getValue().get("duration")).getValue();
+            if (upgrade.getProperties().getCompoundData().containsKey("duration")) {
+                if (!upgrade.getProperties().getCompoundData().containsKey("addset_duration") || upgrade.getProperties().getAs("addset_duration", TagString.class).getStringData().equals("add")) {
+                    duration += upgrade.getProperties().getAs("duration", TagInt.class).getIntData();
+                } else {
+                    duration = upgrade.getProperties().getAs("duration", TagInt.class).getIntData();
                 }
                 valuesEdit = true;
             }
             chance = Math.min(chance, 100);
-            if (!quiet && valuesEdit)
-            {
-                myPet.sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.Skill.Fire.Upgrade", myPet.getOwner().getLanguage())).replace("%petname%", myPet.getPetName()).replace("%chance%", "" + chance).replace("%duration%", "" + duration));
+            if (!quiet && valuesEdit) {
+                myPet.sendMessageToOwner(Util.formatText(Locales.getString("Message.Skill.Fire.Upgrade", myPet.getOwner().getLanguage()), myPet.getPetName(), chance, duration));
             }
         }
     }
 
-    public String getFormattedValue()
-    {
+    public String getFormattedValue() {
         return chance + "% -> " + duration + "sec";
     }
 
-    public void reset()
-    {
+    public void reset() {
         chance = 0;
         duration = 0;
     }
 
-    public boolean activate()
-    {
+    public boolean activate() {
         return random.nextDouble() <= chance / 100.;
     }
 
-    public int getDuration()
-    {
+    public int getDuration() {
         return duration;
     }
 
+    public void igniteTarget(LivingEntity target) {
+        target.setFireTicks(getDuration() * 20);
+        target.getWorld().playEffect(target.getLocation(), Effect.POTION_BREAK, 0xD60000);
+    }
+
     @Override
-    public ISkillInstance cloneSkill()
-    {
+    public ISkillInstance cloneSkill() {
         Fire newSkill = new Fire(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

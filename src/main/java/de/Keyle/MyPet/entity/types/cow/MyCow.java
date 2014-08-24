@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -24,63 +24,57 @@ import de.Keyle.MyPet.entity.MyPetInfo;
 import de.Keyle.MyPet.entity.types.IMyPetBaby;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
-import de.Keyle.MyPet.util.MyPetPlayer;
+import de.Keyle.MyPet.util.ConfigItem;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
+import de.keyle.knbt.TagByte;
+import de.keyle.knbt.TagCompound;
 import org.bukkit.ChatColor;
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundTag;
 
 import static org.bukkit.Material.WHEAT;
 
 @MyPetInfo(food = {WHEAT})
-public class MyCow extends MyPet implements IMyPetBaby
-{
+public class MyCow extends MyPet implements IMyPetBaby {
+    public static boolean CAN_GIVE_MILK = true;
+    public static ConfigItem GROW_UP_ITEM;
+
     protected boolean isBaby = false;
 
-    public MyCow(MyPetPlayer petOwner)
-    {
+    public MyCow(MyPetPlayer petOwner) {
         super(petOwner);
     }
 
-    public boolean isBaby()
-    {
+    @Override
+    public TagCompound getExtendedInfo() {
+        TagCompound info = super.getExtendedInfo();
+        info.getCompoundData().put("Baby", new TagByte(isBaby()));
+        return info;
+    }
+
+    @Override
+    public void setExtendedInfo(TagCompound info) {
+        if (info.getCompoundData().containsKey("Baby")) {
+            setBaby(info.getAs("Baby", TagByte.class).getBooleanData());
+        }
+    }
+
+    @Override
+    public MyPetType getPetType() {
+        return MyPetType.Cow;
+    }
+
+    public boolean isBaby() {
         return isBaby;
     }
 
-    public void setBaby(boolean flag)
-    {
-        if (status == PetState.Here)
-        {
+    public void setBaby(boolean flag) {
+        if (status == PetState.Here) {
             ((EntityMyCow) getCraftPet().getHandle()).setBaby(flag);
         }
         this.isBaby = flag;
     }
 
     @Override
-    public CompoundTag getExtendedInfo()
-    {
-        CompoundTag info = super.getExtendedInfo();
-        info.getValue().put("Baby", new ByteTag("Baby", isBaby()));
-        return info;
-    }
-
-    @Override
-    public void setExtendedInfo(CompoundTag info)
-    {
-        if (info.getValue().containsKey("Baby"))
-        {
-            setBaby(((ByteTag) info.getValue().get("Baby")).getBooleanValue());
-        }
-    }
-
-    @Override
-    public MyPetType getPetType()
-    {
-        return MyPetType.Cow;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "MyCow{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", baby=" + isBaby() + "}";
+    public String toString() {
+        return "MyCow{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", worldgroup=" + worldGroup + ", baby=" + isBaby() + "}";
     }
 }

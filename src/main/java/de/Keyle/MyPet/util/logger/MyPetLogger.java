@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,32 +20,27 @@
 
 package de.Keyle.MyPet.util.logger;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.ConsoleCommandSender;
 
-public class MyPetLogger
-{
+import static org.bukkit.ChatColor.*;
+
+public class MyPetLogger {
     private static ConsoleCommandSender consoleCommandSender = null;
 
-    public static void setConsole(ConsoleCommandSender console)
-    {
+    public static void setConsole(ConsoleCommandSender console) {
         consoleCommandSender = console;
     }
 
-    public static void write(String msg)
-    {
-        if (consoleCommandSender != null)
-        {
-            consoleCommandSender.sendMessage("[" + ChatColor.AQUA + "MyPet" + ChatColor.RESET + "] " + msg);
+    public static void write(String msg) {
+        if (consoleCommandSender != null) {
+            consoleCommandSender.sendMessage("[" + GREEN + "M" + DARK_GREEN + "y" + GREEN + "P" + DARK_GREEN + "et" + RESET + "] " + msg);
             DebugLogger.info("(L) " + msg);
         }
     }
 
-    public static void write(String msg, String source)
-    {
-        if (consoleCommandSender != null)
-        {
-            consoleCommandSender.sendMessage("[" + ChatColor.AQUA + source + ChatColor.RESET + "] " + msg);
+    public static void write(String msg, String source) {
+        if (consoleCommandSender != null) {
+            consoleCommandSender.sendMessage("[" + AQUA + source + RESET + "] " + msg);
             DebugLogger.info("(L) " + msg, source);
         }
     }

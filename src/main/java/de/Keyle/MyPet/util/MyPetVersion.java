@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,6 +20,8 @@
 
 package de.Keyle.MyPet.util;
 
+import de.Keyle.MyPet.util.logger.DebugLogger;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -27,86 +29,81 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-public class MyPetVersion
-{
+public class MyPetVersion {
     private static boolean updated = false;
 
-    private static String myPetVersion = "0.0.0";
-    private static String myPetBuild = "0";
+    private static String version = "0.0.0";
+    private static String build = "0";
     private static String minecraftVersion = "0.0.0";
+    private static String bukkitPacket = "v0_0_R0";
 
-    private static void getManifestVersion()
-    {
-        try
-        {
+    private static void getManifestVersion() {
+        try {
             String path = MyPetVersion.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
             Attributes attr = getClassLoaderForExtraModule(path).getMainAttributes();
 
-            if (attr.getValue("Project-Version") != null)
-            {
-                myPetVersion = attr.getValue("Project-Version");
+            if (attr.getValue("Project-Version") != null) {
+                version = attr.getValue("Project-Version");
             }
-            if (attr.getValue("Project-Build") != null)
-            {
-                myPetBuild = attr.getValue("Project-Build");
+            if (attr.getValue("Project-Build") != null) {
+                build = attr.getValue("Project-Build");
             }
-            if (attr.getValue("Project-Minecraft-Version") != null)
-            {
+            if (attr.getValue("Project-Minecraft-Version") != null) {
                 minecraftVersion = attr.getValue("Project-Minecraft-Version");
             }
-        }
-        catch (IOException e)
-        {
+            if (attr.getValue("Project-Bukkit-Packet") != null) {
+                bukkitPacket = attr.getValue("Project-Bukkit-Packet");
+            }
+        } catch (IOException e) {
             e.printStackTrace();
-        }
-        catch (URISyntaxException e)
-        {
+            DebugLogger.printThrowable(e);
+        } catch (URISyntaxException e) {
             e.printStackTrace();
+            DebugLogger.printThrowable(e);
         }
     }
 
-    private static Manifest getClassLoaderForExtraModule(String filepath) throws IOException
-    {
+    private static Manifest getClassLoaderForExtraModule(String filepath) throws IOException {
         File jar = new File(filepath);
         JarFile jf = new JarFile(jar);
         Manifest mf = jf.getManifest();
         jf.close();
         return mf;
-
     }
 
-    public static String getMyPetVersion()
-    {
-        if (!updated)
-        {
+    public static String getVersion() {
+        if (!updated) {
             getManifestVersion();
             updated = true;
         }
-        return myPetVersion;
+        return version;
     }
 
-    public static String getMyPetBuild()
-    {
-        if (!updated)
-        {
+    public static String getBuild() {
+        if (!updated) {
             getManifestVersion();
             updated = true;
         }
-        return myPetBuild;
+        return build;
     }
 
-    public static String getMinecraftVersion()
-    {
-        if (!updated)
-        {
+    public static String getMinecraftVersion() {
+        if (!updated) {
             getManifestVersion();
             updated = true;
         }
         return minecraftVersion;
     }
 
-    public static void reset()
-    {
+    public static String getBukkitPacket() {
+        if (!updated) {
+            getManifestVersion();
+            updated = true;
+        }
+        return bukkitPacket;
+    }
+
+    public static void reset() {
         updated = false;
     }
 }

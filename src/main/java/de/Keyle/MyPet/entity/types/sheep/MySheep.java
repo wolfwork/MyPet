@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -24,115 +24,94 @@ import de.Keyle.MyPet.entity.MyPetInfo;
 import de.Keyle.MyPet.entity.types.IMyPetBaby;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
-import de.Keyle.MyPet.util.MyPetPlayer;
+import de.Keyle.MyPet.util.ConfigItem;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
+import de.keyle.knbt.TagByte;
+import de.keyle.knbt.TagCompound;
+import de.keyle.knbt.TagInt;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.TagType;
 
 import static org.bukkit.Material.WHEAT;
 
 @MyPetInfo(food = {WHEAT})
-public class MySheep extends MyPet implements IMyPetBaby
-{
+public class MySheep extends MyPet implements IMyPetBaby {
+    public static boolean CAN_BE_SHEARED = true;
+    public static boolean CAN_REGROW_WOOL = true;
+    public static ConfigItem GROW_UP_ITEM;
+
     protected DyeColor color = DyeColor.WHITE;
     protected boolean isSheared = false;
     protected boolean isBaby = false;
 
-    public MySheep(MyPetPlayer petOwner)
-    {
+    public MySheep(MyPetPlayer petOwner) {
         super(petOwner);
     }
 
-    public void setColor(DyeColor color)
-    {
-        if (status == PetState.Here)
-        {
-            ((EntityMySheep) getCraftPet().getHandle()).setColor(color.getDyeData());
+    public DyeColor getColor() {
+        return color;
+    }
+
+    public void setColor(DyeColor color) {
+        if (status == PetState.Here) {
+            ((EntityMySheep) getCraftPet().getHandle()).setColor(color.getWoolData());
         }
         this.color = color;
     }
 
-    public DyeColor getColor()
-    {
-        return color;
+    @Override
+    public TagCompound getExtendedInfo() {
+        TagCompound info = super.getExtendedInfo();
+        info.getCompoundData().put("Color", new TagByte(getColor().getDyeData()));
+        info.getCompoundData().put("Sheared", new TagByte(isSheared()));
+        info.getCompoundData().put("Baby", new TagByte(isBaby()));
+        return info;
     }
 
-    public void setSheared(boolean flag)
-    {
-        if (status == PetState.Here)
-        {
-            ((EntityMySheep) getCraftPet().getHandle()).setSheared(flag);
+    @Override
+    public void setExtendedInfo(TagCompound info) {
+        if (info.containsKeyAs("Color", TagInt.class)) {
+            setColor(DyeColor.getByDyeData((byte) info.getAs("Color", TagInt.class).getIntData()));
+        } else if (info.containsKeyAs("Color", TagByte.class)) {
+            setColor(DyeColor.getByDyeData(info.getAs("Color", TagByte.class).getByteData()));
         }
-        this.isSheared = flag;
+        if (info.getCompoundData().containsKey("Sheared")) {
+            setSheared(info.getAs("Sheared", TagByte.class).getBooleanData());
+        }
+        if (info.getCompoundData().containsKey("Baby")) {
+            setBaby(info.getAs("Baby", TagByte.class).getBooleanData());
+        }
     }
 
-    public boolean isSheared()
-    {
-        return isSheared;
+    @Override
+    public MyPetType getPetType() {
+        return MyPetType.Sheep;
     }
 
-    public boolean isBaby()
-    {
+    public boolean isBaby() {
         return isBaby;
     }
 
-    public void setBaby(boolean flag)
-    {
-        if (status == PetState.Here)
-        {
+    public void setBaby(boolean flag) {
+        if (status == PetState.Here) {
             ((EntityMySheep) getCraftPet().getHandle()).setBaby(flag);
         }
         this.isBaby = flag;
     }
 
-    @Override
-    public CompoundTag getExtendedInfo()
-    {
-        CompoundTag info = super.getExtendedInfo();
-        info.getValue().put("Color", new ByteTag("Color", getColor().getDyeData()));
-        info.getValue().put("Sheared", new ByteTag("Sheared", isSheared()));
-        info.getValue().put("Baby", new ByteTag("Baby", isBaby()));
-        return info;
+    public boolean isSheared() {
+        return isSheared;
+    }
+
+    public void setSheared(boolean flag) {
+        if (status == PetState.Here) {
+            ((EntityMySheep) getCraftPet().getHandle()).setSheared(flag);
+        }
+        this.isSheared = flag;
     }
 
     @Override
-    public void setExtendedInfo(CompoundTag info)
-    {
-        if (info.getValue().containsKey("Color"))
-        {
-            byte data;
-            if (info.getValue().get("Color").getType() == TagType.TAG_INT)
-            {
-                data = ((IntTag) info.getValue().get("Color")).getValue().byteValue();
-            }
-            else
-            {
-                data = ((ByteTag) info.getValue().get("Color")).getValue();
-            }
-            setColor(DyeColor.getByDyeData(data));
-        }
-        if (info.getValue().containsKey("Sheared"))
-        {
-            setSheared(((ByteTag) info.getValue().get("Sheared")).getBooleanValue());
-        }
-        if (info.getValue().containsKey("Baby"))
-        {
-            setBaby(((ByteTag) info.getValue().get("Baby")).getBooleanValue());
-        }
-    }
-
-    @Override
-    public MyPetType getPetType()
-    {
-        return MyPetType.Sheep;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "MySheep{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", color=" + getColor() + ", sheared=" + isSheared() + ", baby=" + isBaby() + "}";
+    public String toString() {
+        return "MySheep{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", worldgroup=" + worldGroup + ", color=" + getColor() + ", sheared=" + isSheared() + ", baby=" + isBaby() + "}";
     }
 }

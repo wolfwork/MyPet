@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -22,39 +22,34 @@ package de.Keyle.MyPet.skill.skills.info;
 
 import de.Keyle.MyPet.gui.skilltreecreator.skills.HealthRegeneration;
 import de.Keyle.MyPet.gui.skilltreecreator.skills.SkillPropertiesPanel;
-import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
-import de.Keyle.MyPet.skill.SkillName;
-import de.Keyle.MyPet.skill.SkillProperties;
-import de.Keyle.MyPet.skill.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skills.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillProperties;
+import de.Keyle.MyPet.skill.skills.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeSkill;
 
-@SkillName("HPregeneration")
+@SkillName(value = "HPregeneration", translationNode = "Name.Skill.Regeneration")
 @SkillProperties(
         parameterNames = {"hp_double", "time", "addset_hp", "addset_time"},
         parameterTypes = {NBTdatatypes.Double, NBTdatatypes.Int, NBTdatatypes.String, NBTdatatypes.String},
         parameterDefaultValues = {"1.0", "60", "add", "add"})
-public class HPregenerationInfo extends MyPetSkillTreeSkill implements ISkillInfo
-{
+public class HPregenerationInfo extends SkillTreeSkill implements ISkillInfo {
     private SkillPropertiesPanel panel = null;
 
     protected double increaseHpBy = 0;
     protected int regenTime = 0;
 
-    public HPregenerationInfo(boolean addedByInheritance)
-    {
+    public HPregenerationInfo(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public SkillPropertiesPanel getGuiPanel()
-    {
-        if (panel == null)
-        {
+    public SkillPropertiesPanel getGuiPanel() {
+        if (panel == null) {
             panel = new HealthRegeneration(this.getProperties());
         }
         return panel;
     }
 
-    public ISkillInfo cloneSkill()
-    {
+    public ISkillInfo cloneSkill() {
         HPregenerationInfo newSkill = new HPregenerationInfo(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,47 +23,30 @@ package de.Keyle.MyPet.entity.types.silverfish;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.World;
+import net.minecraft.server.v1_7_R4.World;
 
 @EntitySize(width = 0.3F, height = 0.7F)
-public class EntityMySilverfish extends EntityMyPet
-{
-    public EntityMySilverfish(World world, MyPet myPet)
-    {
+public class EntityMySilverfish extends EntityMyPet {
+    public EntityMySilverfish(World world, MyPet myPet) {
         super(world, myPet);
     }
 
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
     @Override
-    protected void a(int i, int j, int k, int l)
-    {
-        makeSound("mob.silverfish.step", 1.0F, 1.0F);
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
-    @Override
-    protected String aK()
-    {
-        return "mob.silverfish.hit";
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    @Override
-    protected String aL()
-    {
+    protected String getDeathSound() {
         return "mob.silverfish.kill";
     }
 
-    /**
-     * Returns the default sound of the MyPet
-     */
-    protected String r()
-    {
-        return !playIdleSound() ? "" : "mob.silverfish.say";
+    @Override
+    protected String getHurtSound() {
+        return "mob.silverfish.hit";
+    }
+
+    protected String getLivingSound() {
+        return "mob.silverfish.say";
+    }
+
+    @Override
+    public void playStepSound() {
+        makeSound("mob.silverfish.step", 1.0F, 1.0F);
     }
 }

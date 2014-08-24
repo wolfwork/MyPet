@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -30,13 +30,12 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface MyPetInfo
-{
-    public LeashFlag[] leashFlags() default {LeashFlag.LowHp};
-
+public @interface MyPetInfo {
     public Material[] food() default {};
 
     public double hp() default 20D;
+
+    public LeashFlag[] leashFlags() default {LeashFlag.LowHp};
 
     public double walkSpeed() default 0.30D;
 }

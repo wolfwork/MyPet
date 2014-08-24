@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,15 +21,23 @@
 package de.Keyle.MyPet.gui.skilltreecreator;
 
 import de.Keyle.MyPet.gui.GuiMain;
-import de.Keyle.MyPet.skill.*;
+import de.Keyle.MyPet.skill.skills.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillProperties;
+import de.Keyle.MyPet.skill.skills.SkillsInfo;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
-import de.Keyle.MyPet.util.MyPetUtil;
+import de.Keyle.MyPet.skill.skilltree.SkillTree;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeLevel;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeMobType;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeSkill;
 import de.Keyle.MyPet.util.MyPetVersion;
+import de.Keyle.MyPet.util.Util;
+import de.keyle.knbt.TagCompound;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagShort;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -38,10 +46,12 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 
-public class LevelCreator
-{
+public class LevelCreator {
     JTree skillTreeTree;
     JLabel skillTreeNameLabel;
     JButton deleteLevelSkillButton;
@@ -51,52 +61,60 @@ public class LevelCreator
     JCheckBox inheritanceCheckBox;
     JPanel levelCreatorPanel;
     JButton backButton;
-    JLabel mobTypeLabel;
-    JTable skillCounterTabel;
-    JLabel skilllevelLabel;
     JButton copyButton;
     JTextField permissionDisplayTextField;
     JCheckBox displayNameCheckbox;
     JCheckBox permissionCheckbox;
     JTextField displayNameTextField;
     JTextField permissionTextField;
+    JCheckBox levelUpMessageCheckBox;
+    JTextField levelUpMessageInput;
+    JButton editDescriptionButton;
+    JButton editIconButton;
+    JTextField maxLevelTextField;
+    JCheckBox maxLevelCheckBox;
+    JTextField requiredLevelTextField;
+    JCheckBox requiredLevelCheckBox;
     JFrame levelCreatorFrame;
+    JPopupMenu levelListRightclickMenu;
 
-    DefaultTableModel skillCounterTabelModel;
     DefaultTreeModel skillTreeTreeModel;
     DefaultComboBoxModel inheritanceComboBoxModel;
 
-    MyPetSkillTree skillTree;
-    MyPetSkillTreeMobType skillTreeMobType;
+    SkillTree skillTree;
+    SkillTreeLevel selectedLevel = null;
+    SkillTreeMobType skillTreeMobType;
 
-    private static String[] skillNames = new String[]{"Beacon", "Behavior", "Control", "Damage", "Fire", "HP", "HPregeneration", "Inventory", "Knockback", "Lightning", "Pickup", "Poison", "Ranged", "Ride", "Slow", "Sprint", "Thorns", "Wither"};
+    private static String[] skillNames = null;
 
     int highestLevel = 0;
 
-    public LevelCreator()
-    {
-        addLevelButton.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
+    public LevelCreator() {
+        if (skillNames == null) {
+            skillNames = new String[SkillsInfo.getRegisteredSkillsInfo().size()];
+            int skillCounter = 0;
+            for (Class<? extends SkillTreeSkill> clazz : SkillsInfo.getRegisteredSkillsInfo()) {
+                SkillName sn = clazz.getAnnotation(SkillName.class);
+                if (sn != null) {
+                    skillNames[skillCounter++] = sn.value();
+                }
+            }
+            Arrays.sort(skillNames);
+        }
+
+        addLevelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 String response = (String) JOptionPane.showInputDialog(null, "Enter the number for the new level.", "Create new Level", JOptionPane.QUESTION_MESSAGE, null, null, "" + (highestLevel + 1));
-                if (response != null)
-                {
-                    if (MyPetUtil.isInt(response))
-                    {
+                if (response != null) {
+                    if (Util.isInt(response)) {
                         int newLevel = Integer.parseInt(response);
-                        for (int i = 0 ; i < skillTreeTreeModel.getChildCount(skillTreeTreeModel.getRoot()) ; i++)
-                        {
-                            if (MyPetUtil.isInt(((DefaultMutableTreeNode) skillTreeTreeModel.getRoot()).getChildAt(i).toString()))
-                            {
+                        for (int i = 0; i < skillTreeTreeModel.getChildCount(skillTreeTreeModel.getRoot()); i++) {
+                            if (Util.isInt(((DefaultMutableTreeNode) skillTreeTreeModel.getRoot()).getChildAt(i).toString())) {
                                 int level = Integer.parseInt(((DefaultMutableTreeNode) skillTreeTreeModel.getRoot()).getChildAt(i).toString());
-                                if (newLevel == level)
-                                {
+                                if (newLevel == level) {
                                     JOptionPane.showMessageDialog(null, response + " already exists!", "Create new Level", JOptionPane.ERROR_MESSAGE);
                                     return;
-                                }
-                                else if (newLevel < 1)
-                                {
+                                } else if (newLevel < 1) {
                                     JOptionPane.showMessageDialog(null, response + " is smaller than 1!", "Create new Level", JOptionPane.ERROR_MESSAGE);
                                     return;
                                 }
@@ -110,39 +128,27 @@ public class LevelCreator
                         skillTreeTree.setSelectionPath(new TreePath(new Object[]{skillTreeTreeModel.getRoot(), levelNode}));
                         skillTreeTree.expandPath(skillTreeTree.getSelectionPath());
                         skillTreeTree.updateUI();
-                    }
-                    else
-                    {
+                    } else {
                         JOptionPane.showMessageDialog(null, response + " is not a number!", "Create new Level", JOptionPane.ERROR_MESSAGE);
                     }
                 }
-                countSkillLevels();
             }
         });
-        addSkillButton.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
+        addSkillButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 int level;
-                if (skillTreeTree.getSelectionPath().getPath().length == 2 || skillTreeTree.getSelectionPath().getPath().length == 3)
-                {
-                    if (MyPetUtil.isInt(skillTreeTree.getSelectionPath().getPathComponent(1).toString()))
-                    {
+                if (skillTreeTree.getSelectionPath().getPath().length == 2 || skillTreeTree.getSelectionPath().getPath().length == 3) {
+                    if (Util.isInt(skillTreeTree.getSelectionPath().getPathComponent(1).toString())) {
                         level = Integer.parseInt(skillTreeTree.getSelectionPath().getPathComponent(1).toString());
-                    }
-                    else
-                    {
+                    } else {
                         return;
                     }
-                }
-                else
-                {
+                } else {
                     return;
                 }
                 String choosenSkill = (String) JOptionPane.showInputDialog(null, "Please select the skill you want to add to level " + level + '.', "", JOptionPane.QUESTION_MESSAGE, null, skillNames, "");
-                if (choosenSkill != null)
-                {
-                    ISkillInfo skill = MyPetSkillsInfo.getNewSkillInfoInstance(choosenSkill);
+                if (choosenSkill != null) {
+                    ISkillInfo skill = SkillsInfo.getNewSkillInfoInstance(choosenSkill);
                     skillTree.addSkillToLevel(level, skill);
                     SkillTreeSkillNode skillNode = new SkillTreeSkillNode(skill);
                     skill.setDefaultProperties();
@@ -150,36 +156,24 @@ public class LevelCreator
                     skillTreeTree.expandPath(skillTreeTree.getSelectionPath());
                     skillTreeTree.updateUI();
                 }
-                countSkillLevels();
             }
         });
-        deleteLevelSkillButton.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
+        deleteLevelSkillButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
 
-                if (skillTreeTree.getSelectionPath().getPath().length == 2)
-                {
-                    if (MyPetUtil.isInt(skillTreeTree.getSelectionPath().getLastPathComponent().toString()))
-                    {
+                if (skillTreeTree.getSelectionPath().getPath().length == 2) {
+                    if (Util.isInt(skillTreeTree.getSelectionPath().getLastPathComponent().toString())) {
                         int level = Integer.parseInt(skillTreeTree.getSelectionPath().getLastPathComponent().toString());
                         skillTree.removeLevel(level);
-                    }
-                    else
-                    {
+                    } else {
                         return;
                     }
-                }
-                else if (skillTreeTree.getSelectionPath().getPath().length == 3)
-                {
-                    if (MyPetUtil.isInt(skillTreeTree.getSelectionPath().getPathComponent(1).toString()))
-                    {
+                } else if (skillTreeTree.getSelectionPath().getPath().length == 3) {
+                    if (Util.isInt(skillTreeTree.getSelectionPath().getPathComponent(1).toString())) {
                         short level = Short.parseShort(skillTreeTree.getSelectionPath().getPathComponent(1).toString());
                         int index = ((DefaultMutableTreeNode) skillTreeTree.getSelectionPath().getPathComponent(1)).getIndex(((DefaultMutableTreeNode) skillTreeTree.getSelectionPath().getPathComponent(2)));
                         skillTree.getLevel(level).removeSkill(index);
-                    }
-                    else
-                    {
+                    } else {
                         return;
                     }
                 }
@@ -187,155 +181,159 @@ public class LevelCreator
                 skillTreeTree.updateUI();
                 addSkillButton.setEnabled(false);
                 deleteLevelSkillButton.setEnabled(false);
-                countSkillLevels();
             }
         });
-        skillTreeTree.addTreeSelectionListener(new TreeSelectionListener()
-        {
-            public void valueChanged(TreeSelectionEvent e)
-            {
-                if (e.getPath().getPath().length == 1)
-                {
+        skillTreeTree.addTreeSelectionListener(new TreeSelectionListener() {
+            public void valueChanged(TreeSelectionEvent e) {
+                if (e.getPath().getPath().length == 1) {
                     addSkillButton.setEnabled(false);
                     deleteLevelSkillButton.setEnabled(false);
-                    skillCounterTabelModel.getDataVector().removeAllElements();
-                    skillCounterTabel.updateUI();
-                    skilllevelLabel.setText("Skilllevels for level: -");
-                }
-                else if (e.getPath().getPath().length == 2)
-                {
+                    levelUpMessageCheckBox.setEnabled(false);
+                    levelUpMessageCheckBox.setSelected(false);
+                    levelUpMessageInput.setEnabled(false);
+                    levelUpMessageInput.setText("");
+                    selectedLevel = null;
+                } else if (e.getPath().getPath().length == 2) {
                     addSkillButton.setEnabled(true);
                     deleteLevelSkillButton.setEnabled(true);
-                    countSkillLevels();
-                }
-                else if (e.getPath().getPath().length == 3)
-                {
+                    levelUpMessageCheckBox.setEnabled(false);
+                    levelUpMessageInput.setEnabled(false);
+                    levelUpMessageInput.setText("");
+
+                    if (skillTreeTree.getSelectionPath() == null) {
+                        return;
+                    }
+
+                    if (Util.isInt(skillTreeTree.getSelectionPath().getLastPathComponent().toString())) {
+                        int level = Integer.parseInt(skillTreeTree.getSelectionPath().getLastPathComponent().toString());
+                        if (level > 1 && skillTree.hasLevel(level)) {
+                            levelUpMessageCheckBox.setEnabled(true);
+                            selectedLevel = skillTree.getLevel(level);
+                            if (selectedLevel.hasLevelupMessage()) {
+                                levelUpMessageCheckBox.setSelected(true);
+                                levelUpMessageInput.setEnabled(true);
+                                levelUpMessageInput.setText(selectedLevel.getLevelupMessage());
+                            } else {
+                                levelUpMessageCheckBox.setSelected(false);
+                                levelUpMessageInput.setText("");
+                            }
+                        }
+                    }
+                } else if (e.getPath().getPath().length == 3) {
                     addSkillButton.setEnabled(true);
                     deleteLevelSkillButton.setEnabled(true);
-                    countSkillLevels();
+                    levelUpMessageCheckBox.setEnabled(false);
+                    levelUpMessageInput.setEnabled(false);
+                    levelUpMessageCheckBox.setSelected(false);
+                    levelUpMessageInput.setText("");
+                    selectedLevel = null;
                 }
             }
 
         });
-        inheritanceCheckBox.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
-                if (inheritanceCheckBox.isSelected())
-                {
+        inheritanceCheckBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (inheritanceCheckBox.isSelected()) {
                     inheritanceComboBox.setEnabled(true);
                     skillTree.setInheritance(inheritanceComboBox.getSelectedItem().toString());
-                }
-                else
-                {
+                } else {
                     inheritanceComboBox.setEnabled(false);
                     skillTree.setInheritance(null);
                 }
             }
         });
-        permissionCheckbox.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
-                if (permissionCheckbox.isSelected())
-                {
+        maxLevelCheckBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (maxLevelCheckBox.isSelected()) {
+                    maxLevelTextField.setEnabled(true);
+                    skillTree.setMaxLevel(0);
+                } else {
+                    maxLevelTextField.setEnabled(false);
+                    skillTree.setMaxLevel(0);
+                    maxLevelTextField.setText("" + 0);
+                }
+            }
+        });
+        requiredLevelCheckBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (requiredLevelCheckBox.isSelected()) {
+                    requiredLevelTextField.setEnabled(true);
+                    skillTree.setRequiredLevel(0);
+                } else {
+                    requiredLevelTextField.setEnabled(false);
+                    skillTree.setRequiredLevel(0);
+                    requiredLevelTextField.setText("" + 0);
+                }
+            }
+        });
+        permissionCheckbox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (permissionCheckbox.isSelected()) {
                     permissionTextField.setEnabled(true);
-                    if (!permissionTextField.getText().equalsIgnoreCase(""))
-                    {
+                    if (!permissionTextField.getText().equalsIgnoreCase("")) {
                         skillTree.setPermission(permissionTextField.getText());
-                    }
-                    else
-                    {
+                    } else {
                         skillTree.setPermission(null);
                     }
-                }
-                else
-                {
+                } else {
                     permissionTextField.setEnabled(false);
                     skillTree.setPermission(null);
                 }
                 permissionDisplayTextField.setText("MyPet.custom.skilltree." + skillTree.getPermission());
             }
         });
-        displayNameCheckbox.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
-                if (displayNameCheckbox.isSelected())
-                {
+        displayNameCheckbox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (displayNameCheckbox.isSelected()) {
                     displayNameTextField.setEnabled(true);
-                    if (!displayNameTextField.getText().equalsIgnoreCase(""))
-                    {
+                    if (!displayNameTextField.getText().equalsIgnoreCase("")) {
                         skillTree.setDisplayName(displayNameTextField.getText());
-                    }
-                    else
-                    {
+                    } else {
                         skillTree.setDisplayName(null);
                     }
-                }
-                else
-                {
+                } else {
                     displayNameTextField.setEnabled(false);
                     skillTree.setDisplayName(null);
                 }
             }
         });
-        backButton.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
+        backButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 GuiMain.skilltreeCreator.getFrame().setEnabled(true);
                 levelCreatorFrame.setVisible(false);
             }
         });
-        inheritanceComboBox.addItemListener(new ItemListener()
-        {
-            public void itemStateChanged(ItemEvent e)
-            {
-                if (e.getStateChange() == ItemEvent.SELECTED && inheritanceCheckBox.isSelected())
-                {
-                    if (!skillTree.getInheritance().equals(e.getItem().toString()))
-                    {
+        inheritanceComboBox.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED && inheritanceCheckBox.isSelected()) {
+                    if (!skillTree.getInheritance().equals(e.getItem().toString())) {
                         skillTree.setInheritance(e.getItem().toString());
-                        countSkillLevels();
                     }
                 }
             }
         });
-        copyButton.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
+        copyButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 StringSelection stringSelection = new StringSelection("MyPet.custom.skilltree." + skillTree.getName());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
             }
         });
-        skillTreeTree.addMouseListener(new MouseAdapter()
-        {
+        skillTreeTree.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent evt)
-            {
-                if (evt.getClickCount() == 2)
-                {
-                    if (skillTreeTree.getSelectionPath().getPath().length == 3)
-                    {
-                        if (skillTreeTree.getSelectionPath().getPathComponent(2) instanceof SkillTreeSkillNode)
-                        {
+            public void mouseClicked(MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    if (skillTreeTree.getSelectionPath().getPath().length == 3) {
+                        if (skillTreeTree.getSelectionPath().getPathComponent(2) instanceof SkillTreeSkillNode) {
                             ISkillInfo skill = ((SkillTreeSkillNode) skillTreeTree.getSelectionPath().getPathComponent(2)).getSkill();
-                            if (skill.getClass().getAnnotation(SkillProperties.class) == null)
-                            {
+                            if (skill.getClass().getAnnotation(SkillProperties.class) == null) {
                                 JOptionPane.showMessageDialog(null, skill.getName() + " has no options.", "Skill options", JOptionPane.INFORMATION_MESSAGE);
                                 return;
                             }
-                            if (MyPetSkillsInfo.isValidSkill(skill.getName()))
-                            {
-                                if (skill.getGuiPanel() != null)
-                                {
+                            if (SkillsInfo.getSkillInfoClass(skill.getName()) != null) {
+                                if (skill.getGuiPanel() != null) {
                                     GuiMain.skillPropertyEditor.setSkill(skill);
-                                }
-                                else
-                                {
+                                } else {
                                     JOptionPane.showMessageDialog(null, skill.getName() + " has no options.", "Skill options", JOptionPane.INFORMATION_MESSAGE);
                                     return;
                                 }
@@ -348,193 +346,301 @@ public class LevelCreator
                 }
             }
         });
-        permissionTextField.addKeyListener(new KeyListener()
-        {
-            public void keyTyped(KeyEvent arg0)
-            {
+        permissionTextField.addKeyListener(new KeyListener() {
+            public void keyTyped(KeyEvent arg0) {
             }
 
-            public void keyReleased(KeyEvent arg0)
-            {
+            public void keyReleased(KeyEvent arg0) {
                 permissionTextField.setText(permissionTextField.getText().replaceAll("[^a-zA-Z0-9]*", ""));
-                if (permissionCheckbox.isSelected() && !skillTree.getPermission().equals(permissionTextField.getText()))
-                {
-                    if (!permissionTextField.getText().equalsIgnoreCase(""))
-                    {
+                if (permissionCheckbox.isSelected() && !skillTree.getPermission().equals(permissionTextField.getText())) {
+                    if (!permissionTextField.getText().equalsIgnoreCase("")) {
                         skillTree.setPermission(permissionTextField.getText());
-                    }
-                    else
-                    {
+                    } else {
                         skillTree.setPermission(null);
                     }
                     permissionDisplayTextField.setText("MyPet.custom.skilltree." + skillTree.getPermission());
                 }
             }
 
-            public void keyPressed(KeyEvent arg0)
-            {
+            public void keyPressed(KeyEvent arg0) {
             }
         });
-        displayNameTextField.addKeyListener(new KeyListener()
-        {
-            public void keyTyped(KeyEvent arg0)
-            {
+        maxLevelTextField.addKeyListener(new KeyListener() {
+            public void keyTyped(KeyEvent arg0) {
             }
 
-            public void keyReleased(KeyEvent arg0)
-            {
-                if (displayNameCheckbox.isSelected() && !skillTree.getDisplayName().equals(displayNameTextField.getText()))
-                {
-                    if (!displayNameTextField.getText().equalsIgnoreCase(""))
-                    {
-                        skillTree.setDisplayName(displayNameTextField.getText());
+            public void keyReleased(KeyEvent arg0) {
+                maxLevelTextField.setText(maxLevelTextField.getText().replaceAll("[^0-9]*", ""));
+                if (maxLevelCheckBox.isSelected()) {
+                    if (!maxLevelTextField.getText().equalsIgnoreCase("") && maxLevelTextField.getText().matches("[0-9]*")) {
+                        skillTree.setMaxLevel(Integer.parseInt(maxLevelTextField.getText()));
+                    } else {
+                        skillTree.setMaxLevel(0);
                     }
-                    else
-                    {
+                }
+            }
+
+            public void keyPressed(KeyEvent arg0) {
+            }
+        });
+        requiredLevelTextField.addKeyListener(new KeyListener() {
+            public void keyTyped(KeyEvent arg0) {
+            }
+
+            public void keyReleased(KeyEvent arg0) {
+                requiredLevelTextField.setText(requiredLevelTextField.getText().replaceAll("[^0-9]*", ""));
+                if (requiredLevelCheckBox.isSelected()) {
+                    if (!requiredLevelTextField.getText().equalsIgnoreCase("") && requiredLevelTextField.getText().matches("[0-9]*")) {
+                        skillTree.setRequiredLevel(Integer.parseInt(requiredLevelTextField.getText()));
+                    } else {
+                        skillTree.setRequiredLevel(0);
+                    }
+                }
+            }
+
+            public void keyPressed(KeyEvent arg0) {
+            }
+        });
+        displayNameTextField.addKeyListener(new KeyListener() {
+            public void keyTyped(KeyEvent arg0) {
+            }
+
+            public void keyReleased(KeyEvent arg0) {
+                if (displayNameCheckbox.isSelected() && !skillTree.getDisplayName().equals(displayNameTextField.getText())) {
+                    if (!displayNameTextField.getText().equalsIgnoreCase("")) {
+                        skillTree.setDisplayName(displayNameTextField.getText());
+                    } else {
                         skillTree.setDisplayName(null);
                     }
                 }
             }
 
-            public void keyPressed(KeyEvent arg0)
-            {
+            public void keyPressed(KeyEvent arg0) {
+            }
+        });
+        levelUpMessageInput.addKeyListener(new KeyListener() {
+            public void keyTyped(KeyEvent arg0) {
+            }
+
+            public void keyReleased(KeyEvent arg0) {
+                if (levelUpMessageCheckBox.isSelected() && selectedLevel != null && (selectedLevel.getLevelupMessage() == null || !selectedLevel.getLevelupMessage().equals(levelUpMessageInput.getText()))) {
+                    if (!levelUpMessageInput.getText().equalsIgnoreCase("")) {
+                        selectedLevel.setLevelupMessage(levelUpMessageInput.getText());
+                    } else {
+                        selectedLevel.setLevelupMessage(null);
+                    }
+                }
+            }
+
+            public void keyPressed(KeyEvent arg0) {
+            }
+        });
+        levelUpMessageCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                levelUpMessageInput.setEnabled(levelUpMessageCheckBox.isSelected());
+            }
+        });
+        editDescriptionButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String oldDescription = "";
+                for (String line : skillTree.getDescription()) {
+                    if (!oldDescription.equals("")) {
+                        oldDescription += "\n";
+                    }
+                    oldDescription += line;
+                }
+
+                JTextArea msg = new JTextArea(oldDescription);
+                msg.setRows(5);
+                msg.setColumns(50);
+                msg.setLineWrap(true);
+                msg.setWrapStyleWord(true);
+
+                JScrollPane scrollPane = new JScrollPane(msg);
+                JOptionPane.showMessageDialog(null, scrollPane, "Edit Skilltree Description", JOptionPane.QUESTION_MESSAGE);
+
+                String[] description = msg.getText().split("\\n");
+
+                skillTree.clearDescription();
+                skillTree.addDescription(description);
+            }
+        });
+        editIconButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                short id, damage;
+                boolean glowing = false;
+
+                id = skillTree.getIconItem().getAs("id", TagShort.class).getShortData();
+                damage = skillTree.getIconItem().getAs("Damage", TagShort.class).getShortData();
+                if (skillTree.getIconItem().getCompoundData().containsKey("tag")) {
+                    TagCompound tag = skillTree.getIconItem().getAs("tag", TagCompound.class);
+                    glowing = tag.getCompoundData().containsKey("ench");
+                }
+
+                JPanel iconPanel = new JPanel();
+
+                iconPanel.add(new JLabel("ID: "));
+                JTextField idTextField = new JTextField("" + id);
+                idTextField.setColumns(4);
+                iconPanel.add(idTextField);
+
+                iconPanel.add(new JLabel("Damage: "));
+                JTextField damageTextField = new JTextField("" + damage);
+                damageTextField.setColumns(4);
+                iconPanel.add(damageTextField);
+
+                JCheckBox glowingCheckbox = new JCheckBox("Glowing: ");
+                glowingCheckbox.setHorizontalTextPosition(SwingConstants.LEFT);
+                glowingCheckbox.setSelected(glowing);
+                iconPanel.add(glowingCheckbox);
+
+                JOptionPane.showMessageDialog(null, iconPanel, "Edit Skilltree Icon Item", JOptionPane.QUESTION_MESSAGE);
+
+                damage = -1;
+                if (Util.isShort(damageTextField.getText())) {
+                    damage = Short.parseShort(damageTextField.getText());
+                }
+                id = -1;
+                if (Util.isShort(idTextField.getText())) {
+                    id = Short.parseShort(idTextField.getText());
+                }
+                glowing = glowingCheckbox.isSelected();
+
+                skillTree.setIconItem(id, damage, glowing);
+
+                if (id >= 298 && id <= 301) {
+                    int color = 0;
+                    if (skillTree.getIconItem().getCompoundData().containsKey("tag")) {
+                        TagCompound tag = skillTree.getIconItem().getAs("tag", TagCompound.class);
+                        //CompoundMap tag = ((TagCompound) values.get("tag")).getValue();
+                        if (tag.getCompoundData().containsKey("display")) {
+                            TagCompound display = tag.getAs("tag", TagCompound.class);
+                            if (display.getCompoundData().containsKey("color")) {
+                                color = display.getAs("color", TagInt.class).getIntData();
+                            }
+                        }
+                    }
+
+                    JPanel colorPanel = new JPanel();
+
+                    iconPanel.add(new JLabel("Color: "));
+                    JTextField colorTextField = new JTextField("" + color);
+                    colorTextField.setColumns(19);
+                    colorPanel.add(colorTextField);
+
+                    JOptionPane.showMessageDialog(null, colorPanel, "Edit Leather Armor Color", JOptionPane.QUESTION_MESSAGE);
+
+                    if (Util.isInt(colorTextField.getText())) {
+                        color = Integer.parseInt(colorTextField.getText());
+                    }
+                    color = Math.max(0, color);
+
+                    TagCompound tag, display;
+                    if (!skillTree.getIconItem().getCompoundData().containsKey("tag")) {
+                        tag = new TagCompound();
+                        skillTree.getIconItem().getCompoundData().put("tag", tag);
+                    } else {
+                        tag = skillTree.getIconItem().getAs("tag", TagCompound.class);
+                    }
+                    if (!skillTree.getIconItem().getCompoundData().containsKey("display")) {
+                        display = new TagCompound();
+                        tag.getCompoundData().put("display", display);
+                    } else {
+                        display = tag.get("display");
+                    }
+                    display.getCompoundData().put("color", new TagInt(color));
+                }
             }
         });
     }
 
-    private void countSkillLevels()
-    {
-        int level = 0;
-        if (skillTreeTree.getSelectionPath() != null && skillTreeTree.getSelectionPath().getPathCount() > 1 && MyPetUtil.isInt(skillTreeTree.getSelectionPath().getPathComponent(1).toString()))
-        {
-            level = Integer.parseInt(skillTreeTree.getSelectionPath().getPathComponent(1).toString());
-        }
-
-        Map<String, Integer> skillCount = new HashMap<String, Integer>();
-        for (MyPetSkillTreeLevel skillTreeLevel : this.skillTree.getLevelList())
-        {
-            if (skillTreeLevel.getLevel() <= level)
-            {
-                for (ISkillInfo skill : skillTreeLevel.getSkills())
-                {
-                    if (skillCount.containsKey(skill.getName()))
-                    {
-                        skillCount.put(skill.getName(), skillCount.get(skill.getName()) + 1);
-                    }
-                    else
-                    {
-                        skillCount.put(skill.getName(), 1);
-                    }
-                }
-            }
-        }
-        if (skillTree.getInheritance() != null && skillTreeMobType.getSkillTree(skillTree.getInheritance()) != null)
-        {
-            for (MyPetSkillTreeLevel skillTreeLevel : this.skillTreeMobType.getSkillTree(skillTree.getInheritance()).getLevelList())
-            {
-                if (skillTreeLevel.getLevel() <= level)
-                {
-                    for (ISkillInfo skill : skillTreeLevel.getSkills())
-                    {
-                        if (skillCount.containsKey(skill.getName()))
-                        {
-                            skillCount.put(skill.getName(), skillCount.get(skill.getName()) + 1);
-                        }
-                        else
-                        {
-                            skillCount.put(skill.getName(), 1);
-                        }
-                    }
-                }
-            }
-        }
-        skillCounterTabelModel.getDataVector().removeAllElements();
-        for (String skillName : skillCount.keySet())
-        {
-            String[] row = {skillName, "" + skillCount.get(skillName)};
-            skillCounterTabelModel.addRow(row);
-        }
-        skilllevelLabel.setText("Skilllevels for level: " + level);
-        skillCounterTabel.updateUI();
-    }
-
-    public JPanel getMainPanel()
-    {
+    public JPanel getMainPanel() {
         return levelCreatorPanel;
     }
 
-    public JFrame getFrame()
-    {
-        if (levelCreatorFrame == null)
-        {
-            levelCreatorFrame = new JFrame("LevelCreator - MyPet " + MyPetVersion.getMyPetVersion());
+    public JFrame getFrame() {
+        if (levelCreatorFrame == null) {
+            levelCreatorFrame = new JFrame("LevelCreator - MyPet " + MyPetVersion.getVersion());
         }
         return levelCreatorFrame;
     }
 
-    public void setSkillTree(MyPetSkillTree skillTree, MyPetSkillTreeMobType skillTreeMobType)
-    {
+    public void setSkillTree(SkillTree skillTree, SkillTreeMobType skillTreeMobType) {
         this.skillTree = skillTree;
         this.skillTreeMobType = skillTreeMobType;
         highestLevel = 0;
 
-        if (skillTree.hasDisplayName())
-        {
+        if (skillTree.hasDisplayName()) {
             displayNameTextField.setEnabled(true);
             displayNameCheckbox.setSelected(true);
-        }
-        else
-        {
+        } else {
             displayNameTextField.setEnabled(false);
             displayNameCheckbox.setSelected(false);
         }
         displayNameTextField.setText(skillTree.getDisplayName());
-        if (skillTree.hasCustomPermissions())
-        {
+        if (skillTree.hasCustomPermissions()) {
             permissionTextField.setEnabled(true);
             permissionCheckbox.setSelected(true);
-        }
-        else
-        {
+        } else {
             permissionTextField.setEnabled(false);
             permissionCheckbox.setSelected(false);
         }
         permissionTextField.setText(skillTree.getPermission());
         permissionDisplayTextField.setText("MyPet.custom.skilltree." + skillTree.getPermission());
-        mobTypeLabel.setText(skillTreeMobType.getMobTypeName());
+
+        if (skillTree.getMaxLevel() > 0) {
+            maxLevelCheckBox.setSelected(true);
+            maxLevelTextField.setEnabled(true);
+            maxLevelTextField.setText("" + skillTree.getMaxLevel());
+        } else {
+            maxLevelCheckBox.setSelected(false);
+            maxLevelTextField.setEnabled(false);
+            maxLevelTextField.setText("");
+        }
+        if (skillTree.getRequiredLevel() > 1) {
+            requiredLevelCheckBox.setSelected(true);
+            requiredLevelTextField.setEnabled(true);
+            requiredLevelTextField.setText("" + skillTree.getRequiredLevel());
+        } else {
+            requiredLevelCheckBox.setSelected(false);
+            requiredLevelTextField.setEnabled(false);
+            requiredLevelTextField.setText("");
+        }
 
         this.inheritanceComboBoxModel.removeAllElements();
 
         inheritanceCheckBox.setSelected(false);
         inheritanceCheckBox.setEnabled(false);
-        if (skillTreeMobType.getSkillTreeNames().size() > 1 || (!skillTreeMobType.getMobTypeName().equals("default") && MyPetSkillTreeMobType.getMobTypeByName("default").getSkillTreeNames().size() > 0))
-        {
+        if (skillTreeMobType.getSkillTreeNames().size() > 1 || (!skillTreeMobType.getMobTypeName().equals("default") && SkillTreeMobType.getMobTypeByName("default").getSkillTreeNames().size() > 0)) {
             inheritanceCheckBox.setEnabled(true);
             ArrayList<String> skilltreeNames = new ArrayList<String>();
-            for (String skillTreeName : skillTreeMobType.getSkillTreeNames())
-            {
-                if (!skillTreeName.equals(skillTree.getName()) && !skilltreeNames.contains(skillTreeName))
-                {
+            for (String skillTreeName : skillTreeMobType.getSkillTreeNames()) {
+                if (!skillTreeName.equals(skillTree.getName()) && !skilltreeNames.contains(skillTreeName)) {
                     skilltreeNames.add(skillTreeName);
                     inheritanceComboBoxModel.addElement(skillTreeName);
                 }
             }
-            for (String skillTreeName : MyPetSkillTreeMobType.getMobTypeByName("default").getSkillTreeNames())
-            {
-                if (!skillTreeName.equals(skillTree.getName()) && !skilltreeNames.contains(skillTreeName))
-                {
+            for (String skillTreeName : SkillTreeMobType.getMobTypeByName("default").getSkillTreeNames()) {
+                if (!skillTreeName.equals(skillTree.getName()) && !skilltreeNames.contains(skillTreeName)) {
                     skilltreeNames.add(skillTreeName);
                     inheritanceComboBoxModel.addElement(skillTreeName);
                 }
             }
-            if (skillTree.getInheritance() != null && skillTreeMobType.getSkillTreeNames().contains(skillTree.getInheritance()))
-            {
-                inheritanceCheckBox.setSelected(true);
-                inheritanceComboBox.setEnabled(true);
-                this.inheritanceComboBoxModel.setSelectedItem(skillTree.getInheritance());
-            }
-            else
-            {
+            if (skillTree.getInheritance() != null) {
+                if (skillTreeMobType.getSkillTreeNames().contains(skillTree.getInheritance())) {
+                    inheritanceCheckBox.setSelected(true);
+                    inheritanceComboBox.setEnabled(true);
+                    this.inheritanceComboBoxModel.setSelectedItem(skillTree.getInheritance());
+                }
+                if (SkillTreeMobType.hasMobType("default") && SkillTreeMobType.getMobTypeByName("default").getSkillTreeNames().contains(skillTree.getInheritance())) {
+                    inheritanceCheckBox.setSelected(true);
+                    inheritanceComboBox.setEnabled(true);
+                    this.inheritanceComboBoxModel.setSelectedItem(skillTree.getInheritance());
+                }
+            } else {
                 inheritanceComboBox.setEnabled(false);
             }
         }
@@ -543,114 +649,109 @@ public class LevelCreator
         SortedDefaultMutableTreeNode rootNode = new SortedDefaultMutableTreeNode(skillTree.getName());
         skillTreeTreeModel.setRoot(rootNode);
         int skillcount = 0;
-        for (MyPetSkillTreeLevel level : skillTree.getLevelList())
-        {
+        for (SkillTreeLevel level : skillTree.getLevelList()) {
             highestLevel = Math.max(highestLevel, level.getLevel());
             DefaultMutableTreeNode levelNode = new DefaultMutableTreeNode(level.getLevel());
             rootNode.add(levelNode);
-            for (ISkillInfo skill : level.getSkills())
-            {
+            for (ISkillInfo skill : level.getSkills()) {
                 SkillTreeSkillNode skillNode = new SkillTreeSkillNode(skill);
                 levelNode.add(skillNode);
                 skillcount++;
             }
         }
 
-        if (skillcount <= 15)
-        {
-            for (int i = 0 ; i < skillTreeTree.getRowCount() ; i++)
-            {
+        if (skillcount <= 15) {
+            for (int i = 0; i < skillTreeTree.getRowCount(); i++) {
                 skillTreeTree.expandRow(i);
             }
-        }
-        else
-        {
+        } else {
             skillTreeTree.expandRow(0);
         }
         skillTreeTree.updateUI();
         skillTreeTree.setSelectionPath(new TreePath(rootNode));
     }
 
-    private void createUIComponents()
-    {
+    private void createUIComponents() {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("");
         skillTreeTreeModel = new DefaultTreeModel(root);
         skillTreeTree = new JTree(skillTreeTreeModel);
         skillTreeTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
+        createRightclickMenus();
+
         inheritanceComboBoxModel = new DefaultComboBoxModel();
         inheritanceComboBox = new JComboBox(inheritanceComboBoxModel);
-
-        String[] columnNames = {"Skill", "Level"};
-        String[][] data = new String[0][0];
-        skillCounterTabelModel = new DefaultTableModel(data, columnNames);
-        skillCounterTabel = new JTable(skillCounterTabelModel)
-        {
-            public boolean isCellEditable(int rowIndex, int colIndex)
-            {
-                return false;
-            }
-        };
-        skillCounterTabel.getColumnModel().getColumn(0).setPreferredWidth(160);
-        skillCounterTabel.getColumnModel().getColumn(1).setPreferredWidth(50);
     }
 
-    private class SkillTreeSkillNode extends DefaultMutableTreeNode
-    {
+    public void createRightclickMenus() {
+        levelListRightclickMenu = new JPopupMenu();
+
+        JMenuItem expandMenuItem = new JMenuItem("Expand all");
+        levelListRightclickMenu.add(expandMenuItem);
+        expandMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                for (int i = 0; i < skillTreeTree.getRowCount(); i++) {
+                    skillTreeTree.expandRow(i);
+                }
+            }
+        });
+
+        JMenuItem collapseMenuItem = new JMenuItem("Collapse all");
+        levelListRightclickMenu.add(collapseMenuItem);
+        collapseMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                for (int i = 1; i < skillTreeTree.getRowCount(); i++) {
+                    skillTreeTree.collapseRow(i);
+                }
+            }
+        });
+
+        MouseListener popupListener = new SkilltreeCreator.PopupListener(levelListRightclickMenu);
+        skillTreeTree.addMouseListener(popupListener);
+    }
+
+    private class SkillTreeSkillNode extends DefaultMutableTreeNode {
         private ISkillInfo skill;
 
-        public SkillTreeSkillNode(ISkillInfo skill)
-        {
+        public SkillTreeSkillNode(ISkillInfo skill) {
             super(skill.getName());
             this.skill = skill;
         }
 
-        public ISkillInfo getSkill()
-        {
+        public ISkillInfo getSkill() {
             return skill;
         }
     }
 
-    private class SortedDefaultMutableTreeNode extends DefaultMutableTreeNode
-    {
-        public SortedDefaultMutableTreeNode(Object userObject)
-        {
+    private class SortedDefaultMutableTreeNode extends DefaultMutableTreeNode {
+        public SortedDefaultMutableTreeNode(Object userObject) {
             super(userObject);
         }
 
         @SuppressWarnings("unchecked")
-        public void add(DefaultMutableTreeNode newChild)
-        {
+        public void add(DefaultMutableTreeNode newChild) {
             super.add(newChild);
             Collections.sort(this.children, nodeComparator);
         }
 
-        protected Comparator nodeComparator = new Comparator()
-        {
-            public int compare(Object o1, Object o2)
-            {
-                if (MyPetUtil.isInt(o1.toString()) && MyPetUtil.isInt(o2.toString()))
-                {
+        protected Comparator nodeComparator = new Comparator() {
+            public int compare(Object o1, Object o2) {
+                if (Util.isInt(o1.toString()) && Util.isInt(o2.toString())) {
                     int n1 = Integer.parseInt(o1.toString());
                     int n2 = Integer.parseInt(o2.toString());
-                    if (n1 < n2)
-                    {
+                    if (n1 < n2) {
                         return -1;
-                    }
-                    else if (n1 == n2)
-                    {
+                    } else if (n1 == n2) {
                         return 0;
                     }
-                    if (n1 > n2)
-                    {
+                    if (n1 > n2) {
                         return 1;
                     }
                 }
                 return o1.toString().compareToIgnoreCase(o2.toString());
             }
 
-            public boolean equals(Object obj)
-            {
+            public boolean equals(Object obj) {
                 return false;
             }
         };

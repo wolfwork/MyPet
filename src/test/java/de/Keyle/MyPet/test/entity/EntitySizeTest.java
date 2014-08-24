@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -28,13 +28,10 @@ import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class EntitySizeTest
-{
+public class EntitySizeTest {
     @Test
-    public void testEntitySizes()
-    {
-        for (MyPetType petType : MyPetType.values())
-        {
+    public void testEntitySizes() {
+        for (MyPetType petType : MyPetType.values()) {
             Class<? extends EntityMyPet> entityClass = petType.getEntityClass();
             EntitySize es = entityClass.getAnnotation(EntitySize.class);
             assertNotNull(es);

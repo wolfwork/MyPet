@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,15 +21,14 @@
 package de.Keyle.MyPet.skill.skills.info;
 
 import de.Keyle.MyPet.gui.skilltreecreator.skills.SkillPropertiesPanel;
-import org.spout.nbt.CompoundTag;
+import de.keyle.knbt.TagCompound;
 
-public interface ISkillInfo
-{
+public interface ISkillInfo {
     public SkillPropertiesPanel getGuiPanel();
 
-    public void setProperties(CompoundTag propertiesCompound);
+    public void setProperties(TagCompound propertiesCompound);
 
-    public CompoundTag getProperties();
+    public TagCompound getProperties();
 
     public void setDefaultProperties();
 
@@ -40,4 +39,6 @@ public interface ISkillInfo
     public ISkillInfo cloneSkill();
 
     public String getName();
+
+    public String getName(String locale);
 }

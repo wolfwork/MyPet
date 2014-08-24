@@ -1,49 +1,50 @@
-name: MyPet
+name: ${project.name}
 main: de.Keyle.MyPet.MyPetPlugin
-version: ${mypet.version}
+version: ${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}
 author: Keyle
-website: http://dev.bukkit.org/server-mods/mywolf/
-softdepend: [Vault, Heroes, AncientRPG, BattleArena, Minigames, MobArena, pvparena]
+website: ${project.url}
+softdepend: [Vault, Heroes, AncientRPG, BattleArena, Minigames, MobArena, pvparena, Multiverse-Core]
 commands:
   myPet:
     description: Help for all MyPet commands.
   petname:
-    description: Set the name of your MyPet
+    description: Changes the name of your MyPet
     usage: '/<command> <PetName>'
+    permission: MyPet.user.command.name
   petcall:
     aliases: [petc, pc]
-    description: Call your MyPet.
+    description: Calls your MyPet.
   petsendaway:
     aliases: [petsa, psa]
     description: Send your MyPet away.
   petrelease:
-    description: Release your MyPet.
+    description: Releases your MyPet.
     usage: '/<command> <PetName>'
-    permission: MyPet.user.release
+    permission: MyPet.user.command.release
   petstop:
     aliases: [pets, ps]
-    description: your MyPet stop attacking.
+    description: Stops your MyPet from attacking.
   petpickup:
     aliases: [petp, pp]
     description: Toogles pickup of your MyPet.
   petinventory:
     aliases: [peti, pi]
-    description: Open the inventory of your MyPet.
+    description: Opens the inventory of your MyPet.
   petbehavior:
     aliases: [petb, pb]
-    description: Switch the behavior mode of your MyPet.
+    description: Changes the behavior mode of your MyPet.
     usage: '/<command> [<friendly/friend/aggressive/aggro/normal/farm/raid/duel>]'
   petinfo:
     aliases: [pinfo]
-    description: Shows HP and Exp of your MyPet
+    description: Shows info about your MyPet
     usage: '/<command> [PlayerName]'
   petskill:
     aliases: [pskill]
-    description: Shows the skill-levels of a online MyPet
+    description: Shows the Skill-levels of your MyPet
     usage: '/<command> <Playername>'
-  petadmin:
-    description: Set the Exp or Name of a MyPet
-    usage: '/<command> -> http://mypet.keyle.de/doku.php?id=en:commands'
+  mypetadmin:
+    aliases: [petadmin]
+    description: MyPet-Admin-Command -> http://mypet.keyle.de/doku.php?id=en:commands
     permission: MyPet.admin
   petskilltree:
     aliases: [pst, petst]
@@ -56,20 +57,19 @@ commands:
   petbeacon:
     aliases: [pbeacon]
     description: Beacon!
-    usage: '/<command> [stop]'
   petrespawn:
     aliases: [pr, petr]
     description: Pays respawn fee or enable auto respawn fee paying.
     usage: '/<command> [pay/auto] [min respawn time]'
-    permission: MyPet.user.respawn
+    permission: MyPet.user.command.respawn
   pettype:
-    description: Infos for Pettype
+    description: Shows info about the MyPet-types.
     usage: '/<command> <Pettype>'
   petcapturehelper:
     aliases: [pch]
-    description: Sets the mode for the capturehelper
-    usage: '/<command> [normal|half|tameableonly|deactivate]'
-    permission: MyPet.user.capturehelper
+    description: Toogles CaptureHelper on/off
+    usage: '/<command>'
+    permission: MyPet.user.command.capturehelper
 
 permissions:
   MyPet.user.leash.*:
@@ -83,6 +83,7 @@ permissions:
       MyPet.user.leash.Creeper: true
       MyPet.user.leash.Enderman: true
       MyPet.user.leash.Giant: true
+      MyPet.user.leash.Horse: true
       MyPet.user.leash.IronGolem: true
       MyPet.user.leash.MagmaCube: true
       MyPet.user.leash.Mooshroom: true
@@ -95,6 +96,7 @@ permissions:
       MyPet.user.leash.Slime: true
       MyPet.user.leash.Snowman: true
       MyPet.user.leash.Spider: true
+      MyPet.user.leash.Squid: true
       MyPet.user.leash.Villager: true
       MyPet.user.leash.Witch: true
       MyPet.user.leash.Wither: true
@@ -104,17 +106,30 @@ permissions:
     description: Gives access to ALL (not includes admin) MyPet features.
     children:
       MyPet.user.*: true
+  MyPet.admin:
+    description: Gives access to the MyPet admin features.
+    default: op
   MyPet.user.*:
     description: Gives access to MyPet features for normal user.
     children:
       MyPet.user.leash.*: true
-      MyPet.user.release: true
-      MyPet.user.respawn: true
-      MyPet.user.capturehelper: true
-  MyPet.user.release:
+      MyPet.user.command.respawn: true
+      MyPet.user.command.release: true
+      MyPet.user.command.capturehelper: true
+      MyPet.user.command.name: true
+      MyPet.user.command.name.color: true
+  MyPet.user.command.release:
+    default: true
     description: Allows usage of /petrelease
-  MyPet.admin:
-    description: Gives access to admin MyPet features.
-    default: op
-  MyPet.user.capturehelper:
+  MyPet.user.command.capturehelper:
+    default: true
     description: Gives access to the CaptureHelper
+  MyPet.user.command.respawn:
+    default: true
+    description: Allows usage of /petrespawn
+  MyPet.user.command.name:
+    default: true
+    description: Allows usage of /petname
+  MyPet.user.command.name.color:
+    default: true
+    description: Allows to use colors in petnames

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -24,63 +24,54 @@ import de.Keyle.MyPet.entity.MyPetInfo;
 import de.Keyle.MyPet.entity.types.IMyPetSlimeSize;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
-import de.Keyle.MyPet.util.MyPetPlayer;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
+import de.keyle.knbt.TagCompound;
+import de.keyle.knbt.TagInt;
 import org.bukkit.ChatColor;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.IntTag;
 
 import static org.bukkit.Material.SUGAR;
 
 @MyPetInfo(food = {SUGAR})
-public class MySlime extends MyPet implements IMyPetSlimeSize
-{
+public class MySlime extends MyPet implements IMyPetSlimeSize {
     protected int size = 1;
 
-    public MySlime(MyPetPlayer petOwner)
-    {
+    public MySlime(MyPetPlayer petOwner) {
         super(petOwner);
     }
 
-    public int getSize()
-    {
+    @Override
+    public TagCompound getExtendedInfo() {
+        TagCompound info = super.getExtendedInfo();
+        info.getCompoundData().put("Size", new TagInt(getSize()));
+        return info;
+    }
+
+    @Override
+    public void setExtendedInfo(TagCompound info) {
+        if (info.getCompoundData().containsKey("Size")) {
+            setSize(info.getAs("Size", TagInt.class).getIntData());
+        }
+    }
+
+    @Override
+    public MyPetType getPetType() {
+        return MyPetType.Slime;
+    }
+
+    public int getSize() {
         return size;
     }
 
-    public void setSize(int value)
-    {
-        if (status == PetState.Here)
-        {
+    public void setSize(int value) {
+        value = Math.max(1, value);
+        if (status == PetState.Here) {
             ((EntityMySlime) getCraftPet().getHandle()).setSize(value);
         }
         this.size = value;
     }
 
     @Override
-    public CompoundTag getExtendedInfo()
-    {
-        CompoundTag info = super.getExtendedInfo();
-        info.getValue().put("Size", new IntTag("Size", getSize()));
-        return info;
-    }
-
-    @Override
-    public void setExtendedInfo(CompoundTag info)
-    {
-        if (info.getValue().containsKey("Size"))
-        {
-            setSize(((IntTag) info.getValue().get("Size")).getValue());
-        }
-    }
-
-    @Override
-    public MyPetType getPetType()
-    {
-        return MyPetType.Slime;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "MySlime{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", size=" + getSize() + "}";
+    public String toString() {
+        return "MySlime{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", worldgroup=" + worldGroup + ", size=" + getSize() + "}";
     }
 }

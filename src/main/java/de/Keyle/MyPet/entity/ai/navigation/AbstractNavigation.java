@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,12 +21,11 @@
 package de.Keyle.MyPet.entity.ai.navigation;
 
 import de.Keyle.MyPet.entity.types.EntityMyPet;
-import net.minecraft.server.v1_6_R1.EntityLiving;
+import net.minecraft.server.v1_7_R4.EntityLiving;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 
-public abstract class AbstractNavigation
-{
+public abstract class AbstractNavigation {
     protected EntityMyPet entityMyPet;
     NavigationParameters parameters;
 
@@ -36,35 +35,29 @@ public abstract class AbstractNavigation
 
     public abstract void applyNavigationParameters();
 
-    public AbstractNavigation(EntityMyPet entityMyPet)
-    {
+    public AbstractNavigation(EntityMyPet entityMyPet) {
         this.entityMyPet = entityMyPet;
         parameters = new NavigationParameters(entityMyPet.getWalkSpeed());
     }
 
-    public AbstractNavigation(EntityMyPet entityMyPet, NavigationParameters parameters)
-    {
+    public AbstractNavigation(EntityMyPet entityMyPet, NavigationParameters parameters) {
         this.entityMyPet = entityMyPet;
         this.parameters = parameters;
     }
 
-    public boolean navigateTo(Location loc)
-    {
+    public boolean navigateTo(Location loc) {
         return navigateTo(loc.getX(), loc.getY(), loc.getZ());
     }
 
-    public boolean navigateTo(LivingEntity entity)
-    {
+    public boolean navigateTo(LivingEntity entity) {
         return navigateTo(entity.getLocation());
     }
 
-    public boolean navigateTo(EntityLiving entity)
-    {
+    public boolean navigateTo(EntityLiving entity) {
         return navigateTo((LivingEntity) entity.getBukkitEntity());
     }
 
-    public NavigationParameters getParameters()
-    {
+    public NavigationParameters getParameters() {
         return parameters;
     }
 

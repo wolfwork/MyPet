@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,82 +20,32 @@
 
 package de.Keyle.MyPet.entity.types.ghast;
 
-import de.Keyle.MyPet.MyPetPlugin;
 import de.Keyle.MyPet.entity.MyPetInfo;
-import de.Keyle.MyPet.entity.types.CraftMyPet;
-import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
-import de.Keyle.MyPet.util.MyPetBukkitUtil;
-import de.Keyle.MyPet.util.MyPetPlayer;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_6_R1.CraftWorld;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.metadata.FixedMetadataValue;
 
 import static de.Keyle.MyPet.entity.types.MyPet.LeashFlag.Impossible;
 import static org.bukkit.Material.SULPHUR;
 
 @MyPetInfo(food = {SULPHUR}, leashFlags = {Impossible})
-public class MyGhast extends MyPet
-{
-    public MyGhast(MyPetPlayer petOwner)
-    {
+public class MyGhast extends MyPet {
+    public MyGhast(MyPetPlayer petOwner) {
         super(petOwner);
     }
 
-    @Override
-    public SpawnFlags createPet()
-    {
-        if (status != PetState.Here && getOwner().isOnline())
-        {
-            if (respawnTime <= 0)
-            {
-                Location loc = petOwner.getPlayer().getLocation();
-                net.minecraft.server.v1_6_R1.World mcWorld = ((CraftWorld) loc.getWorld()).getHandle();
-                EntityMyPet petEntity = getPetType().getNewEntityInstance(mcWorld, this);
-                craftMyPet = (CraftMyPet) petEntity.getBukkitEntity();
-                petEntity.setLocation(loc);
-                if (!MyPetBukkitUtil.canSpawn(loc, petEntity))
-                {
-                    Location l = loc.add(0, 4, 0);
-                    if (!MyPetBukkitUtil.canSpawn(l, petEntity))
-                    {
-                        status = PetState.Despawned;
-                        return SpawnFlags.NoSpace;
-                    }
-                    petEntity.setLocation(l);
-                }
-                if (!mcWorld.addEntity(petEntity, CreatureSpawnEvent.SpawnReason.CUSTOM))
-                {
-                    status = PetState.Despawned;
-                    return SpawnFlags.Canceled;
-                }
-                craftMyPet.setMetadata("MyPet", new FixedMetadataValue(MyPetPlugin.getPlugin(), this));
-                status = PetState.Here;
-                return SpawnFlags.Success;
-            }
-        }
-        if (status == PetState.Dead)
-        {
-            return SpawnFlags.Dead;
-        }
-        else
-        {
-            return SpawnFlags.AlreadyHere;
-        }
+    public double getYSpawnOffset() {
+        return 4;
     }
 
     @Override
-    public MyPetType getPetType()
-    {
+    public MyPetType getPetType() {
         return MyPetType.Ghast;
     }
 
     @Override
-    public String toString()
-    {
-        return "MyGhast{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + "}";
+    public String toString() {
+        return "MyGhast{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", worldgroup=" + worldGroup + "}";
     }
 }

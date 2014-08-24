@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,63 +23,53 @@ package de.Keyle.MyPet.entity.types.blaze;
 import de.Keyle.MyPet.entity.MyPetInfo;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
-import de.Keyle.MyPet.util.MyPetPlayer;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
+import de.keyle.knbt.TagByte;
+import de.keyle.knbt.TagCompound;
 import org.bukkit.ChatColor;
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundTag;
 
 import static org.bukkit.Material.SULPHUR;
 
 @MyPetInfo(food = {SULPHUR})
-public class MyBlaze extends MyPet
-{
+public class MyBlaze extends MyPet {
     protected boolean isOnFire = false;
 
-    public MyBlaze(MyPetPlayer petOwner)
-    {
+    public MyBlaze(MyPetPlayer petOwner) {
         super(petOwner);
     }
 
-    public boolean isOnFire()
-    {
+    @Override
+    public TagCompound getExtendedInfo() {
+        TagCompound info = super.getExtendedInfo();
+        info.getCompoundData().put("Fire", new TagByte(isOnFire()));
+        return info;
+    }
+
+    @Override
+    public void setExtendedInfo(TagCompound info) {
+        if (info.getCompoundData().containsKey("Fire")) {
+            setOnFire(info.getAs("Fire", TagByte.class).getBooleanData());
+        }
+    }
+
+    @Override
+    public MyPetType getPetType() {
+        return MyPetType.Blaze;
+    }
+
+    public boolean isOnFire() {
         return isOnFire;
     }
 
-    public void setOnFire(boolean flag)
-    {
-        if (status == PetState.Here)
-        {
+    public void setOnFire(boolean flag) {
+        if (status == PetState.Here) {
             ((EntityMyBlaze) getCraftPet().getHandle()).setOnFire(flag);
         }
         isOnFire = flag;
     }
 
     @Override
-    public CompoundTag getExtendedInfo()
-    {
-        CompoundTag info = super.getExtendedInfo();
-        info.getValue().put("Fire", new ByteTag("Fire", isOnFire()));
-        return info;
-    }
-
-    @Override
-    public void setExtendedInfo(CompoundTag info)
-    {
-        if (info.getValue().containsKey("Fire"))
-        {
-            setOnFire(((ByteTag) info.getValue().get("Fire")).getBooleanValue());
-        }
-    }
-
-    @Override
-    public MyPetType getPetType()
-    {
-        return MyPetType.Blaze;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "MyBlaze{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", isOnFire=" + isOnFire + "}";
+    public String toString() {
+        return "MyBlaze{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", worldgroup=" + worldGroup + ", isOnFire=" + isOnFire + "}";
     }
 }

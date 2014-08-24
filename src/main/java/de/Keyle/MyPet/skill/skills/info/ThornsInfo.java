@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -22,39 +22,34 @@ package de.Keyle.MyPet.skill.skills.info;
 
 import de.Keyle.MyPet.gui.skilltreecreator.skills.SkillPropertiesPanel;
 import de.Keyle.MyPet.gui.skilltreecreator.skills.Thorns;
-import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
-import de.Keyle.MyPet.skill.SkillName;
-import de.Keyle.MyPet.skill.SkillProperties;
-import de.Keyle.MyPet.skill.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skills.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillProperties;
+import de.Keyle.MyPet.skill.skills.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeSkill;
 
-@SkillName("Thorns")
+@SkillName(value = "Thorns", translationNode = "Name.Skill.Thorns")
 @SkillProperties(
         parameterNames = {"chance", "addset_chance", "reflection", "addset_reflection"},
         parameterTypes = {NBTdatatypes.Int, NBTdatatypes.String, NBTdatatypes.Int, NBTdatatypes.String},
         parameterDefaultValues = {"5", "add", "15", "add"})
-public class ThornsInfo extends MyPetSkillTreeSkill implements ISkillInfo
-{
+public class ThornsInfo extends SkillTreeSkill implements ISkillInfo {
     private SkillPropertiesPanel panel = null;
 
     protected int chance = 0;
     protected int reflectedDamagePercent = 0;
 
-    public ThornsInfo(boolean addedByInheritance)
-    {
+    public ThornsInfo(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public SkillPropertiesPanel getGuiPanel()
-    {
-        if (panel == null)
-        {
+    public SkillPropertiesPanel getGuiPanel() {
+        if (panel == null) {
             panel = new Thorns(this.getProperties());
         }
         return panel;
     }
 
-    public ISkillInfo cloneSkill()
-    {
+    public ISkillInfo cloneSkill() {
         ThornsInfo newSkill = new ThornsInfo(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,90 +20,77 @@
 
 package de.Keyle.MyPet.gui.skilltreecreator.skills;
 
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.StringTag;
+import de.keyle.knbt.TagByte;
+import de.keyle.knbt.TagCompound;
+import de.keyle.knbt.TagDouble;
+import de.keyle.knbt.TagString;
 
 import javax.swing.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class Pickup implements SkillPropertiesPanel
-{
+public class Pickup implements SkillPropertiesPanel {
     private JPanel mainPanel;
     private JTextField rangeInput;
     private JRadioButton addRangeRadioButton;
     private JRadioButton setRangeRadioButton;
+    private JCheckBox expPickupCheckBox;
 
-    private CompoundTag compoundTag;
+    private TagCompound tagCompound;
 
-    public Pickup(CompoundTag compoundTag)
-    {
-        this.compoundTag = compoundTag;
-        load(compoundTag);
+    public Pickup(TagCompound tagCompound) {
+        this.tagCompound = tagCompound;
+        load(tagCompound);
     }
 
     @Override
-    public JPanel getMainPanel()
-    {
+    public JPanel getMainPanel() {
         return mainPanel;
     }
 
     @Override
-    public void verifyInput()
-    {
+    public void verifyInput() {
         rangeInput.setText(rangeInput.getText().replaceAll("[^0-9\\.]*", ""));
-        if (rangeInput.getText().length() > 0)
-        {
-            if (rangeInput.getText().matches("\\.+"))
-            {
+        if (rangeInput.getText().length() > 0) {
+            if (rangeInput.getText().matches("\\.+")) {
                 rangeInput.setText("0.0");
-            }
-            else
-            {
-                try
-                {
+            } else {
+                try {
                     Pattern regex = Pattern.compile("[0-9]+(\\.[0-9]+)?");
                     Matcher regexMatcher = regex.matcher(rangeInput.getText());
                     regexMatcher.find();
                     rangeInput.setText(regexMatcher.group());
-                }
-                catch (PatternSyntaxException ignored)
-                {
+                } catch (PatternSyntaxException ignored) {
                     rangeInput.setText("0.0");
                 }
             }
-        }
-        else
-        {
+        } else {
             rangeInput.setText("0.0");
         }
     }
 
     @Override
-    public CompoundTag save()
-    {
-        compoundTag.getValue().put("addset_range", new StringTag("addset_range", addRangeRadioButton.isSelected() ? "add" : "set"));
-        compoundTag.getValue().put("range", new DoubleTag("range", Double.parseDouble(rangeInput.getText())));
+    public TagCompound save() {
+        tagCompound.getCompoundData().put("addset_range", new TagString(addRangeRadioButton.isSelected() ? "add" : "set"));
+        tagCompound.getCompoundData().put("range", new TagDouble(Double.parseDouble(rangeInput.getText())));
+        tagCompound.getCompoundData().put("exp_pickup", new TagByte(expPickupCheckBox.isSelected()));
 
-        return compoundTag;
+        return tagCompound;
     }
 
     @Override
-    public void load(CompoundTag compoundTag)
-    {
-        if (!compoundTag.getValue().containsKey("addset_range") || ((StringTag) compoundTag.getValue().get("addset_range")).getValue().equals("add"))
-        {
+    public void load(TagCompound TagCompound) {
+        if (!TagCompound.getCompoundData().containsKey("addset_range") || TagCompound.getAs("addset_range", TagString.class).getStringData().equals("add")) {
             addRangeRadioButton.setSelected(true);
-        }
-        else
-        {
+        } else {
             setRangeRadioButton.setSelected(true);
         }
-        if (compoundTag.getValue().containsKey("range"))
-        {
-            rangeInput.setText("" + ((DoubleTag) compoundTag.getValue().get("range")).getValue());
+        if (TagCompound.getCompoundData().containsKey("range")) {
+            rangeInput.setText("" + TagCompound.getAs("range", TagDouble.class).getDoubleData());
+        }
+        if (TagCompound.getCompoundData().containsKey("exp_pickup")) {
+            expPickupCheckBox.setSelected(TagCompound.getAs("exp_pickup", TagByte.class).getBooleanData());
         }
     }
 }

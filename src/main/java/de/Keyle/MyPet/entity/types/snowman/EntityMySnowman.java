@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,47 +23,93 @@ package de.Keyle.MyPet.entity.types.snowman;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.World;
+import net.minecraft.server.v1_7_R4.*;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 @EntitySize(width = 0.4F, height = 1.8F)
-public class EntityMySnowman extends EntityMyPet
-{
-    public EntityMySnowman(World world, MyPet myPet)
-    {
+public class EntityMySnowman extends EntityMyPet {
+    Map<Location, Integer> snowMap = new HashMap<Location, Integer>();
+
+    public EntityMySnowman(World world, MyPet myPet) {
         super(world, myPet);
     }
 
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
+    private void addAirBlocksInBB(org.bukkit.World bukkitWorld, AxisAlignedBB axisalignedbb) {
+        int minX = MathHelper.floor(axisalignedbb.a - 0.1);
+        int maxX = MathHelper.floor(axisalignedbb.d + 1.1D);
+        int minY = MathHelper.floor(axisalignedbb.b - 0.1);
+        int maxY = MathHelper.floor(axisalignedbb.e + 1.1D);
+        int minZ = MathHelper.floor(axisalignedbb.c - 0.1);
+        int maxZ = MathHelper.floor(axisalignedbb.f + 1.1D);
+
+        WorldServer world = ((CraftWorld) bukkitWorld).getHandle();
+
+        for (int x = minX; x < maxX; x++) {
+            for (int z = minZ; z < maxZ; z++) {
+                if (bukkitWorld.isChunkLoaded(x, z)) {
+                    for (int y = minY - 1; y < maxY; y++) {
+                        Block block = world.getType(x, y, z);
+
+                        if (block == Blocks.AIR) {
+                            snowMap.put(new Location(bukkitWorld, x, y, z), 10);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     @Override
-    protected void a(int i, int j, int k, int l)
-    {
+    protected String getDeathSound() {
+        return "step.snow";
+    }
+
+    @Override
+    protected String getHurtSound() {
+        return "step.snow";
+    }
+
+    protected String getLivingSound() {
+        return "step.snow";
+    }
+
+    public void onLivingUpdate() {
+        super.onLivingUpdate();
+
+        if (MySnowman.FIX_SNOW_TRACK) {
+            if (this.motX != 0D || this.motZ != 0D) {
+                addAirBlocksInBB(this.world.getWorld(), this.boundingBox);
+            }
+            if (snowMap.size() > 0) {
+                Iterator<Map.Entry<Location, Integer>> iter = snowMap.entrySet().iterator();
+                while (iter.hasNext()) {
+                    Map.Entry<Location, Integer> entry = iter.next();
+
+                    int oldCounter = entry.getValue();
+                    Location loc = entry.getKey();
+
+                    if (oldCounter - 1 == 0) {
+                        iter.remove();
+                        if (loc.getBlock().getTypeId() == 0) {
+                            byte data = loc.getBlock().getData();
+                            loc.getBlock().setData((byte) 1);
+                            loc.getBlock().setData(data);
+                        }
+                    } else {
+                        snowMap.put(loc, oldCounter - 1);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void playStepSound() {
         makeSound("step.snow", 0.15F, 1.0F);
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
-    @Override
-    protected String aK()
-    {
-        return "step.snow";
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    @Override
-    protected String aL()
-    {
-        return "step.snow";
-    }
-
-    /**
-     * Returns the default sound of the MyPet
-     */
-    protected String r()
-    {
-        return !playIdleSound() ? "" : "step.snow";
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,115 +21,91 @@
 package de.Keyle.MyPet.skill.skills.implementation;
 
 import de.Keyle.MyPet.MyPetPlugin;
+import de.Keyle.MyPet.api.util.IScheduler;
 import de.Keyle.MyPet.entity.types.CraftMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPet.PetState;
 import de.Keyle.MyPet.skill.skills.info.HPregenerationInfo;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
-import de.Keyle.MyPet.util.IScheduler;
-import de.Keyle.MyPet.util.MyPetBukkitUtil;
-import de.Keyle.MyPet.util.locale.MyPetLocales;
-import net.minecraft.server.v1_6_R1.EntityLiving;
-import net.minecraft.server.v1_6_R1.PotionBrewer;
+import de.Keyle.MyPet.util.Util;
+import de.Keyle.MyPet.util.locale.Locales;
+import de.keyle.knbt.TagDouble;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagString;
+import net.minecraft.server.v1_7_R4.EntityLiving;
+import net.minecraft.server.v1_7_R4.PotionBrewer;
 import org.bukkit.Bukkit;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
 
-public class HPregeneration extends HPregenerationInfo implements ISkillInstance, IScheduler
-{
+public class HPregeneration extends HPregenerationInfo implements ISkillInstance, IScheduler {
     private int timeCounter = 0;
     private MyPet myPet;
 
-    public HPregeneration(boolean addedByInheritance)
-    {
+    public HPregeneration(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
+    public void setMyPet(MyPet myPet) {
         this.myPet = myPet;
     }
 
-    public MyPet getMyPet()
-    {
+    public MyPet getMyPet() {
         return myPet;
     }
 
-    public boolean isActive()
-    {
+    public boolean isActive() {
         return increaseHpBy > 0;
     }
 
-    public void upgrade(ISkillInfo upgrade, boolean quiet)
-    {
-        if (upgrade instanceof HPregenerationInfo)
-        {
+    public void upgrade(ISkillInfo upgrade, boolean quiet) {
+        if (upgrade instanceof HPregenerationInfo) {
             boolean valuesEdit = false;
-            if (getProperties().getValue().containsKey("hp"))
-            {
-                int hp = ((IntTag) getProperties().getValue().get("hp")).getValue();
-                getProperties().getValue().remove("hp");
-                DoubleTag doubleTag = new DoubleTag("hp_double", hp);
-                getProperties().getValue().put("hp_double", doubleTag);
+            if (upgrade.getProperties().getCompoundData().containsKey("hp")) {
+                int hp = upgrade.getProperties().getAs("hp", TagInt.class).getIntData();
+                upgrade.getProperties().getCompoundData().remove("hp");
+                TagDouble TagDouble = new TagDouble(hp);
+                upgrade.getProperties().getCompoundData().put("hp_double", TagDouble);
             }
-            if (upgrade.getProperties().getValue().containsKey("hp_double"))
-            {
-                if (!upgrade.getProperties().getValue().containsKey("addset_hp") || ((StringTag) upgrade.getProperties().getValue().get("addset_hp")).getValue().equals("add"))
-                {
-                    increaseHpBy += ((DoubleTag) upgrade.getProperties().getValue().get("hp_double")).getValue();
-                }
-                else
-                {
-                    increaseHpBy = ((DoubleTag) upgrade.getProperties().getValue().get("hp_double")).getValue();
+            if (upgrade.getProperties().getCompoundData().containsKey("hp_double")) {
+                if (!upgrade.getProperties().getCompoundData().containsKey("addset_hp") || upgrade.getProperties().getAs("addset_hp", TagString.class).getStringData().equals("add")) {
+                    increaseHpBy += upgrade.getProperties().getAs("hp_double", TagDouble.class).getDoubleData();
+                } else {
+                    increaseHpBy = upgrade.getProperties().getAs("hp_double", TagDouble.class).getDoubleData();
                 }
                 valuesEdit = true;
             }
-            if (upgrade.getProperties().getValue().containsKey("time"))
-            {
-                if (!upgrade.getProperties().getValue().containsKey("addset_time") || ((StringTag) upgrade.getProperties().getValue().get("addset_time")).getValue().equals("add"))
-                {
-                    regenTime -= ((IntTag) upgrade.getProperties().getValue().get("time")).getValue();
+            if (upgrade.getProperties().getCompoundData().containsKey("time")) {
+                if (!upgrade.getProperties().getCompoundData().containsKey("addset_time") || upgrade.getProperties().getAs("addset_time", TagString.class).getStringData().equals("add")) {
+                    regenTime -= upgrade.getProperties().getAs("time", TagInt.class).getIntData();
+                } else {
+                    regenTime = upgrade.getProperties().getAs("time", TagInt.class).getIntData();
                 }
-                else
-                {
-                    regenTime = ((IntTag) upgrade.getProperties().getValue().get("time")).getValue();
-                }
-                if (regenTime < 1)
-                {
+                if (regenTime < 1) {
                     regenTime = 1;
                 }
                 timeCounter = regenTime;
                 valuesEdit = true;
             }
-            if (!quiet && valuesEdit)
-            {
-                myPet.sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.Skill.HpRegeneration.Upgrade", myPet.getOwner().getLanguage())).replace("%petname%", myPet.getPetName()).replace("%sec%", "" + regenTime).replace("%hp%", "" + increaseHpBy));
+            if (!quiet && valuesEdit) {
+                myPet.sendMessageToOwner(Util.formatText(Locales.getString("Message.Skill.HpRegeneration.Upgrade", myPet.getOwner().getLanguage()), myPet.getPetName(), increaseHpBy, regenTime));
             }
         }
     }
 
-    public String getFormattedValue()
-    {
-        return "+" + increaseHpBy + MyPetLocales.getString("Name.HP", myPet.getOwner().getLanguage()) + " ->" + regenTime + "sec";
+    public String getFormattedValue() {
+        return "+" + increaseHpBy + Locales.getString("Name.HP", myPet.getOwner().getLanguage()) + " ->" + regenTime + "sec";
     }
 
-    public void reset()
-    {
+    public void reset() {
         regenTime = 0;
         increaseHpBy = 0;
         timeCounter = 0;
     }
 
-    public void schedule()
-    {
-        if (increaseHpBy > 0 && myPet.getStatus() == PetState.Here)
-        {
-            if (timeCounter-- <= 0)
-            {
-                if (myPet.getHealth() < myPet.getMaxHealth())
-                {
+    public void schedule() {
+        if (increaseHpBy > 0 && myPet.getStatus() == PetState.Here) {
+            if (timeCounter-- <= 0) {
+                if (myPet.getHealth() < myPet.getMaxHealth()) {
                     addPotionGraphicalEffect(myPet.getCraftPet(), 0x00FF00, 40); //Green Potion Effect
                     myPet.getCraftPet().getHandle().heal((float) increaseHpBy, EntityRegainHealthEvent.RegainReason.REGEN);
                 }
@@ -139,25 +115,20 @@ public class HPregeneration extends HPregenerationInfo implements ISkillInstance
     }
 
     @Override
-    public ISkillInstance cloneSkill()
-    {
+    public ISkillInstance cloneSkill() {
         HPregeneration newSkill = new HPregeneration(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;
     }
 
-    public void addPotionGraphicalEffect(CraftMyPet entity, int color, int duration)
-    {
+    public void addPotionGraphicalEffect(CraftMyPet entity, int color, int duration) {
         final EntityLiving entityLiving = entity.getHandle();
         entityLiving.getDataWatcher().watch(7, new Integer(color));
 
-        Bukkit.getScheduler().scheduleSyncDelayedTask(MyPetPlugin.getPlugin(), new Runnable()
-        {
-            public void run()
-            {
+        Bukkit.getScheduler().scheduleSyncDelayedTask(MyPetPlugin.getPlugin(), new Runnable() {
+            public void run() {
                 int potionEffects = 0;
-                if (!entityLiving.effects.isEmpty())
-                {
+                if (!entityLiving.effects.isEmpty()) {
                     potionEffects = PotionBrewer.a(entityLiving.effects.values());
                 }
                 entityLiving.getDataWatcher().watch(7, new Integer(potionEffects));

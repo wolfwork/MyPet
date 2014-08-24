@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,12 +20,11 @@
 
 package de.Keyle.MyPet.gui.skilltreecreator.skills;
 
-import de.Keyle.MyPet.util.NBTStorage;
+import de.Keyle.MyPet.api.util.NBTStorage;
 
 import javax.swing.*;
 
-public interface SkillPropertiesPanel extends NBTStorage
-{
+public interface SkillPropertiesPanel extends NBTStorage {
     public JPanel getMainPanel();
 
     public void verifyInput();

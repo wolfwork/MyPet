@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -22,117 +22,94 @@ package de.Keyle.MyPet.skill.skills.implementation;
 
 import de.Keyle.MyPet.entity.types.CraftMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import de.Keyle.MyPet.skill.ISkillActive;
+import de.Keyle.MyPet.skill.skills.ISkillActive;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
 import de.Keyle.MyPet.skill.skills.info.LightningInfo;
-import de.Keyle.MyPet.util.MyPetBukkitUtil;
-import de.Keyle.MyPet.util.locale.MyPetLocales;
+import de.Keyle.MyPet.util.Util;
+import de.Keyle.MyPet.util.locale.Locales;
+import de.keyle.knbt.TagDouble;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagString;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
 
 import java.util.Random;
 
-public class Lightning extends LightningInfo implements ISkillInstance, ISkillActive
-{
+public class Lightning extends LightningInfo implements ISkillInstance, ISkillActive {
     private static Random random = new Random();
     private MyPet myPet;
     private boolean isStriking = false;
 
-    public Lightning(boolean addedByInheritance)
-    {
+    public Lightning(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
+    public void setMyPet(MyPet myPet) {
         this.myPet = myPet;
     }
 
-    public MyPet getMyPet()
-    {
+    public MyPet getMyPet() {
         return myPet;
     }
 
-    public boolean isActive()
-    {
+    public boolean isActive() {
         return chance > 0 && damage > 0;
     }
 
-    public void upgrade(ISkillInfo upgrade, boolean quiet)
-    {
-        if (upgrade instanceof LightningInfo)
-        {
+    public void upgrade(ISkillInfo upgrade, boolean quiet) {
+        if (upgrade instanceof LightningInfo) {
             boolean valuesEdit = false;
-            if (upgrade.getProperties().getValue().containsKey("chance"))
-            {
-                if (!upgrade.getProperties().getValue().containsKey("addset_chance") || ((StringTag) upgrade.getProperties().getValue().get("addset_chance")).getValue().equals("add"))
-                {
-                    chance += ((IntTag) upgrade.getProperties().getValue().get("chance")).getValue();
-                }
-                else
-                {
-                    chance = ((IntTag) upgrade.getProperties().getValue().get("chance")).getValue();
+            if (upgrade.getProperties().getCompoundData().containsKey("chance")) {
+                if (!upgrade.getProperties().getCompoundData().containsKey("addset_chance") || upgrade.getProperties().getAs("addset_chance", TagString.class).getStringData().equals("add")) {
+                    chance += upgrade.getProperties().getAs("chance", TagInt.class).getIntData();
+                } else {
+                    chance = upgrade.getProperties().getAs("chance", TagInt.class).getIntData();
                 }
                 valuesEdit = true;
             }
-            if (getProperties().getValue().containsKey("damage"))
-            {
-                int damage = ((IntTag) getProperties().getValue().get("damage")).getValue();
-                getProperties().getValue().remove("damage");
-                DoubleTag doubleTag = new DoubleTag("damage_double", damage);
-                getProperties().getValue().put("damage_double", doubleTag);
+            if (upgrade.getProperties().getCompoundData().containsKey("damage")) {
+                int damage = upgrade.getProperties().getAs("damage", TagInt.class).getIntData();
+                upgrade.getProperties().getCompoundData().remove("damage");
+                TagDouble TagDouble = new TagDouble(damage);
+                upgrade.getProperties().getCompoundData().put("damage_double", TagDouble);
             }
-            if (upgrade.getProperties().getValue().containsKey("damage_double"))
-            {
-                if (!upgrade.getProperties().getValue().containsKey("addset_damage") || ((StringTag) upgrade.getProperties().getValue().get("addset_damage")).getValue().equals("add"))
-                {
-                    damage += ((DoubleTag) upgrade.getProperties().getValue().get("damage_double")).getValue();
-                }
-                else
-                {
-                    damage = ((DoubleTag) upgrade.getProperties().getValue().get("damage_double")).getValue();
+            if (upgrade.getProperties().getCompoundData().containsKey("damage_double")) {
+                if (!upgrade.getProperties().getCompoundData().containsKey("addset_damage") || upgrade.getProperties().getAs("addset_damage", TagString.class).getStringData().equals("add")) {
+                    damage += upgrade.getProperties().getAs("damage_double", TagDouble.class).getDoubleData();
+                } else {
+                    damage = upgrade.getProperties().getAs("damage_double", TagDouble.class).getDoubleData();
                 }
                 valuesEdit = true;
             }
             chance = Math.min(chance, 100);
-            if (!quiet && valuesEdit)
-            {
-                myPet.sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.Skill.Lightning.Upgrade", myPet.getOwner().getLanguage())).replace("%petname%", myPet.getPetName()).replace("%chance%", "" + chance).replace("%damage%", "" + damage));
+            if (!quiet && valuesEdit) {
+                myPet.sendMessageToOwner(Util.formatText(Locales.getString("Message.Skill.Lightning.Upgrade", myPet.getOwner().getLanguage()), myPet.getPetName(), chance, damage));
             }
         }
     }
 
-    public String getFormattedValue()
-    {
-        return "" + ChatColor.GOLD + chance + ChatColor.RESET + "% -> " + ChatColor.GOLD + damage + ChatColor.RESET + " " + MyPetLocales.getString("Name.Damage", myPet.getOwner());
+    public String getFormattedValue() {
+        return "" + ChatColor.GOLD + chance + ChatColor.RESET + "% -> " + ChatColor.GOLD + damage + ChatColor.RESET + " " + Locales.getString("Name.Damage", myPet.getOwner());
     }
 
-    public void reset()
-    {
+    public void reset() {
         chance = 0;
         damage = 0;
     }
 
-    public boolean activate()
-    {
+    public boolean activate() {
         return !isStriking && random.nextDouble() <= chance / 100.;
     }
 
-    public void strikeLightning(Location loc)
-    {
+    public void strikeLightning(Location loc) {
         Player owner = myPet.getOwner().getPlayer();
         CraftMyPet craftMyPet = myPet.getCraftPet();
         isStriking = true;
         loc.getWorld().strikeLightningEffect(loc);
-        for (LivingEntity entity : loc.getWorld().getLivingEntities())
-        {
-            if (craftMyPet != entity && owner != entity & loc.distance(entity.getLocation()) <= 1.2)
-            {
+        for (LivingEntity entity : loc.getWorld().getLivingEntities()) {
+            if (craftMyPet != entity && owner != entity & loc.distance(entity.getLocation()) <= 1.2) {
                 entity.damage(damage, myPet.getCraftPet());
             }
         }
@@ -140,8 +117,7 @@ public class Lightning extends LightningInfo implements ISkillInstance, ISkillAc
     }
 
     @Override
-    public ISkillInstance cloneSkill()
-    {
+    public ISkillInstance cloneSkill() {
         Lightning newSkill = new Lightning(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

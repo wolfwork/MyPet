@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,25 +20,29 @@
 
 package de.Keyle.MyPet.skill.skills.implementation.ranged;
 
-import net.minecraft.server.v1_6_R1.*;
+import de.Keyle.MyPet.entity.types.EntityMyPet;
+import net.minecraft.server.v1_7_R4.*;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftSmallFireball;
 
-public class MyPetSmallFireball extends EntitySmallFireball
-{
-    protected int damage = 0;
+public class MyPetSmallFireball extends EntitySmallFireball implements MyPetProjectile {
+    protected float damage = 0;
 
-    public MyPetSmallFireball(World world, EntityLiving entityliving, double d0, double d1, double d2)
-    {
+    public MyPetSmallFireball(World world, EntityMyPet entityliving, double d0, double d1, double d2) {
         super(world, entityliving, d0, d1, d2);
     }
 
-    public void setDamage(int damage)
-    {
+    @Override
+    public EntityMyPet getShooter() {
+        return (EntityMyPet) this.shooter;
+    }
+
+    public void setDamage(float damage) {
         this.damage = damage;
     }
 
     @Override
-    public void setDirection(double d0, double d1, double d2)
-    {
+    public void setDirection(double d0, double d1, double d2) {
         d0 += this.random.nextGaussian() * 0.2D;
         d1 += this.random.nextGaussian() * 0.2D;
         d2 += this.random.nextGaussian() * 0.2D;
@@ -49,20 +53,24 @@ public class MyPetSmallFireball extends EntitySmallFireball
     }
 
     @Override
-    public void a(NBTTagCompound nbtTagCompound)
-    {
+    public CraftEntity getBukkitEntity() {
+        if (this.bukkitEntity == null) {
+            this.bukkitEntity = new CraftSmallFireball(this.world.getServer(), this);
+        }
+        return this.bukkitEntity;
     }
 
     @Override
-    public void b(NBTTagCompound nbtTagCompound)
-    {
+    public void a(NBTTagCompound nbtTagCompound) {
     }
 
     @Override
-    protected void a(MovingObjectPosition movingobjectposition)
-    {
-        if (movingobjectposition.entity != null)
-        {
+    public void b(NBTTagCompound nbtTagCompound) {
+    }
+
+    @Override
+    protected void a(MovingObjectPosition movingobjectposition) {
+        if (movingobjectposition.entity != null) {
             movingobjectposition.entity.damageEntity(DamageSource.fireball(this, this.shooter), damage);
         }
         die();

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,430 +21,502 @@
 package de.Keyle.MyPet.entity.types;
 
 import de.Keyle.MyPet.entity.EntitySize;
-import de.Keyle.MyPet.entity.ai.MyPetAIGoalSelector;
-import de.Keyle.MyPet.entity.ai.attack.MyPetAIMeleeAttack;
-import de.Keyle.MyPet.entity.ai.attack.MyPetAIRangedAttack;
+import de.Keyle.MyPet.entity.ai.AIGoalSelector;
+import de.Keyle.MyPet.entity.ai.attack.MeleeAttack;
+import de.Keyle.MyPet.entity.ai.attack.RangedAttack;
 import de.Keyle.MyPet.entity.ai.movement.*;
+import de.Keyle.MyPet.entity.ai.movement.Float;
 import de.Keyle.MyPet.entity.ai.navigation.AbstractNavigation;
 import de.Keyle.MyPet.entity.ai.navigation.VanillaNavigation;
 import de.Keyle.MyPet.entity.ai.target.*;
-import de.Keyle.MyPet.skill.skills.implementation.Control;
 import de.Keyle.MyPet.skill.skills.implementation.Ride;
-import de.Keyle.MyPet.util.*;
-import de.Keyle.MyPet.util.locale.MyPetLocales;
-import net.minecraft.server.v1_6_R1.*;
+import de.Keyle.MyPet.util.BukkitUtil;
+import de.Keyle.MyPet.util.ConfigItem;
+import de.Keyle.MyPet.util.Configuration;
+import de.Keyle.MyPet.util.Util;
+import de.Keyle.MyPet.util.locale.Locales;
+import de.Keyle.MyPet.util.logger.DebugLogger;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
+import de.Keyle.MyPet.util.support.Permissions;
+import de.Keyle.MyPet.util.support.PvPChecker;
+import net.minecraft.server.v1_7_R4.*;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_6_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_6_R1.entity.CraftPlayer;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Random;
 
-public abstract class EntityMyPet extends EntityCreature implements IMonster
-{
-    public MyPetAIGoalSelector petPathfinderSelector, petTargetSelector;
+public abstract class EntityMyPet extends EntityCreature implements IMonster {
+    public AIGoalSelector petPathfinderSelector, petTargetSelector;
     public EntityLiving goalTarget = null;
     protected double walkSpeed = 0.3F;
-    protected boolean isRidden = false;
+    protected boolean hasRider = false;
     protected boolean isMyPet = false;
+    protected boolean isInvisible = false;
     protected MyPet myPet;
     protected int idleSoundTimer = 0;
     public AbstractNavigation petNavigation;
+    Ride rideSkill = null;
 
-    int donatorParticleCounter = 0;
+    private static Field jump = null;
 
-    public EntityMyPet(World world, MyPet myPet)
-    {
+    public EntityMyPet(World world, MyPet myPet) {
         super(world);
 
-        try
-        {
+        try {
             setSize();
 
             setMyPet(myPet);
             myPet.craftMyPet = (CraftMyPet) this.getBukkitEntity();
 
-            this.petPathfinderSelector = new MyPetAIGoalSelector();
-            this.petTargetSelector = new MyPetAIGoalSelector();
+            this.petPathfinderSelector = new AIGoalSelector();
+            this.petTargetSelector = new AIGoalSelector();
 
             this.walkSpeed = MyPet.getStartSpeed(MyPetType.getMyPetTypeByEntityClass(this.getClass()).getMyPetClass());
-            a(GenericAttributes.d).a(walkSpeed);
+            getAttributeInstance(GenericAttributes.d).setValue(walkSpeed);
 
             petNavigation = new VanillaNavigation(this);
 
             this.setPathfinder();
-        }
-        catch (Exception e)
-        {
+
+            if (jump == null) {
+                try {
+                    jump = EntityLiving.class.getDeclaredField("bc");
+                    jump.setAccessible(true);
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public boolean isMyPet()
-    {
+    public void applyLeash() {
+        if (Configuration.ALWAYS_SHOW_LEASH_FOR_OWNER) {
+            ((EntityPlayer) this.bI()).playerConnection.sendPacket(new PacketPlayOutAttachEntity(1, this, this.bI()));
+        }
+    }
+
+    public boolean isMyPet() {
         return isMyPet;
     }
 
-    public void setMyPet(MyPet myPet)
-    {
-        if (myPet != null)
-        {
+    public void setMyPet(MyPet myPet) {
+        if (myPet != null) {
             this.myPet = myPet;
             isMyPet = true;
 
-            ((LivingEntity) this.getBukkitEntity()).setMaxHealth(myPet.getMaxHealth());
+            this.getAttributeInstance(GenericAttributes.maxHealth).setValue(myPet.getMaxHealth());
             this.setHealth((float) myPet.getHealth());
             this.setCustomName("");
+
+            rideSkill = myPet.getSkills().getSkill(Ride.class);
         }
     }
 
-    public void setPathfinder()
-    {
-        petPathfinderSelector.addGoal("Float", new MyPetAIFloat(this));
-        petPathfinderSelector.addGoal("Ride", new MyPetAIRide(this, (float) this.walkSpeed));
-        petPathfinderSelector.addGoal("Sprint", new MyPetAISprint(this, 0.25F));
-        petPathfinderSelector.addGoal("RangedTarget", new MyPetAIRangedAttack(this, -0.1F, 35, 12.0F));
-        petPathfinderSelector.addGoal("MeleeAttack", new MyPetAIMeleeAttack(this, 0.1F, 3, 20));
-        petPathfinderSelector.addGoal("Control", new MyPetAIControl(myPet, 0.1F));
-        petPathfinderSelector.addGoal("FollowOwner", new MyPetAIFollowOwner(this, 0F, MyPetConfiguration.MYPET_FOLLOW_START_DISTANCE, 2.0F, 17F));
-        petPathfinderSelector.addGoal("LookAtPlayer", new MyPetAILookAtPlayer(this, 8.0F));
-        petPathfinderSelector.addGoal("RandomLockaround", new MyPetAIRandomLookaround(this));
-        petTargetSelector.addGoal("OwnerHurtByTarget", new MyPetAIOwnerHurtByTarget(this));
-        petTargetSelector.addGoal("OwnerHurtTarget", new MyPetAIOwnerHurtTarget(this));
-        petTargetSelector.addGoal("HurtByTarget", new MyPetAIHurtByTarget(this));
-        petTargetSelector.addGoal("ControlTarget", new MyPetAIControlTarget(this, 1));
-        petTargetSelector.addGoal("AggressiveTarget", new MyPetAIAggressiveTarget(this, 15));
-        petTargetSelector.addGoal("FarmTarget", new MyPetAIFarmTarget(this, 15));
-        petTargetSelector.addGoal("DuelTarget", new MyPetAIDuelTarget(this, 5));
+    public void setPathfinder() {
+        petPathfinderSelector.addGoal("Float", new Float(this));
+        petPathfinderSelector.addGoal("Sprint", new Sprint(this, 0.25F));
+        petPathfinderSelector.addGoal("RangedTarget", new RangedAttack(this, -0.1F, 12.0F));
+        petPathfinderSelector.addGoal("MeleeAttack", new MeleeAttack(this, 0.1F, 3, 20));
+        petPathfinderSelector.addGoal("Control", new Control(myPet, 0.1F));
+        petPathfinderSelector.addGoal("FollowOwner", new FollowOwner(this, Configuration.MYPET_FOLLOW_START_DISTANCE, 2.0F, 16F));
+        petPathfinderSelector.addGoal("LookAtPlayer", new LookAtPlayer(this, 8.0F));
+        petPathfinderSelector.addGoal("RandomLockaround", new RandomLookaround(this));
+        petTargetSelector.addGoal("OwnerHurtByTarget", new OwnerHurtByTarget(this));
+        petTargetSelector.addGoal("OwnerHurtTarget", new OwnerHurtTarget(this));
+        petTargetSelector.addGoal("HurtByTarget", new HurtByTarget(this));
+        petTargetSelector.addGoal("ControlTarget", new ControlTarget(this, 1));
+        petTargetSelector.addGoal("AggressiveTarget", new BehaviorAggressiveTarget(this, 15));
+        petTargetSelector.addGoal("FarmTarget", new BehaviorFarmTarget(this, 15));
+        petTargetSelector.addGoal("DuelTarget", new BehaviorDuelTarget(this, 5));
     }
 
-    public MyPet getMyPet()
-    {
+    public MyPet getMyPet() {
         return myPet;
     }
 
-    public void setSize()
-    {
-        EntitySize es = this.getClass().getAnnotation(EntitySize.class);
-        if (es != null)
-        {
-            this.a(es.width(), es.height());
-        }
+    public void setSize() {
+        setSize(0F);
     }
 
-    public void setSize(float extra)
-    {
+    public void setSize(float extra) {
         EntitySize es = this.getClass().getAnnotation(EntitySize.class);
-        if (es != null)
-        {
+        if (es != null) {
             this.a(es.width(), es.height() + extra);
         }
     }
 
-    public boolean hasRider()
-    {
-        return isRidden;
+    public boolean hasRider() {
+        return passenger != null && getOwner().equals(passenger);
     }
 
-    public void setRidden(boolean flag)
-    {
-        isRidden = flag;
-    }
-
-    public void setLocation(Location loc)
-    {
+    public void setLocation(Location loc) {
         this.setLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getPitch(), loc.getYaw());
     }
 
     @Override
-    public void setCustomName(String ignored)
-    {
-        try
-        {
-            if (getCustomNameVisible())
-            {
-                super.setCustomName(MyPetUtil.cutString(MyPetConfiguration.PET_INFO_OVERHEAD_PREFIX + myPet.getPetName() + MyPetConfiguration.PET_INFO_OVERHEAD_SUFFIX, 64));
-                this.setCustomNameVisible(false);
+    public void setCustomName(String ignored) {
+        try {
+            if (getCustomNameVisible()) {
+                String prefix = Configuration.PET_INFO_OVERHEAD_PREFIX;
+                String suffix = Configuration.PET_INFO_OVERHEAD_SUFFIX;
+                prefix = prefix.replace("<ownername>", getOwner().getName());
+                prefix = prefix.replace("<level>", "" + getMyPet().getExperience().getLevel());
+                suffix = suffix.replace("<ownername>", getOwner().getName());
+                suffix = suffix.replace("<level>", "" + getMyPet().getExperience().getLevel());
+                super.setCustomName(Util.cutString(prefix + myPet.getPetName() + suffix, 64));
+                this.setCustomNameVisible(getCustomNameVisible());
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public String getCustomName()
-    {
-        try
-        {
+    public String getCustomName() {
+        try {
             return myPet.getPetName();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             return super.getCustomName();
         }
     }
 
     @Override
-    public boolean getCustomNameVisible()
-    {
-        return MyPetConfiguration.PET_INFO_OVERHEAD_NAME;
+    public boolean getCustomNameVisible() {
+        return Configuration.PET_INFO_OVERHEAD_NAME;
     }
 
     @Override
-    public void setCustomNameVisible(boolean ignored)
-    {
-        this.datawatcher.watch(11, Byte.valueOf((byte) (MyPetConfiguration.PET_INFO_OVERHEAD_NAME ? 1 : 0)));
+    public void setCustomNameVisible(boolean ignored) {
+        this.datawatcher.watch(11, Byte.valueOf((byte) (Configuration.PET_INFO_OVERHEAD_NAME ? 1 : 0)));
     }
 
-    public boolean canMove()
-    {
+    public boolean canMove() {
         return true;
     }
 
-    public double getWalkSpeed()
-    {
+    public double getWalkSpeed() {
         return walkSpeed;
     }
 
-    public boolean canEat(ItemStack itemstack)
-    {
-        List<Material> foodList = MyPet.getFood(myPet.getClass());
-        for (Material foodItem : foodList)
-        {
-            if (itemstack.id == foodItem.getId())
-            {
+    public boolean canEat(ItemStack itemstack) {
+        List<ConfigItem> foodList = MyPet.getFood(myPet.getClass());
+        for (ConfigItem foodItem : foodList) {
+            if (foodItem.compare(itemstack)) {
                 return true;
             }
         }
         return false;
     }
 
-    public boolean playIdleSound()
-    {
-        if (idleSoundTimer-- <= 0)
-        {
+    public boolean canEquip() {
+        return Permissions.hasExtended(getOwner().getPlayer(), "MyPet.user.extended.Equip") && canUseItem();
+    }
+
+    public boolean canUseItem() {
+        return !getOwner().isInExternalGames();
+    }
+
+    public boolean playIdleSound() {
+        if (idleSoundTimer-- <= 0) {
             idleSoundTimer = 5;
             return true;
         }
         return false;
     }
 
-    public MyPetPlayer getOwner()
-    {
+    public MyPetPlayer getOwner() {
         return myPet.getOwner();
-    }
-
-    public boolean damageEntity(DamageSource damagesource, int i)
-    {
-        boolean damageEntity = false;
-        try
-        {
-            Entity entity = damagesource.getEntity();
-
-            if (entity != null && !(entity instanceof EntityHuman) && !(entity instanceof EntityArrow))
-            {
-                i = (i + 1) / 2;
-            }
-            damageEntity = super.damageEntity(damagesource, i);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return damageEntity;
     }
 
     /**
      * Is called when a MyPet attemps to do damge to another entity
      */
-    public boolean attack(Entity entity)
-    {
+    public boolean attack(Entity entity) {
         boolean damageEntity = false;
-        try
-        {
+        try {
             double damage = isMyPet() ? myPet.getDamage() : 0;
-            if (entity instanceof EntityPlayer)
-            {
+            if (entity instanceof EntityPlayer) {
                 Player victim = (Player) entity.getBukkitEntity();
-                if (!MyPetPvP.canHurt(myPet.getOwner().getPlayer(), victim))
-                {
-                    if (myPet.hasTarget())
-                    {
+                if (!PvPChecker.canHurt(myPet.getOwner().getPlayer(), victim)) {
+                    if (myPet.hasTarget()) {
                         myPet.getCraftPet().getHandle().setGoalTarget(null);
                     }
                     return false;
                 }
             }
             damageEntity = entity.damageEntity(DamageSource.mobAttack(this), (float) damage);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return damageEntity;
     }
 
-    protected void tamedEffect(boolean tamed)
-    {
-        String str = tamed ? "heart" : "smoke";
-        for (int i = 0 ; i < 7 ; i++)
-        {
-            double d1 = this.random.nextGaussian() * 0.02D;
-            double d2 = this.random.nextGaussian() * 0.02D;
-            double d3 = this.random.nextGaussian() * 0.02D;
-            this.world.addParticle(str, this.locX + this.random.nextFloat() * this.width * 2.0F - this.width, this.locY + 0.5D + this.random.nextFloat() * this.length, this.locZ + this.random.nextFloat() * this.width * 2.0F - this.width, d1, d2, d3);
-        }
+    @Override
+    public boolean isPersistent() {
+        return false;
     }
 
     @Override
-    public CraftEntity getBukkitEntity()
-    {
-        if (this.bukkitEntity == null)
-        {
+    public CraftEntity getBukkitEntity() {
+        if (this.bukkitEntity == null) {
             this.bukkitEntity = new CraftMyPet(this.world.getServer(), this);
         }
         return this.bukkitEntity;
     }
 
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
+    // Obfuscated Method handler ------------------------------------------------------------------------------------
 
     /**
      * Is called when player rightclicks this MyPet
      * return:
      * true: there was a reaction on rightclick
      * false: no reaction on rightclick
-     * -> interact()
      */
-    public boolean a(EntityHuman entityhuman)
-    {
-        try
-        {
-            if (super.a(entityhuman))
-            {
-                return true;
-            }
+    public boolean handlePlayerInteraction(EntityHuman entityhuman) {
+        ItemStack itemStack = entityhuman.inventory.getItemInHand();
+        Player owner = this.getOwner().getPlayer();
 
-            ItemStack itemStack = entityhuman.inventory.getItemInHand();
+        applyLeash();
 
-            if (itemStack == null)
-            {
-                return false;
-            }
-
-            Player owner = this.getOwner().getPlayer();
-
-            if (isMyPet() && myPet.getOwner().equals(entityhuman))
-            {
-                if (myPet.getSkills().isSkillActive("Ride"))
-                {
-                    if (itemStack.id == Ride.ITEM.getId() && canMove())
-                    {
-                        if (MyPetPermissions.hasExtended(owner, "MyPet.user.extended.Ride"))
-                        {
-                            ((CraftPlayer) owner).getHandle().setPassengerOf(this);
-                            return true;
-                        }
-                        else
-                        {
-                            getMyPet().sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.CantUse", myPet.getOwner().getLanguage())));
-                        }
-                    }
-                }
-                if (myPet.getSkills().isSkillActive("Control"))
-                {
-                    if (itemStack.id == Control.ITEM.getId())
-                    {
+        if (isMyPet() && myPet.getOwner().equals(entityhuman)) {
+            if (Ride.RIDE_ITEM.compare(itemStack)) {
+                if (myPet.getSkills().isSkillActive(Ride.class) && canMove()) {
+                    if (Permissions.hasExtended(owner, "MyPet.user.extended.Ride")) {
+                        ((CraftPlayer) owner).getHandle().setPassengerOf(this);
                         return true;
+                    } else {
+                        getMyPet().sendMessageToOwner(Locales.getString("Message.No.CanUse", myPet.getOwner().getLanguage()));
                     }
                 }
             }
-            if (canEat(itemStack))
-            {
-                if (owner != null && !MyPetPermissions.hasExtended(owner, "MyPet.user.extended.CanFeed"))
-                {
-                    return false;
-                }
-                if (this.petTargetSelector.hasGoal("DuelTarget"))
-                {
-                    MyPetAIDuelTarget duelTarget = (MyPetAIDuelTarget) this.petTargetSelector.getGoal("DuelTarget");
-                    if (duelTarget.getDuelOpponent() != null)
-                    {
-                        return true;
-                    }
-                }
-                int addHunger = MyPetConfiguration.HUNGER_SYSTEM_POINTS_PER_FEED;
-                if (getHealth() < getMaxHealth())
-                {
-                    if (!entityhuman.abilities.canInstantlyBuild)
-                    {
-                        --itemStack.count;
-                    }
-                    addHunger -= Math.min(3, getMaxHealth() - getHealth()) * 2;
-                    this.heal(Math.min(3, getMaxHealth() - getHealth()), RegainReason.EATING);
-                    if (itemStack.count <= 0)
-                    {
-                        entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
-                    }
-                    this.tamedEffect(true);
-                }
-                else if (myPet.getHungerValue() < 100)
-                {
-                    if (!entityhuman.abilities.canInstantlyBuild)
-                    {
-                        --itemStack.count;
-                    }
-                    if (itemStack.count <= 0)
-                    {
-                        entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
-                    }
-                    this.tamedEffect(true);
-                }
-                if (addHunger > 0 && myPet.getHungerValue() < 100)
-                {
-                    myPet.setHungerValue(myPet.getHungerValue() + addHunger);
-                    addHunger = 0;
-                }
-                if (addHunger < MyPetConfiguration.HUNGER_SYSTEM_POINTS_PER_FEED)
-                {
+            if (de.Keyle.MyPet.skill.skills.implementation.Control.CONTROL_ITEM.compare(itemStack)) {
+                if (myPet.getSkills().isSkillActive(de.Keyle.MyPet.skill.skills.implementation.Control.class)) {
                     return true;
                 }
             }
+            if (itemStack != null) {
+                if (canEat(itemStack) && canUseItem()) {
+                    if (owner != null && !Permissions.hasExtended(owner, "MyPet.user.extended.CanFeed")) {
+                        return false;
+                    }
+                    if (this.petTargetSelector.hasGoal("DuelTarget")) {
+                        BehaviorDuelTarget duelTarget = (BehaviorDuelTarget) this.petTargetSelector.getGoal("DuelTarget");
+                        if (duelTarget.getDuelOpponent() != null) {
+                            return true;
+                        }
+                    }
+                    int addHunger = Configuration.HUNGER_SYSTEM_POINTS_PER_FEED;
+                    if (getHealth() < getMaxHealth()) {
+                        if (!entityhuman.abilities.canInstantlyBuild) {
+                            --itemStack.count;
+                        }
+                        addHunger -= Math.min(3, getMaxHealth() - getHealth()) * 2;
+                        this.heal(Math.min(3, getMaxHealth() - getHealth()), RegainReason.EATING);
+                        if (itemStack.count <= 0) {
+                            entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                        }
+                        BukkitUtil.playParticleEffect(myPet.getLocation().add(0, MyPet.getEntitySize(this.getClass())[0] + 0.15, 0), "heart", 0.5F, 0.5F, 0.5F, 0.5F, 5, 20);
+                    } else if (myPet.getHungerValue() < 100) {
+                        if (!entityhuman.abilities.canInstantlyBuild) {
+                            --itemStack.count;
+                        }
+                        if (itemStack.count <= 0) {
+                            entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                        }
+                        BukkitUtil.playParticleEffect(myPet.getLocation().add(0, MyPet.getEntitySize(this.getClass())[0] + 0.15, 0), "heart", 0.5F, 0.5F, 0.5F, 0.5F, 5, 20);
+                    }
+                    if (addHunger > 0 && myPet.getHungerValue() < 100) {
+                        myPet.setHungerValue(myPet.getHungerValue() + addHunger);
+                        addHunger = 0;
+                    }
+                    if (addHunger < Configuration.HUNGER_SYSTEM_POINTS_PER_FEED) {
+                        return true;
+                    }
+                }
+            }
         }
-        catch (Exception e)
-        {
+        return false;
+    }
+
+    public void onLivingUpdate() {
+        if (getOwner().getPlayer().isSneaking() != isSneaking()) {
+            this.setSneaking(!isSneaking());
+        }
+        if (hasRider) {
+            if (this.passenger == null || !(this.passenger instanceof EntityPlayer)) {
+                hasRider = false;
+                applyLeash();
+                setSize();
+                this.W = 0.5F; // climb height -> halfslab
+                Location playerLoc = getOwner().getPlayer().getLocation();
+                Location petLoc = getBukkitEntity().getLocation();
+                petLoc.setYaw(playerLoc.getYaw());
+                petLoc.setPitch(playerLoc.getPitch());
+                getOwner().getPlayer().teleport(petLoc);
+            }
+        } else {
+            if (this.passenger != null && this.passenger instanceof EntityPlayer) {
+                if (getOwner().equals(this.passenger)) {
+                    hasRider = true;
+                    setSize(1F);
+                    this.W = 1.0F; // climb height -> 1 block
+                } else {
+                    this.passenger.setPassengerOf(null); // just the owner can ride a pet
+                }
+            }
+        }
+        if (Configuration.INVISIBLE_LIKE_OWNER) {
+            if (!isInvisible && getOwner().getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY)) {
+                isInvisible = true;
+                myPet.craftMyPet.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false));
+            } else if (isInvisible && !getOwner().getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY)) {
+                myPet.craftMyPet.removePotionEffect(PotionEffectType.INVISIBILITY);
+                isInvisible = false;
+            }
+        }
+    }
+
+    protected void initDatawatcher() {
+    }
+
+    public Random getRandom() {
+        return this.random;
+    }
+
+    /**
+     * Returns the speed of played sounds
+     * The faster the higher the sound will be
+     */
+    public float getSoundSpeed() {
+        float pitchAddition = 0;
+        if (getMyPet() instanceof IMyPetBaby) {
+            if (((IMyPetBaby) getMyPet()).isBaby()) {
+                pitchAddition += 0.5F;
+            }
+        }
+        return (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1 + pitchAddition;
+    }
+
+    /**
+     * Returns the default sound of the MyPet
+     */
+    protected abstract String getLivingSound();
+
+    /**
+     * Returns the sound that is played when the MyPet get hurt
+     */
+    protected abstract String getHurtSound();
+
+    /**
+     * Returns the sound that is played when the MyPet dies
+     */
+    protected abstract String getDeathSound();
+
+    public void playStepSound() {
+    }
+
+    public void playStepSound(int i, int j, int k, Block block) {
+        playStepSound();
+    }
+
+    // Obfuscated Methods -------------------------------------------------------------------------------------------
+
+    /**
+     * -> initDatawatcher()
+     */
+    protected void c() {
+        super.c();
+        try {
+            initDatawatcher();
+        } catch (Exception e) {
             e.printStackTrace();
+            DebugLogger.printThrowable(e);
+        }
+    }
+
+    /**
+     * Is called when player rightclicks this MyPet
+     * return:
+     * true: there was a reaction on rightclick
+     * false: no reaction on rightclick
+     * -> handlePlayerInteraction(EntityHuman)
+     */
+    protected boolean a(EntityHuman entityhuman) {
+        try {
+            return handlePlayerInteraction(entityhuman);
+        } catch (Exception e) {
+            e.printStackTrace();
+            DebugLogger.printThrowable(e);
         }
         return false;
     }
 
     /**
-     * Returns the default sound of the MyPet
-     * -> getLivingSound()
+     * -> playStepSound()
      */
-    protected abstract String r();
+    protected void a(int i, int j, int k, Block block) {
+        try {
+            playStepSound(i, j, k, block);
+        } catch (Exception e) {
+            e.printStackTrace();
+            DebugLogger.printThrowable(e);
+        }
+    }
 
     /**
      * Returns the sound that is played when the MyPet get hurt
      * -> getHurtSound()
      */
-    protected abstract String aK();
+    protected String aT() {
+        try {
+            return getHurtSound();
+        } catch (Exception e) {
+            e.printStackTrace();
+            DebugLogger.printThrowable(e);
+        }
+        return null;
+    }
 
     /**
      * Returns the sound that is played when the MyPet dies
      * -> getDeathSound()
      */
-    protected abstract String aL();
+    protected String aU() {
+        try {
+            return getDeathSound();
+        } catch (Exception e) {
+            e.printStackTrace();
+            DebugLogger.printThrowable(e);
+        }
+        return null;
+    }
 
     /**
-     * Set weather the "new" AI is used
+     * Returns the speed of played sounds
      */
-    public boolean bb()
-    {
+    protected float bg() {
+        try {
+            return getSoundSpeed();
+        } catch (Exception e) {
+            e.printStackTrace();
+            DebugLogger.printThrowable(e);
+        }
+        return super.bg();
+    }
+
+    /**
+     * Set whether the "new" AI is used
+     */
+    public boolean bk() {
         return true;
     }
 
@@ -453,43 +525,106 @@ public abstract class EntityMyPet extends EntityCreature implements IMonster
      * -> updateAITasks()
      */
     @Override
-    protected void be()
-    {
-        try
-        {
-            aV += 1; // entityAge
+    protected void bn() {
+        try {
+            aU += 1; // entityAge
 
-            getEntitySenses().a(); // sensing
-            petTargetSelector.tick(); // target selector
-            petPathfinderSelector.tick(); // pathfinder selector
-            petNavigation.tick(); // navigation
-            bg(); // "mob tick"
+            if (isAlive()) {
+                getEntitySenses().a(); // sensing
+
+                petTargetSelector.tick(); // target selector
+                petPathfinderSelector.tick(); // pathfinder selector
+                petNavigation.tick(); // navigation
+            }
+
+            bp(); // "mob tick"
 
             // controls
             getControllerMove().c(); // move
             getControllerLook().a(); // look
             getControllerJump().b(); // jump
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
+            DebugLogger.printThrowable(e);
         }
     }
 
-    @Override
-    public void c()
-    {
-        super.c();
-        if (MyPetConfiguration.DONATOR_EFFECT && getOwner().isDonator() && donatorParticleCounter-- <= 0)
-        {
-            Location l1 = getBukkitEntity().getLocation();
-            org.bukkit.block.Block block1 = l1.getBlock();
-            getOwner().getPlayer().sendBlockChange(l1, 60, (byte) 0);
-            Packet61WorldEvent particle = new Packet61WorldEvent(2005, (int) locX, (int) locY, (int) locZ, 0, false);
-            ((CraftPlayer) getOwner().getPlayer()).getHandle().playerConnection.sendPacket(particle);
-            getOwner().getPlayer().sendBlockChange(l1, block1.getType(), block1.getData());
-
-            donatorParticleCounter = 90 + aB().nextInt(60);
+    public Entity bI() {
+        if (Configuration.ALWAYS_SHOW_LEASH_FOR_OWNER) {
+            return ((CraftPlayer) getOwner().getPlayer()).getHandle();
         }
+        return null;
+    }
+
+    @Override
+    public boolean d(NBTTagCompound nbttagcompound) {
+        return false;
+    }
+
+    public void e(float motionSideways, float motionForward) {
+        if (!hasRider || this.passenger == null) {
+            super.e(motionSideways, motionForward);
+            return;
+        }
+
+        //apply pitch & yaw
+        this.lastYaw = (this.yaw = this.passenger.yaw);
+        this.pitch = this.passenger.pitch * 0.5F;
+        b(this.yaw, this.pitch);
+        this.aP = (this.aN = this.yaw);
+
+        // get motion from passenger (player)
+        motionSideways = ((EntityLiving) this.passenger).bd * 0.5F;
+        motionForward = ((EntityLiving) this.passenger).be;
+
+        // backwards is slower
+        if (motionForward <= 0.0F) {
+            motionForward *= 0.25F;
+        }
+        // sideways is slower too
+        motionSideways *= 0.85F;
+
+        float speed = 0.22222F;
+        double jumpHeight = 0.3D;
+        if (rideSkill != null) {
+            speed *= 1F + (rideSkill.getSpeedPercent() / 100F);
+            jumpHeight = rideSkill.getJumpHeight() * 0.18D;
+        }
+        i(speed); // set ride speed
+        super.e(motionSideways, motionForward); // apply motion
+
+        // jump when the player jumps
+        if (jump != null && onGround) {
+            try {
+                if (jump.getBoolean(this.passenger)) {
+                    this.motY = Math.sqrt(jumpHeight);
+                }
+            } catch (IllegalAccessException ignored) {
+            }
+        }
+    }
+
+    public void h() {
+        super.h();
+        try {
+            onLivingUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            DebugLogger.printThrowable(e);
+        }
+    }
+
+    /**
+     * Returns the default sound of the MyPet
+     * -> getLivingSound()
+     */
+    protected String t() {
+        try {
+            return playIdleSound() ? getLivingSound() : null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            DebugLogger.printThrowable(e);
+        }
+        return null;
     }
 }

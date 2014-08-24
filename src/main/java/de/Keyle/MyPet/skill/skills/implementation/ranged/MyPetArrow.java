@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,67 +21,49 @@
 package de.Keyle.MyPet.skill.skills.implementation.ranged;
 
 import de.Keyle.MyPet.entity.types.EntityMyPet;
-import net.minecraft.server.v1_6_R1.EntityArrow;
-import net.minecraft.server.v1_6_R1.EntityLiving;
-import net.minecraft.server.v1_6_R1.NBTTagCompound;
-import net.minecraft.server.v1_6_R1.World;
+import de.Keyle.MyPet.util.logger.DebugLogger;
+import net.minecraft.server.v1_7_R4.EntityArrow;
+import net.minecraft.server.v1_7_R4.EntityLiving;
+import net.minecraft.server.v1_7_R4.NBTTagCompound;
+import net.minecraft.server.v1_7_R4.World;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftArrow;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftEntity;
 
-import java.lang.reflect.Field;
-
-public class MyPetArrow extends EntityArrow
-{
-    private Field inGround = null;
-
-    public MyPetArrow(World world, EntityMyPet entityMyPet, EntityLiving target, float v, int i)
-    {
+public class MyPetArrow extends EntityArrow implements MyPetProjectile {
+    public MyPetArrow(World world, EntityMyPet entityMyPet, EntityLiving target, float v, int i) {
         super(world, entityMyPet, target, v, i);
     }
 
     @Override
-    public void a(NBTTagCompound nbtTagCompound)
-    {
+    public EntityMyPet getShooter() {
+        return (EntityMyPet) this.shooter;
     }
 
     @Override
-    public void b(NBTTagCompound nbtTagCompound)
-    {
+    public CraftEntity getBukkitEntity() {
+        if (this.bukkitEntity == null) {
+            this.bukkitEntity = new CraftArrow(this.world.getServer(), this);
+        }
+        return this.bukkitEntity;
     }
 
-    public void l_()
-    {
-        try
-        {
-            super.l_();
-            if (inGround == null)
-            {
-                try
-                {
-                    inGround = EntityArrow.class.getDeclaredField("inGround");
-                    inGround.setAccessible(true);
-                }
-                catch (NoSuchFieldException e)
-                {
-                    e.printStackTrace();
-                }
+    @Override
+    public void a(NBTTagCompound nbtTagCompound) {
+    }
+
+    @Override
+    public void b(NBTTagCompound nbtTagCompound) {
+    }
+
+    public void h() {
+        try {
+            super.h();
+            if (this.isInGround()) {
+                die();
             }
-            try
-            {
-                if (inGround != null)
-                {
-                    if (inGround.getBoolean(this))
-                    {
-                        die();
-                    }
-                }
-            }
-            catch (IllegalAccessException e)
-            {
-                e.printStackTrace();
-            }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
+            DebugLogger.printThrowable(e);
         }
     }
 }

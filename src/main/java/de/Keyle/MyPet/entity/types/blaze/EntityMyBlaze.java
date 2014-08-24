@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,67 +23,81 @@ package de.Keyle.MyPet.entity.types.blaze;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.World;
+import net.minecraft.server.v1_7_R4.EntityHuman;
+import net.minecraft.server.v1_7_R4.ItemStack;
+import net.minecraft.server.v1_7_R4.Items;
+import net.minecraft.server.v1_7_R4.World;
 
-@EntitySize(width = 0.6F, height = 0.7F)
-public class EntityMyBlaze extends EntityMyPet
-{
-    public EntityMyBlaze(World world, MyPet myPet)
-    {
+@EntitySize(width = 0.6F, height = 1.7F)
+public class EntityMyBlaze extends EntityMyPet {
+    public EntityMyBlaze(World world, MyPet myPet) {
         super(world, myPet);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
-        if (myPet != null)
-        {
-            super.setMyPet(myPet);
-            setOnFire(((MyBlaze) myPet).isOnFire());
-        }
-    }
-
-    public boolean isOnFire()
-    {
-        return ((MyBlaze) myPet).isOnFire;
-    }
-
-    public void setOnFire(boolean flag)
-    {
-        this.datawatcher.watch(16, (byte) (flag ? 1 : 0));
-        ((MyBlaze) myPet).isOnFire = flag;
-    }
-
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    protected void a()
-    {
-        super.a();
-        getDataWatcher().a(16, new Byte((byte) 0)); // burning
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
     @Override
-    protected String aK()
-    {
-        return "mob.blaze.hit";
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    @Override
-    protected String aL()
-    {
+    protected String getDeathSound() {
         return "mob.blaze.death";
     }
 
-    /**
-     * Returns the default sound of the MyPet
-     */
-    protected String r()
-    {
-        return !playIdleSound() ? "" : "mob.blaze.breathe";
+    @Override
+    protected String getHurtSound() {
+        return "mob.blaze.hit";
+    }
+
+    protected String getLivingSound() {
+        return "mob.blaze.breathe";
+    }
+
+    public boolean handlePlayerInteraction(EntityHuman entityhuman) {
+        if (super.handlePlayerInteraction(entityhuman)) {
+            return true;
+        }
+
+        ItemStack itemStack = entityhuman.inventory.getItemInHand();
+
+        if (getOwner().equals(entityhuman) && itemStack != null && canUseItem()) {
+            if (getMyPet().isOnFire() && itemStack.getItem() == Items.GLASS_BOTTLE && itemStack.getData() == 0 && getOwner().getPlayer().isSneaking()) {
+                setOnFire(false);
+                makeSound("random.fizz", 1.0F, 1.0F);
+                if (!entityhuman.abilities.canInstantlyBuild) {
+                    if (--itemStack.count <= 0) {
+                        entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, new ItemStack(Items.GLASS_BOTTLE));
+                    } else {
+                        if (!entityhuman.inventory.pickup(new ItemStack(Items.GLASS_BOTTLE))) {
+                            entityhuman.drop(new ItemStack(Items.GLASS_BOTTLE), true);
+                        }
+                    }
+                }
+                return true;
+            } else if (!getMyPet().isOnFire() && itemStack.getItem() == Items.FLINT_AND_STEEL && getOwner().getPlayer().isSneaking()) {
+                setOnFire(true);
+                makeSound("fire.ignite", 1.0F, 1.0F);
+                if (!entityhuman.abilities.canInstantlyBuild) {
+                    itemStack.damage(1, entityhuman);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected void initDatawatcher() {
+        super.initDatawatcher();
+        getDataWatcher().a(16, new Byte((byte) 0)); // burning
+    }
+
+    public void setOnFire(boolean flag) {
+        this.datawatcher.watch(16, (byte) (flag ? 1 : 0));
+    }
+
+    public void setMyPet(MyPet myPet) {
+        if (myPet != null) {
+            super.setMyPet(myPet);
+            setOnFire(getMyPet().isOnFire());
+        }
+    }
+
+    public MyBlaze getMyPet() {
+        return (MyBlaze) myPet;
     }
 }

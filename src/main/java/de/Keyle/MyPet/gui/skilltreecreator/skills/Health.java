@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,97 +20,77 @@
 
 package de.Keyle.MyPet.gui.skilltreecreator.skills;
 
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
+import de.keyle.knbt.TagCompound;
+import de.keyle.knbt.TagDouble;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagString;
 
 import javax.swing.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class Health implements SkillPropertiesPanel
-{
+public class Health implements SkillPropertiesPanel {
     private JTextField healthInput;
     private JRadioButton addHealthRadioButton;
     private JRadioButton setHealthRadioButton;
     private JPanel mainPanel;
 
-    private CompoundTag compoundTag;
+    private TagCompound tagCompound;
 
-    public Health(CompoundTag compoundTag)
-    {
-        this.compoundTag = compoundTag;
-        load(compoundTag);
+    public Health(TagCompound tagCompound) {
+        this.tagCompound = tagCompound;
+        load(tagCompound);
     }
 
     @Override
-    public JPanel getMainPanel()
-    {
+    public JPanel getMainPanel() {
         return mainPanel;
     }
 
     @Override
-    public void verifyInput()
-    {
+    public void verifyInput() {
         healthInput.setText(healthInput.getText().replaceAll("[^0-9\\.]*", ""));
-        if (healthInput.getText().length() > 0)
-        {
-            if (healthInput.getText().matches("\\.+"))
-            {
+        if (healthInput.getText().length() > 0) {
+            if (healthInput.getText().matches("\\.+")) {
                 healthInput.setText("0.0");
-            }
-            else
-            {
-                try
-                {
+            } else {
+                try {
                     Pattern regex = Pattern.compile("[0-9]+(\\.[0-9]+)?");
                     Matcher regexMatcher = regex.matcher(healthInput.getText());
                     regexMatcher.find();
                     healthInput.setText(regexMatcher.group());
-                }
-                catch (PatternSyntaxException ignored)
-                {
+                } catch (PatternSyntaxException ignored) {
                     healthInput.setText("0.0");
                 }
             }
-        }
-        else
-        {
+        } else {
             healthInput.setText("0.0");
         }
     }
 
     @Override
-    public CompoundTag save()
-    {
-        compoundTag.getValue().put("addset_hp", new StringTag("addset_hp", addHealthRadioButton.isSelected() ? "add" : "set"));
-        compoundTag.getValue().put("hp_double", new DoubleTag("hp_double", Double.parseDouble(healthInput.getText())));
+    public TagCompound save() {
+        tagCompound.getCompoundData().put("addset_hp", new TagString(addHealthRadioButton.isSelected() ? "add" : "set"));
+        tagCompound.getCompoundData().put("hp_double", new TagDouble(Double.parseDouble(healthInput.getText())));
 
-        return compoundTag;
+        return tagCompound;
     }
 
     @Override
-    public void load(CompoundTag compoundTag)
-    {
-        if (!compoundTag.getValue().containsKey("addset_hp") || ((StringTag) compoundTag.getValue().get("addset_hp")).getValue().equals("add"))
-        {
+    public void load(TagCompound TagCompound) {
+        if (!TagCompound.getCompoundData().containsKey("addset_hp") || TagCompound.getAs("addset_hp", TagString.class).getStringData().equals("add")) {
             addHealthRadioButton.setSelected(true);
-        }
-        else
-        {
+        } else {
             setHealthRadioButton.setSelected(true);
         }
 
-        if (compoundTag.getValue().containsKey("hp"))
-        {
-            compoundTag.getValue().put("hp_double", new DoubleTag("hp_double", ((IntTag) compoundTag.getValue().get("hp")).getValue()));
-            compoundTag.getValue().remove("hp");
+        if (TagCompound.getCompoundData().containsKey("hp")) {
+            TagCompound.getCompoundData().put("hp_double", new TagDouble(TagCompound.getAs("hp", TagInt.class).getIntData()));
+            TagCompound.getCompoundData().remove("hp");
         }
-        if (compoundTag.getValue().containsKey("hp_double"))
-        {
-            healthInput.setText("" + ((DoubleTag) compoundTag.getValue().get("hp_double")).getValue());
+        if (TagCompound.getCompoundData().containsKey("hp_double")) {
+            healthInput.setText("" + TagCompound.getAs("hp_double", TagDouble.class).getDoubleData());
         }
     }
 }

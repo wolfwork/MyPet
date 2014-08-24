@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -24,73 +24,57 @@ import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPet.PetState;
 import de.Keyle.MyPet.skill.skills.info.DamageInfo;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
-import de.Keyle.MyPet.util.MyPetBukkitUtil;
-import de.Keyle.MyPet.util.locale.MyPetLocales;
+import de.Keyle.MyPet.util.Util;
+import de.Keyle.MyPet.util.locale.Locales;
+import de.keyle.knbt.TagDouble;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagString;
 import org.bukkit.ChatColor;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
 
-public class Damage extends DamageInfo implements ISkillInstance
-{
+public class Damage extends DamageInfo implements ISkillInstance {
     private MyPet myPet;
 
-    public Damage(boolean addedByInheritance)
-    {
+    public Damage(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
+    public void setMyPet(MyPet myPet) {
         this.myPet = myPet;
     }
 
-    public MyPet getMyPet()
-    {
+    public MyPet getMyPet() {
         return myPet;
     }
 
-    public boolean isActive()
-    {
+    public boolean isActive() {
         return damage > 0;
     }
 
-    public void upgrade(ISkillInfo upgrade, boolean quiet)
-    {
-        if (upgrade instanceof DamageInfo)
-        {
+    public void upgrade(ISkillInfo upgrade, boolean quiet) {
+        if (upgrade instanceof DamageInfo) {
             boolean isPassive = damage <= 0;
-            if (getProperties().getValue().containsKey("damage"))
-            {
-                int damage = ((IntTag) getProperties().getValue().get("damage")).getValue();
-                getProperties().getValue().remove("damage");
-                DoubleTag doubleTag = new DoubleTag("damage_double", damage);
-                getProperties().getValue().put("damage_double", doubleTag);
+            if (upgrade.getProperties().getCompoundData().containsKey("damage")) {
+                int damage = upgrade.getProperties().getAs("damage", TagInt.class).getIntData();
+                upgrade.getProperties().getCompoundData().remove("damage");
+                TagDouble TagDouble = new TagDouble(damage);
+                upgrade.getProperties().getCompoundData().put("damage_double", TagDouble);
             }
-            if (upgrade.getProperties().getValue().containsKey("damage_double"))
-            {
-                if (!upgrade.getProperties().getValue().containsKey("addset_damage") || ((StringTag) upgrade.getProperties().getValue().get("addset_damage")).getValue().equals("add"))
-                {
-                    damage += ((DoubleTag) upgrade.getProperties().getValue().get("damage_double")).getValue();
+            if (upgrade.getProperties().getCompoundData().containsKey("damage_double")) {
+                if (!upgrade.getProperties().getCompoundData().containsKey("addset_damage") || upgrade.getProperties().getAs("addset_damage", TagString.class).getStringData().equals("add")) {
+                    damage += upgrade.getProperties().getAs("damage_double", TagDouble.class).getDoubleData();
+                } else {
+                    damage = upgrade.getProperties().getAs("damage_double", TagDouble.class).getDoubleData();
                 }
-                else
-                {
-                    damage = ((DoubleTag) upgrade.getProperties().getValue().get("damage_double")).getValue();
-                }
-                if (!quiet)
-                {
-                    myPet.sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.Skill.Damage.Upgrade", myPet.getOwner().getLanguage())).replace("%petname%", myPet.getPetName()).replace("%dmg%", "" + damage));
+                if (!quiet) {
+                    myPet.sendMessageToOwner(Util.formatText(Locales.getString("Message.Skill.Damage.Upgrade", myPet.getOwner().getLanguage()), myPet.getPetName(), damage));
                 }
             }
-            if (isPassive != (damage <= 0))
-            {
-                if (myPet.getStatus() == PetState.Here)
-                {
+            if (isPassive != (damage <= 0)) {
+                if (myPet.getStatus() == PetState.Here) {
                     getMyPet().getCraftPet().getHandle().petPathfinderSelector.clearGoals();
                     getMyPet().getCraftPet().getHandle().petTargetSelector.clearGoals();
                     getMyPet().getCraftPet().getHandle().setPathfinder();
-                    if (damage == 0)
-                    {
+                    if (damage == 0) {
                         getMyPet().getCraftPet().getHandle().setGoalTarget(null);
                     }
                 }
@@ -98,16 +82,13 @@ public class Damage extends DamageInfo implements ISkillInstance
         }
     }
 
-    public String getFormattedValue()
-    {
-        return " -> " + ChatColor.GOLD + damage + ChatColor.RESET + " " + MyPetLocales.getString("Name.Damage", myPet.getOwner());
+    public String getFormattedValue() {
+        return " -> " + ChatColor.GOLD + damage + ChatColor.RESET + " " + Locales.getString("Name.Damage", myPet.getOwner());
     }
 
-    public void reset()
-    {
+    public void reset() {
         damage = 0;
-        if (myPet.getStatus() == PetState.Here)
-        {
+        if (myPet.getStatus() == PetState.Here) {
             getMyPet().getCraftPet().getHandle().petPathfinderSelector.clearGoals();
             getMyPet().getCraftPet().getHandle().petTargetSelector.clearGoals();
             getMyPet().getCraftPet().getHandle().setPathfinder();
@@ -115,13 +96,11 @@ public class Damage extends DamageInfo implements ISkillInstance
         }
     }
 
-    public double getDamage()
-    {
+    public double getDamage() {
         return damage;
     }
 
-    public ISkillInstance cloneSkill()
-    {
+    public ISkillInstance cloneSkill() {
         Damage newSkill = new Damage(isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

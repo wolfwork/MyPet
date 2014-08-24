@@ -1,7 +1,7 @@
 <!--
   ~ This file is part of MyPet
   ~
-  ~ Copyright (C) 2011-2013 Keyle
+  ~ Copyright (C) 2011-2014 Keyle
   ~ MyPet is licensed under the GNU Lesser General Public License.
   ~
   ~ MyPet is free software: you can redistribute it and/or modify
@@ -22,61 +22,69 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.Keyle</groupId>
-    <artifactId>MyPet</artifactId>
-    <version>${mypet.version}-SNAPSHOT</version>
+    <groupId>de.keyle</groupId>
+    <artifactId>mypet</artifactId>
+    <version>1.2.1-SNAPSHOT</version>
     <packaging>jar</packaging>
-
     <name>MyPet</name>
-    <url>http://mypet.keyle.de</url>
+    <url>http://dev.bukkit.org/bukkit-plugins/mypet/</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <mypet.version>1.1.2</mypet.version>
-        <minecraft.version>1.6.1</minecraft.version>
+        <minecraft.version>1.7.10</minecraft.version>
         <bukkit.version>R0.1-SNAPSHOT</bukkit.version>
+        <bukkit.packet>v1_7_R4</bukkit.packet>
 
-        <citizensapi.version>2.0.8-SNAPSHOT</citizensapi.version>
-        <mcmmo.version>1.4.05</mcmmo.version>
-        <vault.version>1.2.26-SNAPSHOT</vault.version>
-        <minigames.version>1.5.1</minigames.version>
-        <worldguard.version>5.7.3</worldguard.version>
-        <worldedit.version>5.5.6</worldedit.version>
+        <citizensapi.version>2.0.12-SNAPSHOT</citizensapi.version>
+        <mcmmo.version>1.5.00</mcmmo.version>
+        <vaultapi.version>1.4</vaultapi.version>
+        <minigames.version>1.6.3</minigames.version>
+        <worldguard.version>5.9</worldguard.version>
+        <worldedit.version>5.6.2</worldedit.version>
         <ancientrpg.version>1.0</ancientrpg.version>
         <factions.version>1.8.2</factions.version>
-        <factions2.version>2.0.0</factions2.version>
-        <mobarena.version>0.94.4.96</mobarena.version>
-        <battlearena.version>3.8.8.3.3</battlearena.version>
-        <pvparena.version>1.0.2.146</pvparena.version>
-        <survivalgames.version>0.5.8.42</survivalgames.version>
+        <factions2.version>2.4.0</factions2.version>
+        <mobarena.version>0.96.6</mobarena.version>
+        <battlearena.version>3.9.7.8</battlearena.version>
+        <pvparena.version>1.2.2.425</pvparena.version>
+        <survivalgames.version>0.5.8.54</survivalgames.version>
+        <ultimatesurvivalgames.version>1.9.2</ultimatesurvivalgames.version>
         <myhungergames.version>1.1</myhungergames.version>
-        <regiosapi.version>5.9.8</regiosapi.version>
-        <residence.version>2.6.6.5</residence.version>
-        <towny.version>0.82.1.0</towny.version>
-        <griefprevention.version>7.7</griefprevention.version>
-        <heroes.version>1.5.2</heroes.version>
-        <heroes.build>b1713</heroes.build>
+        <regiosapi.version>5.9.9</regiosapi.version>
+        <residence.version>2.6.6.6</residence.version>
+        <towny.version>0.87.0.0</towny.version>
+        <griefprevention.version>7.8</griefprevention.version>
+        <pvpmanager.version>1.7.4</pvpmanager.version>
+        <heroes.version>1.5.5.3</heroes.version>
+        <!-- http://spoutcraft.org/resources/heroes.2/updates -->
+        <spigot.version>1.7.10-R0.1-SNAPSHOT</spigot.version>
 
         <metrics.version>R7</metrics.version>
-        <simplenbt.version>1.0.5-SNAPSHOT</simplenbt.version>
+        <knbt.version>0.0.1</knbt.version>
         <forms_rt.version>7.0.3</forms_rt.version>
+        <fanciful-chat.version>0.0.2</fanciful-chat.version>
 
         <junit.version>4.8.2</junit.version>
+
+        <download.translations>prepare-package</download.translations>
     </properties>
 
     <repositories>
         <repository>
+            <id>oss-sonartype-repo</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+        <repository>
             <id>mypet-repo</id>
             <url>http://repo.keyle.de/</url>
+            <snapshots>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
         </repository>
         <repository>
             <id>bukkit-repo</id>
             <url>http://repo.bukkit.org/content/groups/public/</url>
-        </repository>
-        <repository>
-            <id>mcmmo-repo</id>
-            <url>http://repo.mcmmo.info/</url>
         </repository>
         <repository>
             <id>sk89q-repo</id>
@@ -85,6 +93,16 @@
         <repository>
             <id>spout-repo</id>
             <url>http://nexus.spout.org/content/groups/public/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spigot-repo</id>
+            <url>http://repo.md-5.net/content/repositories/snapshots/</url>
         </repository>
         <repository>
             <id>metrics-repo</id>
@@ -92,32 +110,42 @@
         </repository>
         <repository>
             <id>citizens-repo</id>
-            <url>http://repo.citizensnpcs.com</url>
-        </repository>
-        <repository>
-            <id>battlearena-repo</id>
-            <url>http://battleplugins.com/maven</url>
+            <url>http://repo.citizensnpcs.co/</url>
         </repository>
         <repository>
             <id>vault-repo</id>
-            <url>http://ci.herocraftonline.com/plugin/repository/everything</url>
+            <url>http://nexus.theyeticave.net/content/repositories/pub_releases</url>
+        </repository>
+        <repository>
+            <id>zml-repo</id>
+            <url>http://files.zachsthings.com/repo/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
 
     <pluginRepositories>
         <pluginRepository>
             <id>bukkit-plugins</id>
-            <url>http://repo.bukkit.org/content/groups/public</url>
+            <url>http://repo.bukkit.org/content/groups/public/</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>keyle-plugins</id>
+            <url>http://repo.keyle.de</url>
         </pluginRepository>
     </pluginRepositories>
 
     <distributionManagement>
         <repository>
-            <id>MyPet</id>
+            <id>Keyle-Release-Repo</id>
             <url>http://nexus.keyle.de/content/repositories/releases/</url>
         </repository>
         <snapshotRepository>
-            <id>MyPet-snapshot</id>
+            <id>Keyle-Snapshot-Repo</id>
             <url>http://nexus.keyle.de/content/repositories/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
@@ -128,139 +156,218 @@
             <artifactId>bukkit</artifactId>
             <version>${minecraft.version}-${bukkit.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>craftbukkit</artifactId>
             <version>${minecraft.version}-${bukkit.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>net.citizensnpcs</groupId>
             <artifactId>citizensapi</artifactId>
             <version>${citizensapi.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.pauldavdesign.mineauz</groupId>
             <artifactId>Minigames</artifactId>
             <version>${minigames.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>net.milkbowl.vault</groupId>
-            <artifactId>Vault</artifactId>
-            <version>${vault.version}</version>
+            <artifactId>VaultAPI</artifactId>
+            <version>${vaultapi.version}</version>
             <type>jar</type>
             <scope>provided</scope>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bukkit</groupId>
+                    <artifactId>bukkit</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.gmail.nossr50.mcMMO</groupId>
             <artifactId>mcMMO</artifactId>
             <version>${mcmmo.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.getspout</groupId>
+                    <artifactId>spoutplugin</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.sk89q</groupId>
             <artifactId>worldedit</artifactId>
             <version>${worldedit.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bukkit</groupId>
+                    <artifactId>bukkit</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.sk89q</groupId>
             <artifactId>worldguard</artifactId>
             <version>${worldguard.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bukkit</groupId>
+                    <artifactId>bukkit</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.ancientshores</groupId>
             <artifactId>AncientRPG</artifactId>
             <version>${ancientrpg.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.massivecraft</groupId>
             <artifactId>factions</artifactId>
             <version>${factions.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.massivecraft.factions</groupId>
             <artifactId>Factions</artifactId>
             <version>${factions2.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.garbagemule</groupId>
             <artifactId>MobArena</artifactId>
             <version>${mobarena.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>mc.alk</groupId>
             <artifactId>BattleArena</artifactId>
             <version>${battlearena.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>net.slipcor</groupId>
             <artifactId>pvparena</artifactId>
             <version>${pvparena.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.mcsg</groupId>
             <artifactId>survivalgames</artifactId>
             <version>${survivalgames.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>me.maker56.survivalgames</groupId>
+            <artifactId>SurvivalGames</artifactId>
+            <version>${ultimatesurvivalgames.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.randude14.hungergames</groupId>
             <artifactId>MyHungerGames</artifactId>
             <version>${myhungergames.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>net.jzx7</groupId>
             <artifactId>regiosapi</artifactId>
             <version>${regiosapi.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.bekvon.bukkit</groupId>
             <artifactId>residence</artifactId>
             <version>${residence.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.palmergames.bukkit</groupId>
             <artifactId>Towny</artifactId>
             <version>${towny.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>me.ryanhamshire</groupId>
             <artifactId>GriefPrevention</artifactId>
             <version>${griefprevention.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>me.NoChance.PvPManager</groupId>
+            <artifactId>PvPManager</artifactId>
+            <version>${pvpmanager.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.herocraftonline.heroes</groupId>
             <artifactId>Heroes</artifactId>
             <version>${heroes.version}</version>
-            <classifier>${heroes.build}</classifier>
             <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <version>${spigot.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.spigotmc</groupId>
+                    <artifactId>sneaky-throw</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.intellij</groupId>
             <artifactId>forms_rt</artifactId>
             <version>${forms_rt.version}</version>
             <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.spout</groupId>
-            <artifactId>simplenbt</artifactId>
-            <version>${simplenbt.version}</version>
+            <groupId>de.keyle</groupId>
+            <artifactId>knbt</artifactId>
+            <version>${knbt.version}</version>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>de.keyle</groupId>
+            <artifactId>fanciful-chat</artifactId>
+            <version>${fanciful-chat.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -268,12 +375,14 @@
             <artifactId>metrics</artifactId>
             <version>${metrics.version}</version>
             <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 
@@ -308,11 +417,24 @@
         </resources>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>parse-version</id>
+                        <goals>
+                            <goal>parse-version</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-scm-plugin</artifactId>
                 <version>1.8.1</version>
                 <executions>
                     <execution>
-                        <phase>generate-resources</phase>
+                        <phase>${download.translations}</phase>
                         <configuration>
                             <connectionUrl>scm:git:https://github.com/xXKeyleXx/MyPet-Translations.git</connectionUrl>
                             <checkoutDirectory>target/classes/locale</checkoutDirectory>
@@ -336,8 +458,8 @@
                         </goals>
                         <configuration>
                             <maps>${basedir}/maps.yml</maps>
-                            <input>${basedir}/target/${project.artifactId}-${project.version}.jar</input>
-                            <original>${basedir}/target/unmapped-${project.artifactId}-${project.version}.jar</original>
+                            <input>${basedir}/target/${project.name}-${project.version}.jar</input>
+                            <original>${basedir}/target/unmapped-${project.name}-${project.version}.jar</original>
                             <missing>FAIL</missing>
                         </configuration>
                     </execution>
@@ -348,14 +470,16 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.1</version>
                 <configuration>
+                    <jarName>${project.name}-${project.version}</jarName>
                     <archive>
                         <manifestEntries>
                             <Main-Class>de.Keyle.MyPet.gui.GuiMain</Main-Class>
                             <Project-Author>Keyle</Project-Author>
-                            <Project-Name>MyPet</Project-Name>
-                            <Project-Version>${mypet.version}</Project-Version>
+                            <Project-Name>${project.name}</Project-Name>
+                            <Project-Version>${project.version}</Project-Version>
                             <Project-Build>${BUILD_NUMBER}</Project-Build>
                             <Project-Minecraft-Version>${minecraft.version}</Project-Minecraft-Version>
+                            <Project-Bukkit-Packet>${bukkit.packet}</Project-Bukkit-Packet>
                             <Git-Commit>${GIT_COMMIT}</Git-Commit>
                         </manifestEntries>
                     </archive>
@@ -373,7 +497,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>ideauidesigner-maven-plugin</artifactId>
-                <version>1.0-alpha-2</version>
+                <version>1.0-beta-2</version>
                 <executions>
                     <execution>
                         <goals>
@@ -401,7 +525,8 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <artifactSet>
                                 <includes>
-                                    <include>org.spout:simplenbt:jar:*</include>
+                                    <include>de.keyle:knbt:jar:*</include>
+                                    <include>de.keyle:fanciful-chat:*</include>
                                     <include>org.mcstats.bukkit:metrics:*</include>
                                     <include>com.intellij:forms_rt:*</include>
                                 </includes>
@@ -412,23 +537,19 @@
                                     <shadedPattern>de.Keyle.MyPet.util</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.spout.nbt</pattern>
-                                    <shadedPattern>de.Keyle.MyPet.util.configuration.nbt</shadedPattern>
+                                    <pattern>de.keyle.knbt</pattern>
+                                    <shadedPattern>de.Keyle.MyPet.util.nbt</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.intellij.uiDesigner.core</pattern>
                                     <shadedPattern>de.Keyle.MyPet.gui.uiDesigner</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>de.keyle.fanciful</pattern>
+                                    <shadedPattern>de.Keyle.MyPet.util.chat.fanciful</shadedPattern>
+                                </relocation>
                             </relocations>
                             <filters>
-                                <filter>
-                                    <artifact>org.spout:simplenbt</artifact>
-                                    <excludes>
-                                        <exclude>org/spout/nbt/gui/*.class</exclude>
-                                        <exclude>org/spout/nbt/util/*.class</exclude>
-                                        <exclude>LICENSE.txt</exclude>
-                                    </excludes>
-                                </filter>
                                 <filter>
                                     <artifact>com.intellij:forms_rt</artifact>
                                     <includes>

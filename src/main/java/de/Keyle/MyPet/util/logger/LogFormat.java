@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -28,36 +28,17 @@ import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-public class LogFormat extends Formatter
-{
+public class LogFormat extends Formatter {
     @Override
-    public String format(LogRecord record)
-    {
+    public String format(LogRecord record) {
         String text = new SimpleDateFormat("MM-dd-yyyy HH:mm").format(new Date(record.getMillis()));
         Level level = record.getLevel();
 
-        if (level == Level.FINEST)
-        {
-            text += " [FINEST]";
-        }
-        else if (level == Level.FINER)
-        {
-            text += " [FINER]";
-        }
-        else if (level == Level.FINE)
-        {
-            text += " [FINE]";
-        }
-        else if (level == Level.WARNING)
-        {
+        if (level == Level.WARNING) {
             text += " [WARNING]";
-        }
-        else if (level == Level.SEVERE)
-        {
+        } else if (level == Level.SEVERE) {
             text += " [SEVERE]";
-        }
-        else
-        {
+        } else {
             text += " [INFO]";
         }
 
@@ -65,8 +46,7 @@ public class LogFormat extends Formatter
         text += "\r\n";
 
         Throwable thrown = record.getThrown();
-        if (thrown != null)
-        {
+        if (thrown != null) {
             StringWriter stringWriter = new StringWriter();
             thrown.printStackTrace(new PrintWriter(stringWriter));
             text += stringWriter;

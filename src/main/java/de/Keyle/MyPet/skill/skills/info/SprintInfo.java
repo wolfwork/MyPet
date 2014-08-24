@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,24 +21,20 @@
 package de.Keyle.MyPet.skill.skills.info;
 
 import de.Keyle.MyPet.gui.skilltreecreator.skills.SkillPropertiesPanel;
-import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
-import de.Keyle.MyPet.skill.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillName;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeSkill;
 
-@SkillName("Sprint")
-public class SprintInfo extends MyPetSkillTreeSkill implements ISkillInfo
-{
-    public SprintInfo(boolean addedByInheritance)
-    {
+@SkillName(value = "Sprint", translationNode = "Name.Skill.Sprint")
+public class SprintInfo extends SkillTreeSkill implements ISkillInfo {
+    public SprintInfo(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public SkillPropertiesPanel getGuiPanel()
-    {
+    public SkillPropertiesPanel getGuiPanel() {
         return null;
     }
 
-    public ISkillInfo cloneSkill()
-    {
+    public ISkillInfo cloneSkill() {
         SprintInfo newSkill = new SprintInfo(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

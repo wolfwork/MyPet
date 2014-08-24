@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,18 +20,17 @@
 
 package de.Keyle.MyPet.gui.skilltreecreator.skills;
 
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
+import de.keyle.knbt.TagCompound;
+import de.keyle.knbt.TagDouble;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagString;
 
 import javax.swing.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class Lightning implements SkillPropertiesPanel
-{
+public class Lightning implements SkillPropertiesPanel {
     private JPanel mainPanel;
     private JTextField chanceInput;
     private JRadioButton addChanceRadioButton;
@@ -40,101 +39,77 @@ public class Lightning implements SkillPropertiesPanel
     private JRadioButton addDamageRadioButton;
     private JRadioButton setDamageRadioButton;
 
-    private CompoundTag compoundTag;
+    private TagCompound tagCompound;
 
-    public Lightning(CompoundTag compoundTag)
-    {
-        this.compoundTag = compoundTag;
-        load(compoundTag);
+    public Lightning(TagCompound tagCompound) {
+        this.tagCompound = tagCompound;
+        load(tagCompound);
     }
 
     @Override
-    public JPanel getMainPanel()
-    {
+    public JPanel getMainPanel() {
         return mainPanel;
     }
 
     @Override
-    public void verifyInput()
-    {
+    public void verifyInput() {
         chanceInput.setText(chanceInput.getText().replaceAll("[^0-9]*", ""));
-        if (chanceInput.getText().length() == 0)
-        {
+        if (chanceInput.getText().length() == 0) {
             chanceInput.setText("0");
         }
 
         damageInput.setText(damageInput.getText().replaceAll("[^0-9\\.]*", ""));
-        if (damageInput.getText().length() > 0)
-        {
-            if (damageInput.getText().matches("\\.+"))
-            {
+        if (damageInput.getText().length() > 0) {
+            if (damageInput.getText().matches("\\.+")) {
                 damageInput.setText("0.0");
-            }
-            else
-            {
-                try
-                {
+            } else {
+                try {
                     Pattern regex = Pattern.compile("[0-9]+(\\.[0-9]+)?");
                     Matcher regexMatcher = regex.matcher(damageInput.getText());
                     regexMatcher.find();
                     damageInput.setText(regexMatcher.group());
-                }
-                catch (PatternSyntaxException ignored)
-                {
+                } catch (PatternSyntaxException ignored) {
                     damageInput.setText("0.0");
                 }
             }
-        }
-        else
-        {
+        } else {
             damageInput.setText("0.0");
         }
     }
 
     @Override
-    public CompoundTag save()
-    {
-        compoundTag.getValue().put("addset_chance", new StringTag("addset_chance", addChanceRadioButton.isSelected() ? "add" : "set"));
-        compoundTag.getValue().put("chance", new IntTag("chance", Integer.parseInt(chanceInput.getText())));
+    public TagCompound save() {
+        tagCompound.getCompoundData().put("addset_chance", new TagString(addChanceRadioButton.isSelected() ? "add" : "set"));
+        tagCompound.getCompoundData().put("chance", new TagInt(Integer.parseInt(chanceInput.getText())));
 
-        compoundTag.getValue().put("addset_damage", new StringTag("addset_damage", addDamageRadioButton.isSelected() ? "add" : "set"));
-        compoundTag.getValue().put("damage_double", new DoubleTag("damage_double", Double.parseDouble(damageInput.getText())));
+        tagCompound.getCompoundData().put("addset_damage", new TagString(addDamageRadioButton.isSelected() ? "add" : "set"));
+        tagCompound.getCompoundData().put("damage_double", new TagDouble(Double.parseDouble(damageInput.getText())));
 
-        return compoundTag;
+        return tagCompound;
     }
 
     @Override
-    public void load(CompoundTag compoundTag)
-    {
-        if (!compoundTag.getValue().containsKey("addset_chance") || ((StringTag) compoundTag.getValue().get("addset_chance")).getValue().equals("add"))
-        {
+    public void load(TagCompound TagCompound) {
+        if (!TagCompound.getCompoundData().containsKey("addset_chance") || TagCompound.getAs("addset_chance", TagString.class).getStringData().equals("add")) {
             addChanceRadioButton.setSelected(true);
-        }
-        else
-        {
+        } else {
             setChanceRadioButton.setSelected(true);
         }
-        if (compoundTag.getValue().containsKey("chance"))
-        {
-            chanceInput.setText("" + ((IntTag) compoundTag.getValue().get("chance")).getValue());
+        if (TagCompound.getCompoundData().containsKey("chance")) {
+            chanceInput.setText("" + TagCompound.getAs("chance", TagInt.class).getIntData());
         }
 
-        if (!compoundTag.getValue().containsKey("addset_damage") || ((StringTag) compoundTag.getValue().get("addset_damage")).getValue().equals("add"))
-        {
+        if (!TagCompound.getCompoundData().containsKey("addset_damage") || TagCompound.getAs("addset_damage", TagString.class).getStringData().equals("add")) {
             addDamageRadioButton.setSelected(true);
-        }
-        else
-        {
+        } else {
             setDamageRadioButton.setSelected(true);
         }
-        if (compoundTag.getValue().containsKey("damage"))
-        {
-            compoundTag.getValue().put("damage_double", new DoubleTag("damage_double", ((IntTag) compoundTag.getValue().get("damage")).getValue()));
-            compoundTag.getValue().remove("damage");
+        if (TagCompound.getCompoundData().containsKey("damage")) {
+            TagCompound.getCompoundData().put("damage_double", new TagDouble(TagCompound.getAs("damage", TagInt.class).getIntData()));
+            TagCompound.getCompoundData().remove("damage");
         }
-        if (compoundTag.getValue().containsKey("damage_double"))
-        {
-            damageInput.setText("" + ((DoubleTag) compoundTag.getValue().get("damage_double")).getValue());
+        if (TagCompound.getCompoundData().containsKey("damage_double")) {
+            damageInput.setText("" + TagCompound.getAs("damage_double", TagDouble.class).getDoubleData());
         }
     }
 }

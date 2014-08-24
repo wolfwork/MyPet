@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,9 +20,8 @@
 
 package de.Keyle.MyPet.entity.types;
 
-public interface IMyPetBaby
-{
-    public void setBaby(boolean flag);
-
+public interface IMyPetBaby {
     public boolean isBaby();
+
+    public void setBaby(boolean flag);
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,117 +20,109 @@
 
 package de.Keyle.MyPet.entity.types.enderman;
 
-
 import de.Keyle.MyPet.entity.MyPetInfo;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
-import de.Keyle.MyPet.util.MyPetPlayer;
+import de.Keyle.MyPet.skill.skills.implementation.inventory.ItemStackNBTConverter;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
+import de.keyle.knbt.TagCompound;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagShort;
 import org.bukkit.ChatColor;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.ShortTag;
-import org.spout.nbt.TagType;
+import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_7_R4.inventory.CraftItemStack;
+import org.bukkit.inventory.ItemStack;
 
 import static org.bukkit.Material.SOUL_SAND;
 
 @MyPetInfo(food = {SOUL_SAND})
-public class MyEnderman extends MyPet
-{
+public class MyEnderman extends MyPet {
 
-    int BlockID = 0;
-    int BlockData = 0;
     public boolean isScreaming = false;
+    public ItemStack block = null;
 
-    public MyEnderman(MyPetPlayer petOwner)
-    {
+    public MyEnderman(MyPetPlayer petOwner) {
         super(petOwner);
     }
 
-    public int getBlockID()
-    {
-        return BlockID;
+    public ItemStack getBlock() {
+        return block;
     }
 
-    public int getBlockData()
-    {
-        return BlockData;
-    }
-
-    public void setBlock(int id, int data)
-    {
-        if (status == PetState.Here)
-        {
-            ((EntityMyEnderman) getCraftPet().getHandle()).setBlock(id, data);
+    @Override
+    public TagCompound getExtendedInfo() {
+        TagCompound info = super.getExtendedInfo();
+        if (block != null) {
+            info.getCompoundData().put("Block", ItemStackNBTConverter.itemStackToCompund(CraftItemStack.asNMSCopy(block)));
         }
-        this.BlockID = id;
-        this.BlockData = data;
+        //info.getValue().put("Screaming", new TagByte("Screaming", isScreaming()));
+        return info;
     }
 
-    public boolean isScreaming()
-    {
+    @Override
+    public void setExtendedInfo(TagCompound info) {
+        if (info.getCompoundData().containsKey("BlockID")) {
+            int id;
+            int data = 0;
+
+            if (info.containsKeyAs("BlockID", TagShort.class)) {
+                id = info.getAs("BlockID", TagShort.class).getShortData();
+            } else {
+                id = info.getAs("BlockID", TagInt.class).getIntData();
+            }
+            if (info.containsKeyAs("BlockData", TagShort.class)) {
+                data = info.getAs("BlockData", TagShort.class).getShortData();
+            } else if (info.containsKeyAs("BlockData", TagInt.class)) {
+                data = info.getAs("BlockData", TagInt.class).getIntData();
+            }
+            setBlock(new ItemStack(Material.getMaterial(id), 1, (short) data));
+        } else if (info.getCompoundData().containsKey("Block")) {
+            TagCompound itemStackCompund = info.getAs("Block", TagCompound.class);
+            ItemStack block = CraftItemStack.asBukkitCopy(ItemStackNBTConverter.compundToItemStack(itemStackCompund));
+            setBlock(block);
+        }
+
+        //setScreaming((()info.getValue().get("Screaming")).getBooleanValue());
+    }
+
+    @Override
+    public MyPetType getPetType() {
+        return MyPetType.Enderman;
+    }
+
+    public boolean isScreaming() {
         return isScreaming;
     }
 
-    public void setScreaming(boolean flag)
-    {
-        if (status == PetState.Here)
-        {
+    public void setScreaming(boolean flag) {
+        if (status == PetState.Here) {
             ((EntityMyEnderman) getCraftPet().getHandle()).setScreaming(flag);
         }
         this.isScreaming = flag;
     }
 
-    @Override
-    public CompoundTag getExtendedInfo()
-    {
-        CompoundTag info = super.getExtendedInfo();
-        info.getValue().put("BlockID", new IntTag("BlockID", getBlockID()));
-        info.getValue().put("BlockData", new IntTag("BlockData", getBlockData()));
-        //info.getValue().put("Screaming", new ByteTag("Screaming", isScreaming()));
-        return info;
+    public boolean hasBlock() {
+        return block != null;
     }
 
-    @Override
-    public void setExtendedInfo(CompoundTag info)
-    {
-        int id = 0;
-        int data = 0;
-        if (info.getValue().containsKey("BlockID"))
-        {
-            if (info.getValue().get("BlockID").getType() == TagType.TAG_SHORT)
-            {
-                id = ((ShortTag) info.getValue().get("BlockID")).getValue();
+    public void setBlock(ItemStack block) {
+        if (block != null) {
+            this.block = block.clone();
+            this.block.setAmount(1);
+
+            if (status == PetState.Here) {
+                ((EntityMyEnderman) getCraftPet().getHandle()).setBlock(this.block.getTypeId(), this.block.getData().getData());
             }
-            else
-            {
-                id = ((IntTag) info.getValue().get("BlockID")).getValue();
+        } else {
+            if (status == PetState.Here) {
+                ((EntityMyEnderman) getCraftPet().getHandle()).setBlock(0, 0);
             }
+            this.block = null;
         }
-        if (info.getValue().containsKey("BlockData"))
-        {
-            if (info.getValue().get("BlockData").getType() == TagType.TAG_SHORT)
-            {
-                data = ((ShortTag) info.getValue().get("BlockData")).getValue();
-            }
-            else
-            {
-                data = ((IntTag) info.getValue().get("BlockData")).getValue();
-            }
-        }
-        setBlock(id, data);
-        //setScreaming((()info.getValue().get("Screaming")).getBooleanValue());
     }
 
     @Override
-    public MyPetType getPetType()
-    {
-        return MyPetType.Enderman;
+    public String toString() {
+        return "MyEnderman{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", worldgroup=" + worldGroup + ",Block=" + block + "}";
     }
-
-    @Override
-    public String toString()
-    {
-        return "MyEnderman{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ",BlockID=" + getBlockID() + ",BlockData=" + getBlockData() + "}";
-    }
-
 }

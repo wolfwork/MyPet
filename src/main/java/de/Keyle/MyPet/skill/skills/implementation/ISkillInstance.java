@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,8 +23,7 @@ package de.Keyle.MyPet.skill.skills.implementation;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
 
-public interface ISkillInstance extends ISkillInfo
-{
+public interface ISkillInstance extends ISkillInfo {
     public void setMyPet(MyPet myPet);
 
     public MyPet getMyPet();
@@ -38,6 +37,8 @@ public interface ISkillInstance extends ISkillInfo
     public void reset();
 
     public String getName();
+
+    public String getName(String locale);
 
     public ISkillInstance cloneSkill();
 }

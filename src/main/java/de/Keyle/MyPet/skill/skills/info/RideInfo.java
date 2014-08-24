@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,27 +20,35 @@
 
 package de.Keyle.MyPet.skill.skills.info;
 
+import de.Keyle.MyPet.gui.skilltreecreator.skills.Ride;
 import de.Keyle.MyPet.gui.skilltreecreator.skills.SkillPropertiesPanel;
-import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
-import de.Keyle.MyPet.skill.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillProperties;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeSkill;
 
-@SkillName("Ride")
-public class RideInfo extends MyPetSkillTreeSkill implements ISkillInfo
-{
-    //protected float speed = 0F;
+@SkillName(value = "Ride", translationNode = "Name.Skill.Ride")
+@SkillProperties(
+        parameterNames = {"speed_percent", "addset_speed", "jump_height", "addset_jump_height"},
+        parameterTypes = {SkillProperties.NBTdatatypes.Int, SkillProperties.NBTdatatypes.String, SkillProperties.NBTdatatypes.Double, SkillProperties.NBTdatatypes.String},
+        parameterDefaultValues = {"5", "add", "1.25", "set"})
+public class RideInfo extends SkillTreeSkill implements ISkillInfo {
+    private SkillPropertiesPanel panel = null;
 
-    public RideInfo(boolean addedByInheritance)
-    {
+    protected int speedPercent = 0;
+    protected double jumpHeigth = 0D;
+
+    public RideInfo(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public SkillPropertiesPanel getGuiPanel()
-    {
-        return null;
+    public SkillPropertiesPanel getGuiPanel() {
+        if (panel == null) {
+            panel = new Ride(this.getProperties());
+        }
+        return panel;
     }
 
-    public ISkillInfo cloneSkill()
-    {
+    public ISkillInfo cloneSkill() {
         RideInfo newSkill = new RideInfo(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

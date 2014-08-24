@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,109 +23,53 @@ package de.Keyle.MyPet.entity.types.bat;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.World;
-
+import net.minecraft.server.v1_7_R4.World;
 
 @EntitySize(width = 0.5F, height = 0.9F)
-public class EntityMyBat extends EntityMyPet
-{
-    public EntityMyBat(World world, MyPet myPet)
-    {
+public class EntityMyBat extends EntityMyPet {
+    public EntityMyBat(World world, MyPet myPet) {
         super(world, myPet);
-    }
-
-    public void setMyPet(MyPet myPet)
-    {
-        if (myPet != null)
-        {
-            super.setMyPet(myPet);
-
-            this.setHanging(((MyBat) myPet).ishanging());
-        }
-    }
-
-    public void setHanging(boolean flags)
-    {
-        int i = this.datawatcher.getByte(16);
-        if (flags)
-        {
-            this.datawatcher.watch(16, (byte) (i | 0x1));
-        }
-        else
-        {
-            this.datawatcher.watch(16, (byte) (i & 0xFFFFFFFE));
-        }
-        ((MyBat) myPet).hanging = flags;
-    }
-
-    public boolean isHanging()
-    {
-        return ((MyBat) myPet).hanging;
-    }
-
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    protected void a()
-    {
-        super.a();
-        this.datawatcher.a(16, new Byte((byte) 0)); // hanging
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
-    @Override
-    protected String aK()
-    {
-        return "mob.bat.hurt";
+        this.height = 1F;
     }
 
     /**
      * Returns the sound that is played when the MyPet dies
      */
     @Override
-    protected String aL()
-    {
+    protected String getDeathSound() {
         return "mob.bat.death";
     }
 
     /**
-     * Returns the speed of played sounds
+     * Returns the sound that is played when the MyPet get hurt
      */
-    protected float aX()
-    {
-        return super.aX() * 0.95F;
+    @Override
+    protected String getHurtSound() {
+        return "mob.bat.hurt";
     }
 
-    public void c()
-    {
-        super.c();
+    @Override
+    protected String getLivingSound() {
+        return "mob.bat.idle";
+    }
 
-        if (!this.onGround && this.motY < 0.0D)
-        {
+    public float getSoundSpeed() {
+        return super.getSoundSpeed() * 0.95F;
+    }
+
+    protected void initDatawatcher() {
+        super.initDatawatcher();
+        this.datawatcher.a(16, new Byte((byte) 0)); // hanging
+    }
+
+    public void onLivingUpdate() {
+        super.onLivingUpdate();
+
+        if (!this.onGround && this.motY < 0.0D) {
             this.motY *= 0.6D;
         }
     }
 
-    public void l_()
-    {
-        try
-        {
-            super.l_();
-            if (!world.getMaterial((int) locX, (int) locY, (int) locZ).isLiquid() && !world.getMaterial((int) locX, (int) (locY + 1.), (int) locZ).isSolid())
-            {
-                this.locY += 0.65;
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    protected String r()
-    {
-        return !playIdleSound() ? "" : "mob.bat.idle";
+    protected void b(float f) {
     }
 }

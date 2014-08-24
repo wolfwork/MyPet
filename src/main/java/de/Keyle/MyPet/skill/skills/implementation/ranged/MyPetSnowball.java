@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,46 +20,51 @@
 
 package de.Keyle.MyPet.skill.skills.implementation.ranged;
 
-import net.minecraft.server.v1_6_R1.*;
+import de.Keyle.MyPet.entity.types.EntityMyPet;
+import net.minecraft.server.v1_7_R4.*;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftSnowball;
 
-public class MyPetSnowball extends EntitySnowball
-{
-    protected int damage = 0;
+public class MyPetSnowball extends EntitySnowball implements MyPetProjectile {
+    protected float damage = 0;
 
-    public MyPetSnowball(World world, EntityLiving entityLiving)
-    {
+    public MyPetSnowball(World world, EntityMyPet entityLiving) {
         super(world, entityLiving);
     }
 
-    public void setDamage(int damage)
-    {
+    @Override
+    public EntityMyPet getShooter() {
+        return (EntityMyPet) this.shooter;
+    }
+
+    public void setDamage(float damage) {
         this.damage = damage;
     }
 
     @Override
-    public void a(NBTTagCompound nbtTagCompound)
-    {
+    public CraftEntity getBukkitEntity() {
+        if (this.bukkitEntity == null) {
+            this.bukkitEntity = new CraftSnowball(this.world.getServer(), this);
+        }
+        return this.bukkitEntity;
     }
 
     @Override
-    public void b(NBTTagCompound nbtTagCompound)
-    {
+    public void a(NBTTagCompound nbtTagCompound) {
     }
 
     @Override
-    protected void a(MovingObjectPosition paramMovingObjectPosition)
-    {
-        if (paramMovingObjectPosition.entity != null)
-        {
+    public void b(NBTTagCompound nbtTagCompound) {
+    }
+
+    @Override
+    protected void a(MovingObjectPosition paramMovingObjectPosition) {
+        if (paramMovingObjectPosition.entity != null) {
             paramMovingObjectPosition.entity.damageEntity(DamageSource.projectile(this, getShooter()), damage);
         }
-        for (int i = 0 ; i < 8 ; i++)
-        {
+        for (int i = 0; i < 8; i++) {
             this.world.addParticle("snowballpoof", this.locX, this.locY, this.locZ, 0.0D, 0.0D, 0.0D);
         }
-        if (!this.world.isStatic)
-        {
-            die();
-        }
+        die();
     }
 }

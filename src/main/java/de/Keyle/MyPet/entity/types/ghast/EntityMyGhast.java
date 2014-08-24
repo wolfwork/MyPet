@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,51 +21,34 @@
 package de.Keyle.MyPet.entity.types.ghast;
 
 import de.Keyle.MyPet.entity.EntitySize;
-import de.Keyle.MyPet.entity.ai.attack.MyPetAIMeleeAttack;
+import de.Keyle.MyPet.entity.ai.attack.MeleeAttack;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.World;
+import net.minecraft.server.v1_7_R4.World;
 
 @EntitySize(width = 4.F, height = 4.F)
-public class EntityMyGhast extends EntityMyPet
-{
-    public EntityMyGhast(World world, MyPet myPet)
-    {
+public class EntityMyGhast extends EntityMyPet {
+    public EntityMyGhast(World world, MyPet myPet) {
         super(world, myPet);
         this.height = 3.5F;
     }
 
-    public void setPathfinder()
-    {
-        super.setPathfinder();
-        petPathfinderSelector.replaceGoal("MeleeAttack", new MyPetAIMeleeAttack(this, 0.1F, 5.5, 20));
-    }
-
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
     @Override
-    protected String aK()
-    {
-        return "mob.ghast.scream";
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    @Override
-    protected String aL()
-    {
+    protected String getDeathSound() {
         return "mob.ghast.death";
     }
 
-    /**
-     * Returns the default sound of the MyPet
-     */
-    protected String r()
-    {
-        return !playIdleSound() ? "" : "mob.ghast.moan";
+    @Override
+    protected String getHurtSound() {
+        return "mob.ghast.scream";
+    }
+
+    protected String getLivingSound() {
+        return "mob.ghast.moan";
+    }
+
+    public void setPathfinder() {
+        super.setPathfinder();
+        petPathfinderSelector.replaceGoal("MeleeAttack", new MeleeAttack(this, 0.1F, 5.5, 20));
     }
 }

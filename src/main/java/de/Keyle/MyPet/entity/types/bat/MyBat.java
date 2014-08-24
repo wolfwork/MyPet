@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,63 +23,28 @@ package de.Keyle.MyPet.entity.types.bat;
 import de.Keyle.MyPet.entity.MyPetInfo;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
-import de.Keyle.MyPet.util.MyPetPlayer;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
 import org.bukkit.ChatColor;
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundTag;
 
 import static org.bukkit.Material.SPIDER_EYE;
 
 @MyPetInfo(food = {SPIDER_EYE})
-public class MyBat extends MyPet
-{
-    boolean hanging = false;
-
-    public MyBat(MyPetPlayer petOwner)
-    {
+public class MyBat extends MyPet {
+    public MyBat(MyPetPlayer petOwner) {
         super(petOwner);
     }
 
-    public void setHanging(boolean flag)
-    {
-        if (status == PetState.Here)
-        {
-            ((EntityMyBat) getCraftPet().getHandle()).setHanging(flag);
-        }
-        this.hanging = flag;
-    }
-
-    public boolean ishanging()
-    {
-        return hanging;
+    public double getYSpawnOffset() {
+        return 1;
     }
 
     @Override
-    public CompoundTag getExtendedInfo()
-    {
-        CompoundTag info = super.getExtendedInfo();
-        info.getValue().put("Hanging", new ByteTag("Hanging", ishanging()));
-        return info;
-    }
-
-    @Override
-    public void setExtendedInfo(CompoundTag info)
-    {
-        if (info.getValue().containsKey("Hanging"))
-        {
-            setHanging(((ByteTag) info.getValue().get("Hanging")).getBooleanValue());
-        }
-    }
-
-    @Override
-    public MyPetType getPetType()
-    {
+    public MyPetType getPetType() {
         return MyPetType.Bat;
     }
 
     @Override
-    public String toString()
-    {
-        return "MyBat{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ",hanging=" + ishanging() + "}";
+    public String toString() {
+        return "MyBat{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", worldgroup=" + worldGroup + "}";
     }
 }

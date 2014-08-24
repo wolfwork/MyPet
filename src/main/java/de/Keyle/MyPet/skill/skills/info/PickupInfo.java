@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -22,38 +22,34 @@ package de.Keyle.MyPet.skill.skills.info;
 
 import de.Keyle.MyPet.gui.skilltreecreator.skills.Pickup;
 import de.Keyle.MyPet.gui.skilltreecreator.skills.SkillPropertiesPanel;
-import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
-import de.Keyle.MyPet.skill.SkillName;
-import de.Keyle.MyPet.skill.SkillProperties;
-import de.Keyle.MyPet.skill.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skills.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillProperties;
+import de.Keyle.MyPet.skill.skills.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeSkill;
 
-@SkillName("Pickup")
+@SkillName(value = "Pickup", translationNode = "Name.Skill.Pickup")
 @SkillProperties(
-        parameterNames = {"range", "addset_range"},
-        parameterTypes = {NBTdatatypes.Double, NBTdatatypes.String},
-        parameterDefaultValues = {"1.0", "add"})
-public class PickupInfo extends MyPetSkillTreeSkill implements ISkillInfo
-{
+        parameterNames = {"range", "addset_range", "exp_pickup"},
+        parameterTypes = {NBTdatatypes.Double, NBTdatatypes.String, NBTdatatypes.Boolean},
+        parameterDefaultValues = {"1.0", "add", "false"})
+public class PickupInfo extends SkillTreeSkill implements ISkillInfo {
     private SkillPropertiesPanel panel = null;
 
     protected double range = 0;
+    protected boolean expPickup = false;
 
-    public PickupInfo(boolean addedByInheritance)
-    {
+    public PickupInfo(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public SkillPropertiesPanel getGuiPanel()
-    {
-        if (panel == null)
-        {
+    public SkillPropertiesPanel getGuiPanel() {
+        if (panel == null) {
             panel = new Pickup(this.getProperties());
         }
         return panel;
     }
 
-    public ISkillInfo cloneSkill()
-    {
+    public ISkillInfo cloneSkill() {
         PickupInfo newSkill = new PickupInfo(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,112 +20,130 @@
 
 package de.Keyle.MyPet.gui.skilltreecreator.skills;
 
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.DoubleTag;
-import org.spout.nbt.IntTag;
-import org.spout.nbt.StringTag;
+import de.Keyle.MyPet.util.Util;
+import de.keyle.knbt.TagCompound;
+import de.keyle.knbt.TagDouble;
+import de.keyle.knbt.TagInt;
+import de.keyle.knbt.TagString;
 
 import javax.swing.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class Ranged implements SkillPropertiesPanel
-{
+public class Ranged implements SkillPropertiesPanel {
     private JPanel mainPanel;
     private JTextField damageInput;
     private JRadioButton addDamageRadioButton;
     private JRadioButton setDamageRadioButton;
     private JComboBox projectileComboBox;
+    private JLabel arrowsPerSecondLabel;
+    private JRadioButton setRateOfFireRadioButton;
+    private JRadioButton addRateOfFireRadioButton;
+    private JTextField rateOfFireInput;
 
-    private CompoundTag compoundTag;
+    private TagCompound tagCompound;
 
-    public Ranged(CompoundTag compoundTag)
-    {
-        this.compoundTag = compoundTag;
-        load(compoundTag);
+    public Ranged(TagCompound tagCompound) {
+        this.tagCompound = tagCompound;
+        load(tagCompound);
+
+        rateOfFireInput.addKeyListener(new KeyListener() {
+            public void keyTyped(KeyEvent arg0) {
+            }
+
+            public void keyReleased(KeyEvent arg0) {
+                if (Util.isInt(rateOfFireInput.getText())) {
+                    arrowsPerSecondLabel.setText(String.format("%1.2f", 1. / ((Integer.parseInt(rateOfFireInput.getText()) * 50.) / 1000.)) + " Arrows/Second");
+                } else {
+                    arrowsPerSecondLabel.setText("- Arrows/Second");
+                }
+            }
+
+            public void keyPressed(KeyEvent arg0) {
+            }
+        });
     }
 
     @Override
-    public JPanel getMainPanel()
-    {
+    public JPanel getMainPanel() {
         return mainPanel;
     }
 
     @Override
-    public void verifyInput()
-    {
+    public void verifyInput() {
+        if (!rateOfFireInput.getText().replaceAll("[^0-9]*", "").equals(rateOfFireInput.getText())) {
+            rateOfFireInput.setText(rateOfFireInput.getText().replaceAll("[^0-9]*", ""));
+        }
+        if (!rateOfFireInput.getText().matches("[1-9][0-9]*")) {
+            rateOfFireInput.setText("1");
+        }
         damageInput.setText(damageInput.getText().replaceAll("[^0-9\\.]*", ""));
-        if (damageInput.getText().length() > 0)
-        {
-            if (damageInput.getText().matches("\\.+"))
-            {
+        if (damageInput.getText().length() > 0) {
+            if (damageInput.getText().matches("\\.+")) {
                 damageInput.setText("0.0");
-            }
-            else
-            {
-                try
-                {
+            } else {
+                try {
                     Pattern regex = Pattern.compile("[0-9]+(\\.[0-9]+)?");
                     Matcher regexMatcher = regex.matcher(damageInput.getText());
                     regexMatcher.find();
                     damageInput.setText(regexMatcher.group());
-                }
-                catch (PatternSyntaxException ignored)
-                {
+                } catch (PatternSyntaxException ignored) {
                     damageInput.setText("0.0");
                 }
             }
-        }
-        else
-        {
+        } else {
             damageInput.setText("0.0");
         }
     }
 
     @Override
-    public CompoundTag save()
-    {
-        compoundTag.getValue().put("projectile", new StringTag("projectile", ((String) projectileComboBox.getSelectedItem()).replace(" ", "")));
+    public TagCompound save() {
+        tagCompound.getCompoundData().put("projectile", new TagString(((String) projectileComboBox.getSelectedItem()).replace(" ", "")));
 
-        compoundTag.getValue().put("addset_damage", new StringTag("addset_damage", addDamageRadioButton.isSelected() ? "add" : "set"));
-        compoundTag.getValue().put("damage_double", new DoubleTag("damage_double", Double.parseDouble(damageInput.getText())));
-        return compoundTag;
+        tagCompound.getCompoundData().put("addset_damage", new TagString(addDamageRadioButton.isSelected() ? "add" : "set"));
+        tagCompound.getCompoundData().put("damage_double", new TagDouble(Double.parseDouble(damageInput.getText())));
+
+        tagCompound.getCompoundData().put("addset_rateoffire", new TagString(addRateOfFireRadioButton.isSelected() ? "add" : "set"));
+        tagCompound.getCompoundData().put("rateoffire", new TagInt(Integer.parseInt(rateOfFireInput.getText())));
+        return tagCompound;
     }
 
     @Override
-    public void load(CompoundTag compoundTag)
-    {
-        if (!compoundTag.getValue().containsKey("addset_damage") || ((StringTag) compoundTag.getValue().get("addset_damage")).getValue().equals("add"))
-        {
+    public void load(TagCompound TagCompound) {
+        if (!TagCompound.getCompoundData().containsKey("addset_damage") || TagCompound.getAs("addset_damage", TagString.class).getStringData().equals("add")) {
             addDamageRadioButton.setSelected(true);
-        }
-        else
-        {
+        } else {
             setDamageRadioButton.setSelected(true);
         }
-        if (compoundTag.getValue().containsKey("damage"))
-        {
-            compoundTag.getValue().put("damage_double", new DoubleTag("damage_double", ((IntTag) compoundTag.getValue().get("damage")).getValue()));
-            compoundTag.getValue().remove("damage");
+        if (TagCompound.getCompoundData().containsKey("damage")) {
+            TagCompound.getCompoundData().put("damage_double", new TagDouble(TagCompound.getAs("damage", TagInt.class).getIntData()));
+            TagCompound.getCompoundData().remove("damage");
         }
-        if (compoundTag.getValue().containsKey("damage_double"))
-        {
-            damageInput.setText("" + ((DoubleTag) compoundTag.getValue().get("damage_double")).getValue());
+        if (TagCompound.getCompoundData().containsKey("damage_double")) {
+            damageInput.setText("" + TagCompound.getAs("damage_double", TagDouble.class).getDoubleData());
         }
 
-        if (compoundTag.getValue().containsKey("projectile"))
-        {
-            String projectileName = ((StringTag) compoundTag.getValue().get("projectile")).getValue();
+        if (TagCompound.getCompoundData().containsKey("projectile")) {
+            String projectileName = TagCompound.getAs("projectile", TagString.class).getStringData();
 
-            for (int i = 0 ; i < projectileComboBox.getItemCount() ; i++)
-            {
-                if (((String) projectileComboBox.getItemAt(i)).replace(" ", "").equalsIgnoreCase(projectileName))
-                {
+            for (int i = 0; i < projectileComboBox.getItemCount(); i++) {
+                if (((String) projectileComboBox.getItemAt(i)).replace(" ", "").equalsIgnoreCase(projectileName)) {
                     projectileComboBox.setSelectedIndex(i);
                     break;
                 }
             }
+        }
+
+        if (!TagCompound.getCompoundData().containsKey("addset_rateoffire") || TagCompound.getAs("addset_rateoffire", TagString.class).getStringData().equals("add")) {
+            addRateOfFireRadioButton.setSelected(true);
+        } else {
+            setRateOfFireRadioButton.setSelected(true);
+        }
+        if (TagCompound.getCompoundData().containsKey("rateoffire")) {
+            rateOfFireInput.setText("" + TagCompound.getAs("rateoffire", TagInt.class).getIntData());
         }
     }
 }

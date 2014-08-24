@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,63 +23,53 @@ package de.Keyle.MyPet.entity.types.creeper;
 import de.Keyle.MyPet.entity.MyPetInfo;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPetType;
-import de.Keyle.MyPet.util.MyPetPlayer;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
+import de.keyle.knbt.TagByte;
+import de.keyle.knbt.TagCompound;
 import org.bukkit.ChatColor;
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundTag;
 
 import static org.bukkit.Material.SULPHUR;
 
 @MyPetInfo(food = {SULPHUR})
-public class MyCreeper extends MyPet
-{
+public class MyCreeper extends MyPet {
     boolean isPowered = false;
 
-    public MyCreeper(MyPetPlayer petOwner)
-    {
+    public MyCreeper(MyPetPlayer petOwner) {
         super(petOwner);
     }
 
-    public void setPowered(boolean flag)
-    {
-        if (status == PetState.Here)
-        {
+    @Override
+    public TagCompound getExtendedInfo() {
+        TagCompound info = super.getExtendedInfo();
+        info.getCompoundData().put("Powered", new TagByte(isPowered()));
+        return info;
+    }
+
+    @Override
+    public void setExtendedInfo(TagCompound info) {
+        if (info.getCompoundData().containsKey("Powered")) {
+            setPowered(((TagByte) info.getAs("Powered", TagByte.class)).getBooleanData());
+        }
+    }
+
+    @Override
+    public MyPetType getPetType() {
+        return MyPetType.Creeper;
+    }
+
+    public boolean isPowered() {
+        return isPowered;
+    }
+
+    public void setPowered(boolean flag) {
+        if (status == PetState.Here) {
             ((EntityMyCreeper) getCraftPet().getHandle()).setPowered(flag);
         }
         this.isPowered = flag;
     }
 
-    public boolean isPowered()
-    {
-        return isPowered;
-    }
-
     @Override
-    public CompoundTag getExtendedInfo()
-    {
-        CompoundTag info = super.getExtendedInfo();
-        info.getValue().put("Powered", new ByteTag("Powered", isPowered()));
-        return info;
-    }
-
-    @Override
-    public void setExtendedInfo(CompoundTag info)
-    {
-        if (info.getValue().containsKey("Powered"))
-        {
-            setPowered(((ByteTag) info.getValue().get("Powered")).getBooleanValue());
-        }
-    }
-
-    @Override
-    public MyPetType getPetType()
-    {
-        return MyPetType.Creeper;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "MyCreeper{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ",powered=" + isPowered() + "}";
+    public String toString() {
+        return "MyCreeper{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + (skillTree != null ? skillTree.getName() : "-") + ", worldgroup=" + worldGroup + ",powered=" + isPowered() + "}";
     }
 }

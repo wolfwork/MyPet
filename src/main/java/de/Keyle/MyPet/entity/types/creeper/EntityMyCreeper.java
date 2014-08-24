@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,75 +23,52 @@ package de.Keyle.MyPet.entity.types.creeper;
 import de.Keyle.MyPet.entity.EntitySize;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.World;
+import net.minecraft.server.v1_7_R4.World;
 
-
-@EntitySize(width = 0.6F, height = 0.9F)
-public class EntityMyCreeper extends EntityMyPet
-{
-    public EntityMyCreeper(World world, MyPet myPet)
-    {
+@EntitySize(width = 0.6F, height = 1.9F)
+public class EntityMyCreeper extends EntityMyPet {
+    public EntityMyCreeper(World world, MyPet myPet) {
         super(world, myPet);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
-        if (myPet != null)
-        {
-            super.setMyPet(myPet);
-
-            this.setPowered(((MyCreeper) myPet).isPowered());
-        }
-    }
-
-    public void setPowered(boolean powered)
-    {
-        if (!powered)
-        {
-            this.datawatcher.watch(17, (byte) 0);
-        }
-        else
-        {
-            this.datawatcher.watch(17, (byte) 1);
-        }
-        ((MyCreeper) myPet).isPowered = powered;
-    }
-
-    public boolean isPowered()
-    {
-        return ((MyCreeper) myPet).isPowered;
-    }
-
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    protected void a()
-    {
-        super.a();
-        this.datawatcher.a(16, new Byte((byte) -1)); // fuse
-        this.datawatcher.a(17, new Byte((byte) 0));  // powered
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
     @Override
-    protected String aK()
-    {
-        return "mob.creeper.say";
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    @Override
-    protected String aL()
-    {
+    protected String getDeathSound() {
         return "mob.creeper.death";
     }
 
     @Override
-    protected String r()
-    {
-        return "";
+    protected String getHurtSound() {
+        return "mob.creeper.say";
+    }
+
+    @Override
+    protected String getLivingSound() {
+        return null;
+    }
+
+    protected void initDatawatcher() {
+        super.initDatawatcher();
+        this.datawatcher.a(16, new Byte((byte) -1)); // fuse
+        this.datawatcher.a(17, new Byte((byte) 0));  // powered
+    }
+
+    public void setPowered(boolean powered) {
+        if (!powered) {
+            this.datawatcher.watch(17, (byte) 0);
+        } else {
+            this.datawatcher.watch(17, (byte) 1);
+        }
+    }
+
+    public void setMyPet(MyPet myPet) {
+        if (myPet != null) {
+            super.setMyPet(myPet);
+
+            this.setPowered(getMyPet().isPowered());
+        }
+    }
+
+    public MyCreeper getMyPet() {
+        return (MyCreeper) myPet;
     }
 }

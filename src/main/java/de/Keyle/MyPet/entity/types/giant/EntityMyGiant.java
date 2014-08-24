@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,69 +21,48 @@
 package de.Keyle.MyPet.entity.types.giant;
 
 import de.Keyle.MyPet.entity.EntitySize;
-import de.Keyle.MyPet.entity.ai.attack.MyPetAIMeleeAttack;
+import de.Keyle.MyPet.entity.ai.attack.MeleeAttack;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.World;
+import net.minecraft.server.v1_7_R4.World;
 
 @EntitySize(width = 5.5f, height = 5.5F)
-public class EntityMyGiant extends EntityMyPet
-{
-    public EntityMyGiant(World world, MyPet myPet)
-    {
+public class EntityMyGiant extends EntityMyPet {
+    public EntityMyGiant(World world, MyPet myPet) {
         super(world, myPet);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
+    @Override
+    protected String getDeathSound() {
+        return "mob.zombie.death";
+    }
 
-        if (myPet != null)
-        {
+    @Override
+    protected String getHurtSound() {
+        return "mob.zombie.hurt";
+    }
+
+    protected String getLivingSound() {
+        return "mob.zombie.say";
+    }
+
+    public void playStepSound() {
+        makeSound("mob.zombie.step", 0.15F, 1.0F);
+    }
+
+    public void setMyPet(MyPet myPet) {
+
+        if (myPet != null) {
             super.setMyPet(myPet);
 
             this.height *= 6.0F;
         }
     }
 
-    public void setPathfinder()
-    {
+    public void setPathfinder() {
         super.setPathfinder();
-        if (myPet.getDamage() > 0)
-        {
-            petPathfinderSelector.replaceGoal("MeleeAttack", new MyPetAIMeleeAttack(this, 0.1F, 8, 20));
+        if (myPet.getDamage() > 0) {
+            petPathfinderSelector.replaceGoal("MeleeAttack", new MeleeAttack(this, 0.1F, 8, 20));
         }
-    }
-
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    protected void a(int i, int j, int k, int l)
-    {
-        makeSound("mob.zombie.step", 0.15F, 1.0F);
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
-    @Override
-    protected String aK()
-    {
-        return "mob.zombie.hurt";
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    @Override
-    protected String aL()
-    {
-        return "mob.zombie.death";
-    }
-
-    /**
-     * Returns the default sound of the MyPet
-     */
-    protected String r()
-    {
-        return !playIdleSound() ? "" : "mob.zombie.say";
     }
 }

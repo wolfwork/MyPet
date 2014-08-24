@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,65 +20,55 @@
 
 package de.Keyle.MyPet.gui.skilltreecreator.skills;
 
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundTag;
-import org.spout.nbt.IntTag;
+import de.keyle.knbt.TagByte;
+import de.keyle.knbt.TagCompound;
+import de.keyle.knbt.TagInt;
 
 import javax.swing.*;
 
-public class Inventory implements SkillPropertiesPanel
-{
+public class Inventory implements SkillPropertiesPanel {
     private JTextField rowsInput;
     private JPanel mainPanel;
     private JCheckBox dropContentCheckBox;
 
-    private CompoundTag compoundTag;
+    private TagCompound tagCompound;
 
-    public Inventory(CompoundTag compoundTag)
-    {
-        this.compoundTag = compoundTag;
-        load(compoundTag);
+    public Inventory(TagCompound tagCompound) {
+        this.tagCompound = tagCompound;
+        load(tagCompound);
     }
 
     @Override
-    public JPanel getMainPanel()
-    {
+    public JPanel getMainPanel() {
         return mainPanel;
     }
 
     @Override
-    public void verifyInput()
-    {
+    public void verifyInput() {
         rowsInput.setText(rowsInput.getText().replaceAll("[^0-6]*", ""));
-        if (rowsInput.getText().length() > 1)
-        {
+        if (rowsInput.getText().length() > 1) {
             rowsInput.setText(rowsInput.getText().substring(0, 1));
         }
-        if (rowsInput.getText().length() == 0)
-        {
+        if (rowsInput.getText().length() == 0) {
             rowsInput.setText("0");
         }
     }
 
     @Override
-    public CompoundTag save()
-    {
-        compoundTag.getValue().put("add", new IntTag("add", Integer.parseInt(rowsInput.getText())));
-        compoundTag.getValue().put("drop", new ByteTag("drop", dropContentCheckBox.isSelected()));
+    public TagCompound save() {
+        tagCompound.getCompoundData().put("add", new TagInt(Integer.parseInt(rowsInput.getText())));
+        tagCompound.getCompoundData().put("drop", new TagByte(dropContentCheckBox.isSelected()));
 
-        return compoundTag;
+        return tagCompound;
     }
 
     @Override
-    public void load(CompoundTag compoundTag)
-    {
-        if (compoundTag.getValue().containsKey("add"))
-        {
-            rowsInput.setText("" + ((IntTag) compoundTag.getValue().get("add")).getValue());
+    public void load(TagCompound TagCompound) {
+        if (TagCompound.getCompoundData().containsKey("add")) {
+            rowsInput.setText("" + TagCompound.getAs("add", TagInt.class).getIntData());
         }
-        if (compoundTag.getValue().containsKey("drop"))
-        {
-            dropContentCheckBox.setSelected(((ByteTag) compoundTag.getValue().get("drop")).getBooleanValue());
+        if (TagCompound.getCompoundData().containsKey("drop")) {
+            dropContentCheckBox.setSelected(TagCompound.getAs("drop", TagByte.class).getBooleanData());
         }
     }
 }

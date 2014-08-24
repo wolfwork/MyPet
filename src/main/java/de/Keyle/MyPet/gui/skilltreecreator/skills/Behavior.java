@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,13 +20,12 @@
 
 package de.Keyle.MyPet.gui.skilltreecreator.skills;
 
-import org.spout.nbt.ByteTag;
-import org.spout.nbt.CompoundTag;
+import de.keyle.knbt.TagByte;
+import de.keyle.knbt.TagCompound;
 
 import javax.swing.*;
 
-public class Behavior implements SkillPropertiesPanel
-{
+public class Behavior implements SkillPropertiesPanel {
     private JCheckBox duelCheckBox;
     private JCheckBox raidCheckBox;
     private JCheckBox farmCheckBox;
@@ -34,59 +33,49 @@ public class Behavior implements SkillPropertiesPanel
     private JCheckBox friendlyCheckBox;
     private JPanel mainPanel;
 
-    private CompoundTag compoundTag;
+    private TagCompound tagCompound;
 
-    public Behavior(CompoundTag compoundTag)
-    {
-        this.compoundTag = compoundTag;
-        load(compoundTag);
+    public Behavior(TagCompound tagCompound) {
+        this.tagCompound = tagCompound;
+        load(tagCompound);
     }
 
     @Override
-    public JPanel getMainPanel()
-    {
+    public JPanel getMainPanel() {
         return mainPanel;
     }
 
     @Override
-    public void verifyInput()
-    {
+    public void verifyInput() {
     }
 
     @Override
-    public CompoundTag save()
-    {
-        compoundTag.getValue().put("friend", new ByteTag("friend", friendlyCheckBox.isSelected()));
-        compoundTag.getValue().put("aggro", new ByteTag("aggro", aggressiveCheckBox.isSelected()));
-        compoundTag.getValue().put("farm", new ByteTag("farm", farmCheckBox.isSelected()));
-        compoundTag.getValue().put("raid", new ByteTag("raid", raidCheckBox.isSelected()));
-        compoundTag.getValue().put("duel", new ByteTag("duel", duelCheckBox.isSelected()));
+    public TagCompound save() {
+        tagCompound.getCompoundData().put("friend", new TagByte(friendlyCheckBox.isSelected()));
+        tagCompound.getCompoundData().put("aggro", new TagByte(aggressiveCheckBox.isSelected()));
+        tagCompound.getCompoundData().put("farm", new TagByte(farmCheckBox.isSelected()));
+        tagCompound.getCompoundData().put("raid", new TagByte(raidCheckBox.isSelected()));
+        tagCompound.getCompoundData().put("duel", new TagByte(duelCheckBox.isSelected()));
 
-        return compoundTag;
+        return tagCompound;
     }
 
     @Override
-    public void load(CompoundTag compoundTag)
-    {
-        if (compoundTag.getValue().containsKey("friend"))
-        {
-            friendlyCheckBox.setSelected(((ByteTag) compoundTag.getValue().get("friend")).getBooleanValue());
+    public void load(TagCompound TagCompound) {
+        if (TagCompound.getCompoundData().containsKey("friend")) {
+            friendlyCheckBox.setSelected(TagCompound.getAs("friend", TagByte.class).getBooleanData());
         }
-        if (compoundTag.getValue().containsKey("aggro"))
-        {
-            aggressiveCheckBox.setSelected(((ByteTag) compoundTag.getValue().get("aggro")).getBooleanValue());
+        if (TagCompound.getCompoundData().containsKey("aggro")) {
+            aggressiveCheckBox.setSelected(TagCompound.getAs("aggro", TagByte.class).getBooleanData());
         }
-        if (compoundTag.getValue().containsKey("farm"))
-        {
-            farmCheckBox.setSelected(((ByteTag) compoundTag.getValue().get("farm")).getBooleanValue());
+        if (TagCompound.getCompoundData().containsKey("farm")) {
+            farmCheckBox.setSelected(TagCompound.getAs("farm", TagByte.class).getBooleanData());
         }
-        if (compoundTag.getValue().containsKey("raid"))
-        {
-            raidCheckBox.setSelected(((ByteTag) compoundTag.getValue().get("raid")).getBooleanValue());
+        if (TagCompound.getCompoundData().containsKey("raid")) {
+            raidCheckBox.setSelected(TagCompound.getAs("raid", TagByte.class).getBooleanData());
         }
-        if (compoundTag.getValue().containsKey("duel"))
-        {
-            duelCheckBox.setSelected(((ByteTag) compoundTag.getValue().get("duel")).getBooleanValue());
+        if (TagCompound.getCompoundData().containsKey("duel")) {
+            duelCheckBox.setSelected(TagCompound.getAs("duel", TagByte.class).getBooleanData());
         }
     }
 }

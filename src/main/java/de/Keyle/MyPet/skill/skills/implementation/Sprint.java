@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -23,60 +23,49 @@ package de.Keyle.MyPet.skill.skills.implementation;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.skill.skills.info.ISkillInfo;
 import de.Keyle.MyPet.skill.skills.info.SprintInfo;
-import de.Keyle.MyPet.util.MyPetBukkitUtil;
-import de.Keyle.MyPet.util.locale.MyPetLocales;
+import de.Keyle.MyPet.util.Util;
+import de.Keyle.MyPet.util.locale.Locales;
 
-public class Sprint extends SprintInfo implements ISkillInstance
-{
+public class Sprint extends SprintInfo implements ISkillInstance {
     private boolean active = false;
     private MyPet myPet;
 
-    public Sprint(boolean addedByInheritance)
-    {
+    public Sprint(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
+    public void setMyPet(MyPet myPet) {
         this.myPet = myPet;
     }
 
-    public MyPet getMyPet()
-    {
+    public MyPet getMyPet() {
         return myPet;
     }
 
-    public boolean isActive()
-    {
+    public boolean isActive() {
         return active;
     }
 
-    public void upgrade(ISkillInfo upgrade, boolean quiet)
-    {
-        if (upgrade instanceof SprintInfo)
-        {
-            active = true;
-            if (!quiet)
-            {
-                myPet.sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.Skill.Sprint.Upgrade", myPet.getOwner().getLanguage())).replace("%petname%", myPet.getPetName()));
+    public void upgrade(ISkillInfo upgrade, boolean quiet) {
+        if (upgrade instanceof SprintInfo) {
+            if (!quiet && !active) {
+                myPet.sendMessageToOwner(Util.formatText(Locales.getString("Message.Skill.Sprint.Upgrade", myPet.getOwner().getLanguage()), myPet.getPetName()));
 
             }
+            active = true;
         }
     }
 
-    public String getFormattedValue()
-    {
+    public String getFormattedValue() {
         return "";
     }
 
-    public void reset()
-    {
+    public void reset() {
         active = false;
     }
 
     @Override
-    public ISkillInstance cloneSkill()
-    {
+    public ISkillInstance cloneSkill() {
         Sprint newSkill = new Sprint(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,116 +21,79 @@
 package de.Keyle.MyPet.entity.types.slime;
 
 import de.Keyle.MyPet.entity.EntitySize;
-import de.Keyle.MyPet.entity.ai.attack.MyPetAIMeleeAttack;
+import de.Keyle.MyPet.entity.ai.attack.MeleeAttack;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.PathEntity;
-import net.minecraft.server.v1_6_R1.World;
+import net.minecraft.server.v1_7_R4.PathEntity;
+import net.minecraft.server.v1_7_R4.World;
 
 @EntitySize(width = 0.6F, height = 0.6F)
-public class EntityMySlime extends EntityMyPet
-{
+public class EntityMySlime extends EntityMyPet {
     int jumpDelay;
     PathEntity lastPathEntity = null;
 
-    public EntityMySlime(World world, MyPet myPet)
-    {
+    public EntityMySlime(World world, MyPet myPet) {
         super(world, myPet);
         this.jumpDelay = (this.random.nextInt(20) + 10);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
-        if (myPet != null)
-        {
-            super.setMyPet(myPet);
+    @Override
+    protected String getDeathSound() {
+        return "mob.slime." + (getMyPet().getSize() > 1 ? "big" : "small");
 
-            setSize(((MySlime) myPet).getSize());
-        }
     }
 
-    public int getSize()
-    {
-        return ((MySlime) myPet).size;
+    @Override
+    protected String getHurtSound() {
+        return getDeathSound();
     }
 
-    public void setSize(int value)
-    {
+    protected String getLivingSound() {
+        return null;
+    }
+
+    public void setSize(int value) {
+        value = Math.max(1, value);
         this.datawatcher.watch(16, new Byte((byte) value));
         EntitySize es = EntityMySlime.class.getAnnotation(EntitySize.class);
-        if (es != null)
-        {
+        if (es != null) {
             this.a(es.height() * value, es.width() * value);
         }
-        if (petPathfinderSelector != null && petPathfinderSelector.hasGoal("MeleeAttack"))
-        {
-            petPathfinderSelector.replaceGoal("MeleeAttack", new MyPetAIMeleeAttack(this, 0.1F, 2 + getSize(), 20));
+        if (petPathfinderSelector != null && petPathfinderSelector.hasGoal("MeleeAttack")) {
+            petPathfinderSelector.replaceGoal("MeleeAttack", new MeleeAttack(this, 0.1F, 3 + (getMyPet().getSize() * 0.6), 20));
         }
-        ((MySlime) myPet).size = value;
     }
 
-    public void setPathfinder()
-    {
-        super.setPathfinder();
-        petPathfinderSelector.replaceGoal("MeleeAttack", new MyPetAIMeleeAttack(this, 0.1F, 2 + getSize(), 20));
-    }
-
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    protected void a()
-    {
-        super.a();
+    protected void initDatawatcher() {
+        super.initDatawatcher();
         this.datawatcher.a(16, new Byte((byte) 1)); //size
     }
 
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
-    @Override
-    protected String aK()
-    {
-        return aL();
-    }
+    public void onLivingUpdate() {
+        super.onLivingUpdate();
 
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    @Override
-    protected String aL()
-    {
-        return "mob.slime." + (getSize() > 1 ? "big" : "small");
-
-    }
-
-    /**
-     * Method is called when pet moves
-     * Is used to create the hopping motion
-     */
-    public void l_()
-    {
-        try
-        {
-            super.l_();
-
-            if (this.onGround && jumpDelay-- <= 0 && lastPathEntity != getNavigation().e())
-            {
-                getControllerJump().a();
-                jumpDelay = (this.random.nextInt(20) + 10);
-                lastPathEntity = getNavigation().e();
-                makeSound("mob.slime." + (getSize() > 1 ? "big" : "small"), aW(), ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F) / 0.8F);
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
+        if (this.onGround && jumpDelay-- <= 0 && lastPathEntity != getNavigation().e()) {
+            getControllerJump().a();
+            jumpDelay = (this.random.nextInt(20) + 10);
+            lastPathEntity = getNavigation().e();
+            makeSound(getDeathSound(), bf(), ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F) / 0.8F);
         }
     }
 
-    /**
-     * Returns the default sound of the MyPet
-     */
-    protected String r()
-    {
-        return "";
+    public void setMyPet(MyPet myPet) {
+        if (myPet != null) {
+            super.setMyPet(myPet);
+
+            setSize(getMyPet().getSize());
+        }
+    }
+
+    public MySlime getMyPet() {
+        return (MySlime) myPet;
+    }
+
+    public void setPathfinder() {
+        super.setPathfinder();
+        petPathfinderSelector.replaceGoal("MeleeAttack", new MeleeAttack(this, 0.1F, 2 + getMyPet().getSize(), 20));
     }
 }

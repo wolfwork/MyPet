@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,30 +20,31 @@
 
 package de.Keyle.MyPet.entity.types;
 
-import de.Keyle.MyPet.skill.MyPetSkillTree;
-import de.Keyle.MyPet.util.MyPetPlayer;
+import de.Keyle.MyPet.skill.skilltree.SkillTree;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
 
 import java.util.UUID;
 
-public interface IMyPet
-{
-    public UUID getUUID();
+public interface IMyPet {
+    public double getExp();
 
     public double getHealth();
 
-    public String getPetName();
+    public int getHungerValue();
 
     public MyPetPlayer getOwner();
 
-    public MyPetSkillTree getSkillTree();
-
-    public int getRespawnTime();
-
-    public double getExp();
-
-    public int getHungerValue();
+    public String getPetName();
 
     public MyPetType getPetType();
 
+    public int getRespawnTime();
+
+    public SkillTree getSkillTree();
+
+    public UUID getUUID();
+
     public String getWorldGroup();
+
+    public long getLastUsed();
 }

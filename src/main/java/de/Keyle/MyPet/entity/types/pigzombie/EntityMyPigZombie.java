@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -26,36 +26,118 @@ import de.Keyle.MyPet.entity.EquipmentSlot;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
 import de.Keyle.MyPet.entity.types.MyPet.PetState;
-import de.Keyle.MyPet.util.MyPetPermissions;
-import de.Keyle.MyPet.util.support.*;
-import net.minecraft.server.v1_6_R1.*;
+import de.Keyle.MyPet.util.BukkitUtil;
+import de.Keyle.MyPet.util.MyPetVersion;
+import de.Keyle.MyPet.util.Util;
+import net.minecraft.server.v1_7_R4.*;
+import org.bukkit.Bukkit;
 
-@EntitySize(width = 0.6F, height = 0.9F)
-public class EntityMyPigZombie extends EntityMyPet
-{
-    public EntityMyPigZombie(World world, MyPet myPet)
-    {
+@EntitySize(width = 0.6F, height = 1.9F)
+public class EntityMyPigZombie extends EntityMyPet {
+    public EntityMyPigZombie(World world, MyPet myPet) {
         super(world, myPet);
     }
 
-    public void setMyPet(MyPet myPet)
-    {
-        if (myPet != null)
-        {
+    @Override
+    protected String getDeathSound() {
+        return "mob.zombiepig.zpigdeath";
+    }
+
+    @Override
+    protected String getHurtSound() {
+        return "mob.zombiepig.zpighurt";
+    }
+
+    protected String getLivingSound() {
+        return "mob.zombiepig.zpig";
+    }
+
+    public boolean handlePlayerInteraction(EntityHuman entityhuman) {
+        if (super.handlePlayerInteraction(entityhuman)) {
+            return true;
+        }
+
+        ItemStack itemStack = entityhuman.inventory.getItemInHand();
+
+        if (getOwner().equals(entityhuman) && itemStack != null && canUseItem()) {
+            if (itemStack.getItem() == Items.SHEARS && getOwner().getPlayer().isSneaking() && canEquip()) {
+                boolean hadEquipment = false;
+                for (EquipmentSlot slot : EquipmentSlot.values()) {
+                    ItemStack itemInSlot = getMyPet().getEquipment(slot);
+                    if (itemInSlot != null) {
+                        EntityItem entityitem = this.a(itemInSlot.cloneItemStack(), 1.0F);
+                        entityitem.motY += (double) (this.random.nextFloat() * 0.05F);
+                        entityitem.motX += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
+                        entityitem.motZ += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
+                        getMyPet().setEquipment(slot, null);
+                        hadEquipment = true;
+                    }
+                }
+                if (hadEquipment) {
+                    if (!entityhuman.abilities.canInstantlyBuild) {
+                        itemStack.damage(1, entityhuman);
+                    }
+                }
+                return true;
+            } else if (BukkitUtil.isEquipment(itemStack) && getOwner().getPlayer().isSneaking() && canEquip()) {
+                EquipmentSlot slot = EquipmentSlot.getSlotById(b(itemStack));
+                ItemStack itemInSlot = getMyPet().getEquipment(slot);
+                if (itemInSlot != null && !entityhuman.abilities.canInstantlyBuild) {
+                    EntityItem entityitem = this.a(itemInSlot.cloneItemStack(), 1.0F);
+                    entityitem.motY += (double) (this.random.nextFloat() * 0.05F);
+                    entityitem.motX += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
+                    entityitem.motZ += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
+                }
+                getMyPet().setEquipment(slot, itemStack);
+                if (!entityhuman.abilities.canInstantlyBuild) {
+                    if (--itemStack.count <= 0) {
+                        entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                    }
+                }
+                return true;
+            } else if (MyPigZombie.GROW_UP_ITEM.compare(itemStack) && getMyPet().isBaby() && getOwner().getPlayer().isSneaking()) {
+                if (!entityhuman.abilities.canInstantlyBuild) {
+                    if (--itemStack.count <= 0) {
+                        entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                    }
+                }
+                getMyPet().setBaby(false);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected void initDatawatcher() {
+        super.initDatawatcher();
+        getDataWatcher().a(12, new Byte((byte) 0)); // is baby
+    }
+
+    /**
+     * Returns the speed of played sounds
+     * The faster the higher the sound will be
+     */
+    public float getSoundSpeed() {
+        return super.getSoundSpeed() + 0.4F;
+    }
+
+    public void setBaby(boolean flag) {
+        getDataWatcher().watch(12, (byte) (flag ? 1 : 0));
+    }
+
+    public void setMyPet(MyPet myPet) {
+        if (myPet != null) {
             super.setMyPet(myPet);
-            final MyPigZombie myPigZombie = (MyPigZombie) myPet;
+            final MyPigZombie myPigZombie = getMyPet();
             final EntityMyPigZombie entityMyPigZombie = this;
 
-            MyPetPlugin.getPlugin().getServer().getScheduler().runTaskLater(MyPetPlugin.getPlugin(), new Runnable()
-            {
-                public void run()
-                {
-                    if (myPigZombie.getStatus() == PetState.Here)
-                    {
-                        for (EquipmentSlot slot : EquipmentSlot.values())
-                        {
-                            if (myPigZombie.getEquipment(slot) != null)
-                            {
+            this.setBaby(myPigZombie.isBaby());
+
+            Bukkit.getScheduler().runTaskLater(MyPetPlugin.getPlugin(), new Runnable() {
+                public void run() {
+                    if (myPigZombie.getStatus() == PetState.Here) {
+                        for (EquipmentSlot slot : EquipmentSlot.values()) {
+                            if (myPigZombie.getEquipment(slot) != null) {
                                 entityMyPigZombie.setPetEquipment(slot.getSlotId(), myPigZombie.getEquipment(slot));
                             }
                         }
@@ -65,172 +147,21 @@ public class EntityMyPigZombie extends EntityMyPet
         }
     }
 
-    public void setPetEquipment(int slot, ItemStack itemStack)
-    {
-        ((WorldServer) this.world).getTracker().a(this, new Packet5EntityEquipment(this.id, slot, itemStack));
-        ((MyPigZombie) myPet).equipment.put(EquipmentSlot.getSlotById(slot), itemStack);
+    public MyPigZombie getMyPet() {
+        return (MyPigZombie) myPet;
     }
 
-    public ItemStack getPetEquipment(int slot)
-    {
-        return ((MyPigZombie) myPet).getEquipment(EquipmentSlot.getSlotById(slot));
+    public void setPetEquipment(int slot, ItemStack itemStack) {
+        ((WorldServer) this.world).getTracker().a(this, new PacketPlayOutEntityEquipment(getId(), slot, itemStack));
     }
 
-    public ItemStack[] getPetEquipment()
-    {
-        return ((MyPigZombie) myPet).getEquipment();
-    }
-
-    public boolean checkForEquipment(ItemStack itemstack)
-    {
-        int slot = b(itemstack);
-        if (slot == 0)
-        {
-            if (itemstack.getItem() instanceof ItemSword)
-            {
-                return true;
-            }
-            else if (itemstack.getItem() instanceof ItemAxe)
-            {
-                return true;
-            }
-            else if (itemstack.getItem() instanceof ItemSpade)
-            {
-                return true;
-            }
-            else if (itemstack.getItem() instanceof ItemHoe)
-            {
-                return true;
-            }
-            else if (itemstack.getItem() instanceof ItemPickaxe)
-            {
-                return true;
-            }
-            else if (itemstack.getItem() instanceof ItemBow)
-            {
-                return true;
-            }
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    /**
-     * Is called when player rightclicks this MyPet
-     * return:
-     * true: there was a reaction on rightclick
-     * false: no reaction on rightclick
-     */
-    public boolean a(EntityHuman entityhuman)
-    {
-        try
-        {
-            if (super.a(entityhuman))
-            {
-                return true;
-            }
-
-            ItemStack itemStack = entityhuman.inventory.getItemInHand();
-
-            if (getOwner().equals(entityhuman) && itemStack != null)
-            {
-                if (itemStack.id == Item.SHEARS.id)
-                {
-                    if (!MyPetPermissions.hasExtended(myPet.getOwner().getPlayer(), "MyPet.user.extended.Equip") ||
-                            MobArena.isInMobArena(myPet.getOwner()) ||
-                            Minigames.isInMinigame(myPet.getOwner()) ||
-                            BattleArena.isInBattleArena(myPet.getOwner()) ||
-                            PvPArena.isInPvPArena(myPet.getOwner()) ||
-                            MyHungerGames.isInHungerGames(myPet.getOwner()) ||
-                            SurvivalGames.isInSurvivalGames(myPet.getOwner()))
-                    {
-                        return false;
-                    }
-                    for (EquipmentSlot slot : EquipmentSlot.values())
-                    {
-                        ItemStack itemInSlot = ((MyPigZombie) myPet).getEquipment(slot);
-                        if (itemInSlot != null)
-                        {
-                            EntityItem entityitem = this.a(itemInSlot.cloneItemStack(), 1.0F);
-                            entityitem.motY += (double) (this.random.nextFloat() * 0.05F);
-                            entityitem.motX += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
-                            entityitem.motZ += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
-                            setPetEquipment(slot.getSlotId(), null);
-                        }
-                    }
-                    return true;
-                }
-                else if (checkForEquipment(itemStack) && getOwner().getPlayer().isSneaking())
-                {
-                    if (!MyPetPermissions.hasExtended(myPet.getOwner().getPlayer(), "MyPet.user.extended.Equip") ||
-                            MobArena.isInMobArena(myPet.getOwner()) ||
-                            Minigames.isInMinigame(myPet.getOwner()) ||
-                            BattleArena.isInBattleArena(myPet.getOwner()) ||
-                            PvPArena.isInPvPArena(myPet.getOwner()) ||
-                            MyHungerGames.isInHungerGames(myPet.getOwner()) ||
-                            SurvivalGames.isInSurvivalGames(myPet.getOwner()))
-                    {
-                        return false;
-                    }
-                    EquipmentSlot slot = EquipmentSlot.getSlotById(b(itemStack));
-                    ItemStack itemInSlot = ((MyPigZombie) myPet).getEquipment(slot);
-                    if (itemInSlot != null && !entityhuman.abilities.canInstantlyBuild)
-                    {
-                        EntityItem entityitem = this.a(itemInSlot.cloneItemStack(), 1.0F);
-                        entityitem.motY += (double) (this.random.nextFloat() * 0.05F);
-                        entityitem.motX += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
-                        entityitem.motZ += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
-                    }
-                    ItemStack itemStackClone = itemStack.cloneItemStack();
-                    itemStackClone.count = 1;
-                    setPetEquipment(b(itemStack), itemStackClone);
-                    if (!entityhuman.abilities.canInstantlyBuild)
-                    {
-                        --itemStack.count;
-                    }
-                    if (itemStack.count <= 0)
-                    {
-                        entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
-                    }
-                    return true;
-                }
+    public ItemStack getEquipment(int i) {
+        if (Util.findClassInStackTrace(Thread.currentThread().getStackTrace(), "net.minecraft.server." + MyPetVersion.getBukkitPacket() + ".EntityTrackerEntry", 2)) {
+            EquipmentSlot slot = EquipmentSlot.getSlotById(i);
+            if (getMyPet().getEquipment(slot) != null) {
+                return getMyPet().getEquipment(slot);
             }
         }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
-    @Override
-    protected String aK()
-    {
-        return "mob.zombiepig.zpighurt";
-    }
-
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    @Override
-    protected String aL()
-    {
-        return "mob.zombiepig.zpigdeath";
-    }
-
-    /**
-     * Returns the default sound of the MyPet
-     */
-    protected String r()
-    {
-        return !playIdleSound() ? "" : "mob.zombiepig.zpig";
+        return super.getEquipment(i);
     }
 }

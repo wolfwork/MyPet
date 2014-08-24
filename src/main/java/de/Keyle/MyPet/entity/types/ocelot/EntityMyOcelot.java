@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -21,110 +21,102 @@
 package de.Keyle.MyPet.entity.types.ocelot;
 
 import de.Keyle.MyPet.entity.EntitySize;
-import de.Keyle.MyPet.entity.ai.movement.MyPetAISit;
+import de.Keyle.MyPet.entity.ai.movement.Sit;
 import de.Keyle.MyPet.entity.types.EntityMyPet;
 import de.Keyle.MyPet.entity.types.MyPet;
-import net.minecraft.server.v1_6_R1.EntityHuman;
-import net.minecraft.server.v1_6_R1.ItemStack;
-import net.minecraft.server.v1_6_R1.World;
+import net.minecraft.server.v1_7_R4.EntityHuman;
+import net.minecraft.server.v1_7_R4.Item;
+import net.minecraft.server.v1_7_R4.ItemStack;
+import net.minecraft.server.v1_7_R4.World;
 import org.bukkit.entity.Ocelot.Type;
 
 @EntitySize(width = 0.6F, height = 0.8F)
-public class EntityMyOcelot extends EntityMyPet
-{
-    public static org.bukkit.Material GROW_UP_ITEM = org.bukkit.Material.POTION;
+public class EntityMyOcelot extends EntityMyPet {
+    private Sit sitPathfinder;
 
-    private MyPetAISit sitPathfinder;
-
-    public EntityMyOcelot(World world, MyPet myPet)
-    {
+    public EntityMyOcelot(World world, MyPet myPet) {
         super(world, myPet);
     }
 
-    public void setPathfinder()
-    {
-        super.setPathfinder();
-        petPathfinderSelector.addGoal("Sit", 2, sitPathfinder);
-    }
-
-    public void setMyPet(MyPet myPet)
-    {
-        if (myPet != null)
-        {
-            this.sitPathfinder = new MyPetAISit(this);
-
-            super.setMyPet(myPet);
-
-            this.setSitting(((MyOcelot) myPet).isSitting());
-            this.setBaby(((MyOcelot) myPet).isBaby());
-            this.setCatType(((MyOcelot) myPet).getCatType().getId());
-        }
-    }
-
-    public boolean canMove()
-    {
-        return !isSitting();
-    }
-
-    public void setSitting(boolean flag)
-    {
-        this.sitPathfinder.setSitting(flag);
-    }
-
-    public boolean isSitting()
-    {
-        return this.sitPathfinder.isSitting();
-    }
-
-    public void applySitting(boolean flag)
-    {
+    public void applySitting(boolean flag) {
         int i = this.datawatcher.getByte(16);
-        if (flag)
-        {
+        if (flag) {
             this.datawatcher.watch(16, (byte) (i | 0x1));
-        }
-        else
-        {
+        } else {
             this.datawatcher.watch(16, (byte) (i & 0xFFFFFFFE));
         }
-        ((MyOcelot) myPet).isSitting = flag;
     }
 
-    public Type getCatType()
-    {
-        return ((MyOcelot) myPet).catType;
+    public boolean canMove() {
+        return !sitPathfinder.isSitting();
     }
 
-    public void setCatType(int value)
-    {
+    public void setCatType(int value) {
         this.datawatcher.watch(18, (byte) value);
-        ((MyOcelot) myPet).catType = Type.getType(value);
     }
 
-    public boolean isBaby()
-    {
-        return ((MyOcelot) myPet).isBaby;
+    protected String getDeathSound() {
+        return "mob.cat.hitt";
     }
 
-    @SuppressWarnings("boxing")
-    public void setBaby(boolean flag)
-    {
-        if (flag)
-        {
-            this.datawatcher.watch(12, Integer.valueOf(Integer.MIN_VALUE));
+    protected String getHurtSound() {
+        return "mob.cat.hitt";
+    }
+
+    protected String getLivingSound() {
+        return this.random.nextInt(4) == 0 ? "mob.cat.purreow" : "mob.cat.meow";
+    }
+
+    public boolean handlePlayerInteraction(EntityHuman entityhuman) {
+        if (super.handlePlayerInteraction(entityhuman)) {
+            return true;
         }
-        else
-        {
-            this.datawatcher.watch(12, new Integer(0));
+
+        ItemStack itemStack = entityhuman.inventory.getItemInHand();
+
+        if (getOwner().equals(entityhuman)) {
+            if (itemStack != null && canUseItem() && getOwner().getPlayer().isSneaking()) {
+                if (Item.getId(itemStack.getItem()) == 351) {
+                    boolean colorChanged = false;
+                    if (itemStack.getData() == 11 && getMyPet().getCatType() != Type.WILD_OCELOT) {
+                        getMyPet().setCatType(Type.WILD_OCELOT);
+                        colorChanged = true;
+                    } else if (itemStack.getData() == 0 && getMyPet().getCatType() != Type.BLACK_CAT) {
+                        getMyPet().setCatType(Type.BLACK_CAT);
+                        colorChanged = true;
+                    } else if (itemStack.getData() == 14 && getMyPet().getCatType() != Type.RED_CAT) {
+                        getMyPet().setCatType(Type.RED_CAT);
+                        colorChanged = true;
+                    } else if (itemStack.getData() == 7 && getMyPet().getCatType() != Type.SIAMESE_CAT) {
+                        getMyPet().setCatType(Type.SIAMESE_CAT);
+                        colorChanged = true;
+                    }
+                    if (colorChanged) {
+                        if (!entityhuman.abilities.canInstantlyBuild) {
+                            if (--itemStack.count <= 0) {
+                                entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                            }
+                        }
+                        return true;
+                    }
+                } else if (MyOcelot.GROW_UP_ITEM.compare(itemStack) && canUseItem() && getMyPet().isBaby() && getOwner().getPlayer().isSneaking()) {
+                    if (!entityhuman.abilities.canInstantlyBuild) {
+                        if (--itemStack.count <= 0) {
+                            entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
+                        }
+                    }
+                    getMyPet().setBaby(false);
+                    return true;
+                }
+            }
+            this.sitPathfinder.toogleSitting();
+            return true;
         }
-        ((MyOcelot) myPet).isBaby = flag;
+        return false;
     }
 
-    // Obfuscated Methods -------------------------------------------------------------------------------------------
-
-    protected void a()
-    {
-        super.a();
+    protected void initDatawatcher() {
+        super.initDatawatcher();
         this.datawatcher.a(12, new Integer(0));     // age
         this.datawatcher.a(16, new Byte((byte) 0)); // tamed/sitting
         this.datawatcher.a(17, "");                 // ownername
@@ -132,98 +124,31 @@ public class EntityMyOcelot extends EntityMyPet
 
     }
 
-    /**
-     * Is called when player rightclicks this MyPet
-     * return:
-     * true: there was a reaction on rightclick
-     * false: no reaction on rightclick
-     */
-    public boolean a(EntityHuman entityhuman)
-    {
-        try
-        {
-            if (super.a(entityhuman))
-            {
-                return true;
-            }
-
-            ItemStack itemStack = entityhuman.inventory.getItemInHand();
-
-            if (getOwner().equals(entityhuman))
-            {
-                if (itemStack != null)
-                {
-                    if (itemStack.id == 351)
-                    {
-                        if (itemStack.getData() == 11)
-                        {
-                            ((MyOcelot) myPet).setCatType(Type.WILD_OCELOT);
-                            return true;
-                        }
-                        else if (itemStack.getData() == 0)
-                        {
-                            ((MyOcelot) myPet).setCatType(Type.BLACK_CAT);
-                            return true;
-                        }
-                        else if (itemStack.getData() == 14)
-                        {
-                            ((MyOcelot) myPet).setCatType(Type.RED_CAT);
-                            return true;
-                        }
-                        else if (itemStack.getData() == 7)
-                        {
-                            ((MyOcelot) myPet).setCatType(Type.SIAMESE_CAT);
-                            return true;
-                        }
-                    }
-                    else if (itemStack.id == GROW_UP_ITEM.getId())
-                    {
-                        if (isBaby())
-                        {
-                            if (!entityhuman.abilities.canInstantlyBuild)
-                            {
-                                if (--itemStack.count <= 0)
-                                {
-                                    entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, null);
-                                }
-                            }
-                            this.setBaby(false);
-                            return true;
-                        }
-                    }
-                }
-                this.sitPathfinder.toogleSitting();
-                return true;
-            }
+    public void setBaby(boolean flag) {
+        if (flag) {
+            this.datawatcher.watch(12, Integer.valueOf(Integer.MIN_VALUE));
+        } else {
+            this.datawatcher.watch(12, new Integer(0));
         }
-        catch (Exception e)
-        {
-            e.printStackTrace();
+    }
+
+    public void setMyPet(MyPet myPet) {
+        if (myPet != null) {
+            this.sitPathfinder = new Sit(this);
+
+            super.setMyPet(myPet);
+
+            this.setBaby(getMyPet().isBaby());
+            this.setCatType(getMyPet().getCatType().getId());
         }
-        return false;
     }
 
-    /**
-     * Returns the sound that is played when the MyPet get hurt
-     */
-    protected String aK()
-    {
-        return "mob.cat.hitt";
+    public MyOcelot getMyPet() {
+        return (MyOcelot) myPet;
     }
 
-    /**
-     * Returns the sound that is played when the MyPet dies
-     */
-    protected String aL()
-    {
-        return "mob.cat.hitt";
-    }
-
-    /**
-     * Returns the default sound of the MyPet
-     */
-    protected String r()
-    {
-        return !playIdleSound() ? "" : this.random.nextInt(4) == 0 ? "mob.cat.purreow" : "mob.cat.meow";
+    public void setPathfinder() {
+        super.setPathfinder();
+        petPathfinderSelector.addGoal("Sit", 2, sitPathfinder);
     }
 }

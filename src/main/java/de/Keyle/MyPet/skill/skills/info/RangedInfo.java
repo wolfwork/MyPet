@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -22,45 +22,40 @@ package de.Keyle.MyPet.skill.skills.info;
 
 import de.Keyle.MyPet.gui.skilltreecreator.skills.Ranged;
 import de.Keyle.MyPet.gui.skilltreecreator.skills.SkillPropertiesPanel;
-import de.Keyle.MyPet.skill.MyPetSkillTreeSkill;
-import de.Keyle.MyPet.skill.SkillName;
-import de.Keyle.MyPet.skill.SkillProperties;
-import de.Keyle.MyPet.skill.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skills.SkillName;
+import de.Keyle.MyPet.skill.skills.SkillProperties;
+import de.Keyle.MyPet.skill.skills.SkillProperties.NBTdatatypes;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeSkill;
 
-@SkillName("Ranged")
+@SkillName(value = "Ranged", translationNode = "Name.Skill.Ranged")
 @SkillProperties(
-        parameterNames = {"damage_double", "addset_damage", "projectile"},
-        parameterTypes = {NBTdatatypes.Double, NBTdatatypes.String, NBTdatatypes.String},
-        parameterDefaultValues = {"1.0", "add", "Arrow"})
-public class RangedInfo extends MyPetSkillTreeSkill implements ISkillInfo
-{
+        parameterNames = {"damage_double", "addset_damage", "projectile", "rateoffire", "addset_rateoffire"},
+        parameterTypes = {NBTdatatypes.Double, NBTdatatypes.String, NBTdatatypes.String, NBTdatatypes.Int, NBTdatatypes.String},
+        parameterDefaultValues = {"1.0", "add", "Arrow", "35", "add"})
+public class RangedInfo extends SkillTreeSkill implements ISkillInfo {
     private SkillPropertiesPanel panel = null;
 
     protected double damage = 0;
+    protected int rateOfFire = 0;
 
-    public enum Projectiles
-    {
+    public enum Projectiles {
         Arrow, Snowball, LargeFireball, SmallFireball, WitherSkull
     }
 
     protected Projectiles selectedProjectile = Projectiles.Arrow;
 
-    public RangedInfo(boolean addedByInheritance)
-    {
+    public RangedInfo(boolean addedByInheritance) {
         super(addedByInheritance);
     }
 
-    public SkillPropertiesPanel getGuiPanel()
-    {
-        if (panel == null)
-        {
+    public SkillPropertiesPanel getGuiPanel() {
+        if (panel == null) {
             panel = new Ranged(this.getProperties());
         }
         return panel;
     }
 
-    public ISkillInfo cloneSkill()
-    {
+    public ISkillInfo cloneSkill() {
         RangedInfo newSkill = new RangedInfo(this.isAddedByInheritance());
         newSkill.setProperties(getProperties());
         return newSkill;

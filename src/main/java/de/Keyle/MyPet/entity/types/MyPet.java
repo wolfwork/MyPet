@@ -1,7 +1,7 @@
 /*
  * This file is part of MyPet
  *
- * Copyright (C) 2011-2013 Keyle
+ * Copyright (C) 2011-2014 Keyle
  * MyPet is licensed under the GNU Lesser General Public License.
  *
  * MyPet is free software: you can redistribute it and/or modify
@@ -20,79 +20,49 @@
 
 package de.Keyle.MyPet.entity.types;
 
+import com.google.common.collect.ArrayListMultimap;
 import de.Keyle.MyPet.MyPetPlugin;
 import de.Keyle.MyPet.api.event.MyPetLevelUpEvent;
-import de.Keyle.MyPet.api.event.MyPetSpoutEvent;
-import de.Keyle.MyPet.api.event.MyPetSpoutEvent.MyPetSpoutEventReason;
+import de.Keyle.MyPet.api.util.IScheduler;
+import de.Keyle.MyPet.api.util.NBTStorage;
 import de.Keyle.MyPet.entity.EntitySize;
-import de.Keyle.MyPet.skill.*;
+import de.Keyle.MyPet.skill.Experience;
+import de.Keyle.MyPet.skill.skills.ISkillStorage;
+import de.Keyle.MyPet.skill.skills.Skills;
 import de.Keyle.MyPet.skill.skills.implementation.Damage;
 import de.Keyle.MyPet.skill.skills.implementation.HP;
 import de.Keyle.MyPet.skill.skills.implementation.ISkillInstance;
 import de.Keyle.MyPet.skill.skills.implementation.Ranged;
+import de.Keyle.MyPet.skill.skilltree.SkillTree;
+import de.Keyle.MyPet.skill.skilltree.SkillTreeMobType;
 import de.Keyle.MyPet.util.*;
-import de.Keyle.MyPet.util.locale.MyPetLocales;
-import de.Keyle.MyPet.util.support.*;
+import de.Keyle.MyPet.util.locale.Locales;
+import de.Keyle.MyPet.util.player.MyPetPlayer;
+import de.Keyle.MyPet.util.support.Economy;
+import de.Keyle.MyPet.util.support.Permissions;
+import de.Keyle.MyPet.util.support.arenas.*;
+import de.keyle.knbt.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_6_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.spout.nbt.*;
 
 import java.util.*;
 
-import static org.bukkit.Bukkit.getPluginManager;
 import static org.bukkit.Bukkit.getServer;
 
-public abstract class MyPet implements IMyPet, NBTStorage
-{
+public abstract class MyPet implements IMyPet, NBTStorage {
     private static Map<Class<? extends MyPet>, Double> startHP = new HashMap<Class<? extends MyPet>, Double>();
     private static Map<Class<? extends MyPet>, Double> startSpeed = new HashMap<Class<? extends MyPet>, Double>();
-    private static Map<Class<? extends MyPet>, List<Material>> food = new HashMap<Class<? extends MyPet>, List<Material>>();
-    private static Map<Class<? extends MyPet>, List<LeashFlag>> leashFlags = new HashMap<Class<? extends MyPet>, List<LeashFlag>>();
+    private static ArrayListMultimap<Class<? extends MyPet>, ConfigItem> food = ArrayListMultimap.create();
+    private static ArrayListMultimap<Class<? extends MyPet>, LeashFlag> leashFlags = ArrayListMultimap.create();
     private static Map<Class<? extends MyPet>, Integer> customRespawnTimeFactor = new HashMap<Class<? extends MyPet>, Integer>();
     private static Map<Class<? extends MyPet>, Integer> customRespawnTimeFixed = new HashMap<Class<? extends MyPet>, Integer>();
-
-    static
-    {
-        for (MyPetType petType : MyPetType.values())
-        {
-            startHP.put(petType.getMyPetClass(), 20D);
-        }
-    }
-
-    public static enum LeashFlag
-    {
-        Baby, Adult, LowHp, Tamed, UserCreated, Wild, CanBreed, Angry, None, Impossible;
-
-        public static LeashFlag getLeashFlagByName(String name)
-        {
-            for (LeashFlag leashFlags : LeashFlag.values())
-            {
-                if (leashFlags.name().equalsIgnoreCase(name))
-                {
-                    return leashFlags;
-                }
-            }
-            return null;
-        }
-    }
-
-    public static enum SpawnFlags
-    {
-        Success, NoSpace, AlreadyHere, Dead, Canceled, NotAllowed
-    }
-
-    public static enum PetState
-    {
-        Dead, Despawned, Here
-    }
-
+    private static Map<Class<? extends MyPet>, ConfigItem> leashItem = new HashMap<Class<? extends MyPet>, ConfigItem>();
+    protected final MyPetPlayer petOwner;
     protected CraftMyPet craftMyPet;
     protected String petName = "Pet";
-    protected final MyPetPlayer petOwner;
     protected double health;
     protected int respawnTime = 0;
     protected int hungerTime = 0;
@@ -100,677 +70,568 @@ public abstract class MyPet implements IMyPet, NBTStorage
     protected UUID uuid = null;
     protected String worldGroup = "";
     protected PetState status = PetState.Despawned;
-    protected boolean wantToRespawn = false;
-    protected MyPetSkillTree skillTree = null;
-    protected MyPetSkills skills;
-    protected MyPetExperience experience;
+    protected boolean wantsToRespawn = false;
+    protected SkillTree skillTree = null;
+    protected Skills skills;
+    protected Experience experience;
+    protected long lastUsed = -1;
 
-    public MyPet(MyPetPlayer Owner)
-    {
-        this.petOwner = Owner;
-        skills = new MyPetSkills(this);
-        experience = new MyPetExperience(this);
-        hungerTime = MyPetConfiguration.HUNGER_SYSTEM_TIME;
-        autoAssignSkilltree();
-        petName = MyPetLocales.getString("Name." + getPetType().getTypeName(), petOwner.getLanguage());
-    }
+    public static enum LeashFlag {
+        Baby, Adult, LowHp, Tamed, UserCreated, Wild, CanBreed, Angry, None, Impossible;
 
-    public void setPetName(String newName)
-    {
-        this.petName = newName;
-        if (status == PetState.Here)
-        {
-            if (MyPetConfiguration.PET_INFO_OVERHEAD_NAME)
-            {
-                getCraftPet().getHandle().setCustomNameVisible(true);
-                getCraftPet().getHandle().setCustomName(MyPetUtil.cutString(MyPetConfiguration.PET_INFO_OVERHEAD_PREFIX + petName + MyPetConfiguration.PET_INFO_OVERHEAD_SUFFIX, 64));
-            }
-        }
-        if (MyPetConfiguration.ENABLE_EVENTS)
-        {
-            getPluginManager().callEvent(new MyPetSpoutEvent(this, MyPetSpoutEventReason.Name));
-        }
-    }
-
-    public String getPetName()
-    {
-        return this.petName;
-    }
-
-    public MyPetSkillTree getSkillTree()
-    {
-        return skillTree;
-    }
-
-    public boolean setSkilltree(MyPetSkillTree skillTree)
-    {
-        if (skillTree == null || this.skillTree == skillTree)
-        {
-            return false;
-        }
-        skills.reset();
-        this.skillTree = skillTree;
-        for (int i = 1 ; i <= experience.getLevel() ; i++)
-        {
-            getServer().getPluginManager().callEvent(new MyPetLevelUpEvent(this, i, true));
-        }
-        return true;
-    }
-
-    public boolean autoAssignSkilltree()
-    {
-        if (MyPetConfiguration.AUTOMATIC_SKILLTREE_ASSIGNMENT && skillTree == null && this.petOwner.isOnline())
-        {
-            if (MyPetSkillTreeMobType.getSkillTreeNames(this.getPetType()).size() > 0)
-            {
-                for (MyPetSkillTree skillTree : MyPetSkillTreeMobType.getSkillTrees(this.getPetType()))
-                {
-                    if (MyPetPermissions.has(this.petOwner.getPlayer(), "MyPet.custom.skilltree." + skillTree.getPermission()))
-                    {
-                        return setSkilltree(skillTree);
-                    }
+        public static LeashFlag getLeashFlagByName(String name) {
+            for (LeashFlag leashFlags : LeashFlag.values()) {
+                if (leashFlags.name().equalsIgnoreCase(name)) {
+                    return leashFlags;
                 }
             }
-        }
-        return false;
-    }
-
-    public void removePet()
-    {
-        removePet(false);
-    }
-
-    public void removePet(boolean wantToRespawn)
-    {
-        if (status == PetState.Here)
-        {
-            health = craftMyPet.getHealth();
-            status = PetState.Despawned;
-            this.wantToRespawn = wantToRespawn;
-            craftMyPet.remove();
-            craftMyPet = null;
+            return null;
         }
     }
 
-    public void respawnPet()
-    {
-        if (status != PetState.Here && getOwner().isOnline())
-        {
-            respawnTime = 0;
-            switch (createPet())
-            {
-                case Success:
-                    sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.OnRespawn", petOwner.getLanguage())).replace("%petname%", petName));
-                    break;
-                case Canceled:
-                    sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.SpawnPrevent", petOwner.getLanguage())).replace("%petname%", petName));
-                    break;
-                case NoSpace:
-                    sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.SpawnNoSpace", petOwner.getLanguage())).replace("%petname%", petName));
-                    break;
-            }
-            if (MyPetConfiguration.USE_HUNGER_SYSTEM)
-            {
-                setHealth((int) Math.ceil(getMaxHealth() / 100. * (hunger + 1 - (hunger % 10))));
-            }
-            else
-            {
-                setHealth(getMaxHealth());
-            }
-        }
+    public static enum SpawnFlags {
+        Success, NoSpace, AlreadyHere, Dead, Canceled, OwnerDead, Flying, NotAllowed
     }
 
-    public SpawnFlags createPet()
-    {
-        if (status != PetState.Here && getOwner().isOnline())
-        {
-            if (respawnTime <= 0)
-            {
-                Location loc = petOwner.getPlayer().getLocation();
-                net.minecraft.server.v1_6_R1.World mcWorld = ((CraftWorld) loc.getWorld()).getHandle();
-                EntityMyPet petEntity = getPetType().getNewEntityInstance(mcWorld, this);
-                craftMyPet = (CraftMyPet) petEntity.getBukkitEntity();
-                petEntity.setLocation(loc);
-                if (!MyPetBukkitUtil.canSpawn(loc, petEntity))
-                {
-                    status = PetState.Despawned;
-                    return SpawnFlags.NoSpace;
-                }
-
-                if (Minigames.DISABLE_PETS_IN_MINIGAMES && Minigames.isInMinigame(getOwner()))
-                {
-                    status = PetState.Despawned;
-                    return SpawnFlags.NotAllowed;
-                }
-                if (PvPArena.DISABLE_PETS_IN_ARENA && PvPArena.isInPvPArena(getOwner()))
-                {
-                    status = PetState.Despawned;
-                    return SpawnFlags.NotAllowed;
-                }
-                if (MobArena.DISABLE_PETS_IN_ARENA && MobArena.isInMobArena(getOwner()))
-                {
-                    status = PetState.Despawned;
-                    return SpawnFlags.NotAllowed;
-                }
-                if (BattleArena.DISABLE_PETS_IN_ARENA && BattleArena.isInBattleArena(getOwner()))
-                {
-                    status = PetState.Despawned;
-                    return SpawnFlags.NotAllowed;
-                }
-                if (SurvivalGames.DISABLE_PETS_IN_SURVIVAL_GAMES && SurvivalGames.isInSurvivalGames(getOwner()))
-                {
-                    status = PetState.Despawned;
-                    return SpawnFlags.NotAllowed;
-                }
-
-                if (!mcWorld.addEntity(petEntity, CreatureSpawnEvent.SpawnReason.CUSTOM))
-                {
-                    status = PetState.Despawned;
-                    return SpawnFlags.Canceled;
-                }
-                craftMyPet.setMetadata("MyPet", new FixedMetadataValue(MyPetPlugin.getPlugin(), this));
-                status = PetState.Here;
-
-                if (worldGroup == null || worldGroup.equals(""))
-                {
-                    setWorldGroup(MyPetWorldGroup.getGroup(craftMyPet.getWorld().getName()).getName());
-                }
-
-                autoAssignSkilltree();
-
-                return SpawnFlags.Success;
-            }
-        }
-        if (status == PetState.Dead)
-        {
-            return SpawnFlags.Dead;
-        }
-        else
-        {
-            return SpawnFlags.AlreadyHere;
-        }
+    public static enum PetState {
+        Dead, Despawned, Here
     }
 
-    public CraftMyPet getCraftPet()
-    {
+    protected MyPet(MyPetPlayer petOwner) {
+        if (petOwner == null) {
+            throw new IllegalArgumentException("Owner must not be null.");
+        }
+        this.petOwner = petOwner;
+        skills = new Skills(this);
+        experience = new Experience(this);
+        hungerTime = Configuration.HUNGER_SYSTEM_TIME;
+        petName = Locales.getString("Name." + getPetType().getTypeName(), this.petOwner);
+    }
+
+    public CraftMyPet getCraftPet() {
         getStatus();
         return craftMyPet;
     }
 
-    public PetState getStatus()
-    {
-        if (status == PetState.Here)
-        {
-            if (craftMyPet == null || craftMyPet.getHandle() == null)
-            {
-                status = PetState.Despawned;
+    public double getYSpawnOffset() {
+        return 0;
+    }
+
+    public Location getLocation() {
+        if (status == PetState.Here) {
+            return craftMyPet.getLocation();
+        } else if (petOwner.isOnline()) {
+            return petOwner.getPlayer().getLocation();
+        } else {
+            return null;
+        }
+    }
+
+    public void setLocation(Location loc) {
+        if (status == PetState.Here && BukkitUtil.canSpawn(loc, this.craftMyPet.getHandle())) {
+            craftMyPet.teleport(loc);
+        }
+    }
+
+    public double getDamage() {
+        return getSkills().hasSkill(Damage.class) ? getSkills().getSkill(Damage.class).getDamage() : 0;
+    }
+
+    public double getRangedDamage() {
+        return getSkills().hasSkill(Ranged.class) ? getSkills().getSkill(Ranged.class).getDamage() : 0;
+    }
+
+    public boolean isPassiv() {
+        return getDamage() == 0 && getRangedDamage() == 0;
+    }
+
+    public boolean hasTarget() {
+        return this.getStatus() == PetState.Here && craftMyPet.getHandle().getGoalTarget() != null && craftMyPet.getHandle().getGoalTarget().isAlive();
+    }
+
+    public double getExp() {
+        return getExperience().getExp();
+    }
+
+    public Experience getExperience() {
+        return experience;
+    }
+
+    public TagCompound getExtendedInfo() {
+        return new TagCompound();
+    }
+
+    public void setExtendedInfo(TagCompound info) {
+    }
+
+    public double getMaxHealth() {
+        return getStartHP(this.getClass()) + (skills.isSkillActive(HP.class) ? skills.getSkill(HP.class).getHpIncrease() : 0);
+    }
+
+    public double getHealth() {
+        if (status == PetState.Here) {
+            return craftMyPet.getHealth();
+        } else {
+            return health;
+        }
+    }
+
+    public void setHealth(double d) {
+        if (d > getMaxHealth()) {
+            health = getMaxHealth();
+        } else {
+            health = d;
+        }
+        if (status == PetState.Here) {
+            craftMyPet.setHealth(health);
+        }
+    }
+
+    public int getHungerValue() {
+        if (Configuration.USE_HUNGER_SYSTEM) {
+            return hunger;
+        } else {
+            return 100;
+        }
+    }
+
+    public void setHungerValue(int value) {
+        if (value > 100) {
+            hunger = 100;
+        } else if (value < 1) {
+            hunger = 1;
+        } else {
+            hunger = value;
+        }
+        hungerTime = Configuration.HUNGER_SYSTEM_TIME;
+    }
+
+    public String getPetName() {
+        return this.petName;
+    }
+
+    public void setPetName(String newName) {
+        this.petName = newName;
+        if (status == PetState.Here) {
+            if (Configuration.PET_INFO_OVERHEAD_NAME) {
+                getCraftPet().getHandle().setCustomNameVisible(true);
+                getCraftPet().getHandle().setCustomName(Util.cutString(Configuration.PET_INFO_OVERHEAD_PREFIX + petName + Configuration.PET_INFO_OVERHEAD_SUFFIX, 64));
             }
-            else if (craftMyPet.getHealth() <= 0 || craftMyPet.isDead())
-            {
+        }
+    }
+
+    public abstract MyPetType getPetType();
+
+    public int getRespawnTime() {
+        return respawnTime;
+    }
+
+    public void setRespawnTime(int time) {
+        respawnTime = time > 0 ? time : 0;
+    }
+
+    public boolean autoAssignSkilltree() {
+        if (skillTree == null && this.petOwner.isOnline()) {
+            if (Configuration.AUTOMATIC_SKILLTREE_ASSIGNMENT) {
+                if (SkillTreeMobType.getSkillTreeNames(this.getPetType()).size() > 0) {
+                    for (SkillTree skillTree : SkillTreeMobType.getSkillTrees(this.getPetType())) {
+                        if (Permissions.has(this.petOwner.getPlayer(), "MyPet.custom.skilltree." + skillTree.getPermission())) {
+                            return setSkilltree(skillTree);
+                        }
+                    }
+                }
+            } else {
+                for (SkillTree skillTree : SkillTreeMobType.getSkillTrees(this.getPetType())) {
+                    if (Permissions.has(this.petOwner.getPlayer(), "MyPet.custom.skilltree." + skillTree.getPermission())) {
+                        sendMessageToOwner(Util.formatText(Locales.getString("Message.Skilltree.SelectionPrompt", getOwner()), getPetName()));
+                        break;
+                    }
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public SkillTree getSkillTree() {
+        return skillTree;
+    }
+
+    public Skills getSkills() {
+        return skills;
+    }
+
+    public PetState getStatus() {
+        if (status == PetState.Here) {
+            if (craftMyPet == null || craftMyPet.getHandle() == null) {
+                status = PetState.Despawned;
+            } else if (craftMyPet.getHealth() <= 0 || craftMyPet.isDead()) {
                 status = PetState.Dead;
             }
         }
         return status;
     }
 
-    public boolean wantToRespawn()
-    {
-        return wantToRespawn;
-    }
-
-    public void setStatus(PetState status)
-    {
-        if (status == PetState.Here)
-        {
-            if (this.status == PetState.Dead)
-            {
+    public void setStatus(PetState status) {
+        if (status == PetState.Here) {
+            if (this.status == PetState.Dead) {
                 respawnPet();
-            }
-            else if (this.status == PetState.Despawned)
-            {
+            } else if (this.status == PetState.Despawned) {
                 createPet();
             }
-        }
-        else if (status == PetState.Dead)
-        {
+        } else if (status == PetState.Dead) {
             this.status = PetState.Dead;
-        }
-        else
-        {
-            if (this.status == PetState.Here)
-            {
+        } else {
+            if (this.status == PetState.Here) {
                 removePet();
             }
         }
     }
 
-    public void setHealth(double d)
-    {
-        if (d > getMaxHealth())
-        {
-            health = getMaxHealth();
-        }
-        else
-        {
-            health = d;
-        }
-        if (status == PetState.Here)
-        {
-            craftMyPet.setHealth(health);
-        }
-    }
-
-    public double getHealth()
-    {
-        if (status == PetState.Here)
-        {
-            return craftMyPet.getHealth();
-        }
-        else
-        {
-            return health;
-        }
-    }
-
-    public double getMaxHealth()
-    {
-        return getStartHP(this.getClass()) + (skills.isSkillActive("HP") ? ((HP) skills.getSkill("HP")).getHpIncrease() : 0);
-    }
-
-    public int getRespawnTime()
-    {
-        return respawnTime;
-    }
-
-    public void setRespawnTime(int time)
-    {
-        respawnTime = time > 0 ? time : 0;
-    }
-
-    public int getHungerValue()
-    {
-        if (MyPetConfiguration.USE_HUNGER_SYSTEM)
-        {
-            return hunger;
-        }
-        else
-        {
-            return 100;
-        }
-    }
-
-    public void setHungerValue(int value)
-    {
-        if (value > 100)
-        {
-            hunger = 100;
-        }
-        else if (value < 1)
-        {
-            hunger = 1;
-        }
-        else
-        {
-            hunger = value;
-        }
-        hungerTime = MyPetConfiguration.HUNGER_SYSTEM_TIME;
-
-        if (MyPetConfiguration.ENABLE_EVENTS)
-        {
-            MyPetSpoutEvent spoutEvent = new MyPetSpoutEvent(this, MyPetSpoutEventReason.HungerChange);
-            getServer().getPluginManager().callEvent(spoutEvent);
-        }
-    }
-
-    public double getDamage()
-    {
-        return (getSkills().hasSkill("Damage") ? ((Damage) getSkills().getSkill("Damage")).getDamage() : 0);
-    }
-
-    public double getRangedDamage()
-    {
-        return (getSkills().hasSkill("Ranged") ? ((Ranged) getSkills().getSkill("Ranged")).getDamage() : 0);
-    }
-
-    public MyPetSkills getSkills()
-    {
-        return skills;
-    }
-
-    public MyPetExperience getExperience()
-    {
-        return experience;
-    }
-
-    public double getExp()
-    {
-        return getExperience().getExp();
-    }
-
-    public Location getLocation()
-    {
-        if (status == PetState.Here)
-        {
-            return craftMyPet.getLocation();
-        }
-        else if (petOwner.isOnline())
-        {
-            return petOwner.getPlayer().getLocation();
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    public void setLocation(Location loc)
-    {
-        if (status == PetState.Here && MyPetBukkitUtil.canSpawn(loc, this.craftMyPet.getHandle()))
-        {
-            craftMyPet.teleport(loc);
-        }
-    }
-
-    @Override
-    public String getWorldGroup()
-    {
-        return this.worldGroup;
-    }
-
-    public void setWorldGroup(String worldGroup)
-    {
-        if (worldGroup != null)
-        {
-            this.worldGroup = worldGroup;
-        }
-    }
-
-    public void setUUID(UUID uuid)
-    {
-        this.uuid = uuid;
-    }
-
-    public UUID getUUID()
-    {
-        if (this.uuid == null)
-        {
+    public UUID getUUID() {
+        if (this.uuid == null) {
             this.uuid = UUID.randomUUID();
         }
-
         return this.uuid;
     }
 
-    public void scheduleTask()
-    {
-        if (status != PetState.Despawned && getOwner().isOnline())
-        {
-            for (ISkillInstance skill : skills.getSkills())
-            {
-                if (skill instanceof IScheduler)
-                {
-                    ((IScheduler) skill).schedule();
-                }
-            }
-            if (status == PetState.Dead)
-            {
-                respawnTime--;
-                if (MyPetEconomy.canUseEconomy() && getOwner().hasAutoRespawnEnabled() && respawnTime >= getOwner().getAutoRespawnMin() && MyPetPermissions.has(getOwner().getPlayer(), "MyPet.user.respawn"))
-                {
-                    double cost = respawnTime * MyPetConfiguration.RESPAWN_COSTS_FACTOR + MyPetConfiguration.RESPAWN_COSTS_FIXED;
-                    if (MyPetEconomy.canPay(getOwner(), cost))
-                    {
-                        MyPetEconomy.pay(getOwner(), cost);
-                        sendMessageToOwner(MyPetBukkitUtil.setColors(MyPetLocales.getString("Message.RespawnPaid", petOwner.getLanguage()).replace("%cost%", cost + " " + MyPetEconomy.getEconomy().currencyNameSingular()).replace("%petname%", petName)));
-                        respawnTime = 1;
-                    }
-                }
-                if (respawnTime <= 0)
-                {
-                    respawnPet();
-                }
-            }
-            if (MyPetConfiguration.USE_HUNGER_SYSTEM && hunger > 1 && --hungerTime <= 0)
-            {
-                hunger--;
-                hungerTime = MyPetConfiguration.HUNGER_SYSTEM_TIME;
-
-                if (MyPetConfiguration.ENABLE_EVENTS)
-                {
-                    MyPetSpoutEvent spoutEvent = new MyPetSpoutEvent(this, MyPetSpoutEventReason.HungerChange);
-                    getServer().getPluginManager().callEvent(spoutEvent);
-                }
-            }
-        }
-    }
-
-    public MyPetPlayer getOwner()
-    {
-        return petOwner;
-    }
-
-    public void sendMessageToOwner(String text)
-    {
-        if (petOwner.isOnline())
-        {
-            getOwner().getPlayer().sendMessage(text);
-        }
-    }
-
-    public static double getStartHP(Class<? extends MyPet> myPetClass)
-    {
-        if (startHP.containsKey(myPetClass))
-        {
-            return startHP.get(myPetClass);
-        }
-        return 1;
-    }
-
-    public static void setStartHP(Class<? extends MyPet> myPetClass, double hp)
-    {
-        startHP.put(myPetClass, hp);
-    }
-
-    public static double getStartSpeed(Class<? extends MyPet> myPetClass)
-    {
-        if (startSpeed.containsKey(myPetClass))
-        {
-            return startSpeed.get(myPetClass);
-        }
-        return 0.3F;
-    }
-
-    public static void setStartSpeed(Class<? extends MyPet> myPetClass, double speed)
-    {
-        startSpeed.put(myPetClass, speed);
-    }
-
-    public static List<Material> getFood(Class<? extends MyPet> myPetClass)
-    {
-        List<Material> foodList = new ArrayList<Material>();
-        if (food.containsKey(myPetClass))
-        {
-            foodList.addAll(food.get(myPetClass));
-        }
-        return foodList;
-    }
-
-    public static void setFood(Class<? extends MyPet> myPetClass, Material foodToAdd)
-    {
-        if (food.containsKey(myPetClass))
-        {
-            List<Material> foodList = food.get(myPetClass);
-            if (!foodList.contains(foodToAdd))
-            {
-                foodList.add(foodToAdd);
-            }
-        }
-        else
-        {
-            List<Material> foodList = new ArrayList<Material>();
-            foodList.add(foodToAdd);
-            food.put(myPetClass, foodList);
-        }
-    }
-
-    public static List<LeashFlag> getLeashFlags(Class<? extends MyPet> myPetClass)
-    {
-        List<LeashFlag> leashFlagList = new ArrayList<LeashFlag>();
-        if (leashFlags.containsKey(myPetClass))
-        {
-            leashFlagList.addAll(leashFlags.get(myPetClass));
-        }
-        return leashFlagList;
-    }
-
-    public static boolean hasLeashFlag(Class<? extends MyPet> myPetClass, LeashFlag flag)
-    {
-        if (leashFlags.containsKey(myPetClass))
-        {
-            return leashFlags.get(myPetClass).contains(flag);
-        }
-        return false;
-    }
-
-    public static void setLeashFlags(Class<? extends MyPet> myPetClass, LeashFlag leashFlagToAdd)
-    {
-        if (leashFlags.containsKey(myPetClass))
-        {
-            List<LeashFlag> leashFlagList = leashFlags.get(myPetClass);
-            if (!leashFlagList.contains(leashFlagToAdd))
-            {
-                leashFlagList.add(leashFlagToAdd);
-            }
-        }
-        else
-        {
-            List<LeashFlag> leashFlagList = new ArrayList<LeashFlag>();
-            leashFlagList.add(leashFlagToAdd);
-            leashFlags.put(myPetClass, leashFlagList);
-        }
-    }
-
-    public static float[] getEntitySize(Class<? extends EntityMyPet> entityMyPetClass)
-    {
-        EntitySize es = entityMyPetClass.getAnnotation(EntitySize.class);
-        if (es != null)
-        {
-            return new float[]{es.height(), es.width()};
-        }
-        return new float[]{0, 0};
-    }
-
-    public boolean isPassiv()
-    {
-        return getDamage() == 0;
-    }
-
-    public boolean hasTarget()
-    {
-        return this.getStatus() == PetState.Here && craftMyPet.getHandle().getGoalTarget() != null && craftMyPet.getHandle().getGoalTarget().isAlive();
-    }
-
-    public abstract MyPetType getPetType();
-
-    public CompoundTag getExtendedInfo()
-    {
-        return new CompoundTag("Info", new CompoundMap());
-    }
-
-    public void setExtendedInfo(CompoundTag info)
-    {
+    public void setUUID(UUID uuid) {
+        this.uuid = uuid;
     }
 
     @Override
-    public CompoundTag save()
-    {
-        CompoundTag petNBT = new CompoundTag(null, new CompoundMap());
+    public long getLastUsed() {
+        return lastUsed;
+    }
 
-        petNBT.getValue().put("UUID", new StringTag("UUID", getUUID().toString()));
-        petNBT.getValue().put("Type", new StringTag("Type", this.getPetType().getTypeName()));
-        petNBT.getValue().put("Owner", new StringTag("Owner", this.petOwner.getName()));
-        petNBT.getValue().put("Health", new DoubleTag("Health", this.health));
-        petNBT.getValue().put("Respawntime", new IntTag("Respawntime", this.respawnTime));
-        petNBT.getValue().put("Hunger", new IntTag("Hunger", this.hunger));
-        petNBT.getValue().put("Name", new StringTag("Name", this.petName));
-        petNBT.getValue().put("WorldGroup", new StringTag("WorldGroup", this.worldGroup));
-        petNBT.getValue().put("Exp", new DoubleTag("Exp", this.getExp()));
-        petNBT.getValue().put("Info", getExtendedInfo());
-        if (this.skillTree != null)
-        {
-            petNBT.getValue().put("Skilltree", new StringTag("Skilltree", skillTree.getName()));
+    @Override
+    public String getWorldGroup() {
+        return this.worldGroup;
+    }
+
+    public void setWorldGroup(String worldGroup) {
+        if (worldGroup == null) {
+            return;
         }
-        CompoundTag skillsNBT = new CompoundTag("Skills", new CompoundMap());
+        if (WorldGroup.getGroupByName(worldGroup) == null) {
+            worldGroup = "default";
+        }
+        this.worldGroup = worldGroup;
+    }
+
+    public SpawnFlags createPet() {
+        lastUsed = System.currentTimeMillis();
+        if (status != PetState.Here && getOwner().isOnline()) {
+            if (getOwner().getPlayer().isDead()) {
+                status = PetState.Despawned;
+                return SpawnFlags.OwnerDead;
+            }
+            if (getOwner().getPlayer().isFlying()) {
+                return SpawnFlags.Flying;
+            }
+            if (respawnTime <= 0) {
+                Location loc = petOwner.getPlayer().getLocation();
+                net.minecraft.server.v1_7_R4.World mcWorld = ((CraftWorld) loc.getWorld()).getHandle();
+                EntityMyPet petEntity = getPetType().getNewEntityInstance(mcWorld, this);
+                craftMyPet = (CraftMyPet) petEntity.getBukkitEntity();
+                if (getYSpawnOffset() > 0) {
+                    loc = loc.add(0, getYSpawnOffset(), 0);
+                }
+                loc.setPitch(0);
+                loc.setYaw(0);
+                if (!BukkitUtil.canSpawn(loc, petEntity)) {
+                    status = PetState.Despawned;
+                    return SpawnFlags.NoSpace;
+                }
+                petEntity.setLocation(loc);
+
+                if (Minigames.DISABLE_PETS_IN_MINIGAMES && Minigames.isInMinigame(getOwner())) {
+                    status = PetState.Despawned;
+                    return SpawnFlags.NotAllowed;
+                }
+                if (PvPArena.DISABLE_PETS_IN_ARENA && PvPArena.isInPvPArena(getOwner())) {
+                    status = PetState.Despawned;
+                    return SpawnFlags.NotAllowed;
+                }
+                if (MobArena.DISABLE_PETS_IN_ARENA && MobArena.isInMobArena(getOwner())) {
+                    status = PetState.Despawned;
+                    return SpawnFlags.NotAllowed;
+                }
+                if (BattleArena.DISABLE_PETS_IN_ARENA && BattleArena.isInBattleArena(getOwner())) {
+                    status = PetState.Despawned;
+                    return SpawnFlags.NotAllowed;
+                }
+                if (SurvivalGames.DISABLE_PETS_IN_SURVIVAL_GAMES && SurvivalGames.isInSurvivalGames(getOwner())) {
+                    status = PetState.Despawned;
+                    return SpawnFlags.NotAllowed;
+                }
+                if (SurvivalGames.DISABLE_PETS_IN_SURVIVAL_GAMES && UltimateSurvivalGames.isInSurvivalGames(getOwner())) {
+                    status = PetState.Despawned;
+                    return SpawnFlags.NotAllowed;
+                }
+
+                if (!mcWorld.addEntity(petEntity, CreatureSpawnEvent.SpawnReason.CUSTOM)) {
+                    status = PetState.Despawned;
+                    return SpawnFlags.Canceled;
+                }
+                craftMyPet.setMetadata("MyPet", new FixedMetadataValue(MyPetPlugin.getPlugin(), this));
+                status = PetState.Here;
+
+                if (worldGroup == null || worldGroup.equals("")) {
+                    setWorldGroup(WorldGroup.getGroupByWorld(craftMyPet.getWorld().getName()).getName());
+                }
+
+                autoAssignSkilltree();
+                wantsToRespawn = true;
+
+                return SpawnFlags.Success;
+            }
+        }
+        if (status == PetState.Dead) {
+            return SpawnFlags.Dead;
+        } else {
+            return SpawnFlags.AlreadyHere;
+        }
+    }
+
+    public void removePet() {
+        removePet(false);
+    }
+
+    public void removePet(boolean wantToRespawn) {
+        if (status == PetState.Here) {
+            health = craftMyPet.getHealth();
+            status = PetState.Despawned;
+            this.wantsToRespawn = wantToRespawn;
+            craftMyPet.getHandle().dead = true;
+            craftMyPet = null;
+            if (wantToRespawn) {
+                sendMessageToOwner(Util.formatText(Locales.getString("Message.Spawn.Despawn", getOwner().getLanguage()), petName));
+            }
+        }
+    }
+
+    public void respawnPet() {
+        if (status != PetState.Here && getOwner().isOnline()) {
+            respawnTime = 0;
+            switch (createPet()) {
+                case Success:
+                    sendMessageToOwner(Util.formatText(Locales.getString("Message.Spawn.Respawn", petOwner), petName));
+                    break;
+                case Canceled:
+                    sendMessageToOwner(Util.formatText(Locales.getString("Message.Spawn.Prevent", petOwner), petName));
+                    break;
+                case NoSpace:
+                    sendMessageToOwner(Util.formatText(Locales.getString("Message.Spawn.NoSpace", petOwner), petName));
+                    break;
+                case Flying:
+                    sendMessageToOwner(Util.formatText(Locales.getString("Message.Spawn.Flying", petOwner), petName));
+                    break;
+            }
+            if (Configuration.USE_HUNGER_SYSTEM) {
+                setHealth((int) Math.ceil(getMaxHealth() / 100. * (hunger + 1 - (hunger % 10))));
+            } else {
+                setHealth(getMaxHealth());
+            }
+        }
+    }
+
+    public MyPetPlayer getOwner() {
+        return petOwner;
+    }
+
+    public void sendMessageToOwner(String text) {
+        if (petOwner.isOnline()) {
+            petOwner.getPlayer().sendMessage(text);
+        }
+    }
+
+    public boolean wantToRespawn() {
+        return wantsToRespawn;
+    }
+
+    public void scheduleTask() {
+        if (status != PetState.Despawned && getOwner().isOnline()) {
+            for (ISkillInstance skill : skills.getSkills()) {
+                if (skill instanceof IScheduler) {
+                    ((IScheduler) skill).schedule();
+                }
+            }
+            if (status == PetState.Dead) {
+                respawnTime--;
+                if (Economy.canUseEconomy() && getOwner().hasAutoRespawnEnabled() && respawnTime >= getOwner().getAutoRespawnMin() && Permissions.has(getOwner().getPlayer(), "MyPet.user.respawn")) {
+                    double cost = respawnTime * Configuration.RESPAWN_COSTS_FACTOR + Configuration.RESPAWN_COSTS_FIXED;
+                    if (Economy.canPay(getOwner(), cost)) {
+                        Economy.pay(getOwner(), cost);
+                        sendMessageToOwner(Util.formatText(Locales.getString("Message.Command.Respawn.Paid", petOwner.getLanguage()), petName, cost + " " + Economy.getEconomy().currencyNameSingular()));
+                        respawnTime = 1;
+                    }
+                }
+                if (respawnTime <= 0) {
+                    respawnPet();
+                }
+            }
+            if (status == PetState.Here) {
+                if (Configuration.USE_HUNGER_SYSTEM && hunger > 1 && --hungerTime <= 0) {
+                    hunger--;
+                    hungerTime = Configuration.HUNGER_SYSTEM_TIME;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void load(TagCompound myPetNBT) {
+    }
+
+    @Override
+    public TagCompound save() {
+        TagCompound petNBT = new TagCompound();
+
+        petNBT.getCompoundData().put("UUID", new TagString(getUUID().toString()));
+        petNBT.getCompoundData().put("Type", new TagString(this.getPetType().getTypeName()));
+        petNBT.getCompoundData().put("Health", new TagDouble(this.health));
+        petNBT.getCompoundData().put("Respawntime", new TagInt(this.respawnTime));
+        petNBT.getCompoundData().put("Hunger", new TagInt(this.hunger));
+        petNBT.getCompoundData().put("Name", new TagString(this.petName));
+        petNBT.getCompoundData().put("WorldGroup", new TagString(this.worldGroup));
+        petNBT.getCompoundData().put("Exp", new TagDouble(this.getExp()));
+        petNBT.getCompoundData().put("LastUsed", new TagLong(this.lastUsed));
+        petNBT.getCompoundData().put("Info", getExtendedInfo());
+        petNBT.getCompoundData().put("Internal-Owner-UUID", new TagString(this.petOwner.getInternalUUID().toString()));
+        petNBT.getCompoundData().put("Wants-To-Respawn", new TagByte(wantsToRespawn));
+        if (this.skillTree != null) {
+            petNBT.getCompoundData().put("Skilltree", new TagString(skillTree.getName()));
+        }
+        TagCompound skillsNBT = new TagCompound();
         Collection<ISkillInstance> skillList = this.getSkills().getSkills();
-        if (skillList.size() > 0)
-        {
-            for (ISkillInstance skill : skillList)
-            {
-                if (skill instanceof ISkillStorage)
-                {
+        if (skillList.size() > 0) {
+            for (ISkillInstance skill : skillList) {
+                if (skill instanceof ISkillStorage) {
                     ISkillStorage storageSkill = (ISkillStorage) skill;
-                    CompoundTag s = storageSkill.save();
-                    if (s != null)
-                    {
-                        skillsNBT.getValue().put(skill.getName(), s);
+                    TagCompound s = storageSkill.save();
+                    if (s != null) {
+                        skillsNBT.getCompoundData().put(skill.getName(), s);
                     }
                 }
             }
         }
-        petNBT.getValue().put("Skills", skillsNBT);
+        petNBT.getCompoundData().put("Skills", skillsNBT);
 
         return petNBT;
     }
 
     @Override
-    public void load(CompoundTag myPetNBT)
-    {
+    public String toString() {
+        return "MyPet{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + skillTree.getName() + ", worldgroup=" + worldGroup + "}";
     }
 
-    public static int getCustomRespawnTimeFactor(Class<? extends MyPet> myPetClass)
-    {
-        if (customRespawnTimeFactor.containsKey(myPetClass))
-        {
+    public static float[] getEntitySize(Class<? extends EntityMyPet> entityMyPetClass) {
+        EntitySize es = entityMyPetClass.getAnnotation(EntitySize.class);
+        if (es != null) {
+            return new float[]{es.height(), es.width()};
+        }
+        return new float[]{0, 0};
+    }
+
+    public static int getCustomRespawnTimeFactor(Class<? extends MyPet> myPetClass) {
+        if (customRespawnTimeFactor.containsKey(myPetClass)) {
             return customRespawnTimeFactor.get(myPetClass);
         }
         return 0;
     }
 
-    public static void setCustomRespawnTimeFactor(Class<? extends MyPet> myPetClass, int factor)
-    {
+    public static void setCustomRespawnTimeFactor(Class<? extends MyPet> myPetClass, int factor) {
         customRespawnTimeFactor.put(myPetClass, factor);
     }
 
-
-    public static int getCustomRespawnTimeFixed(Class<? extends MyPet> myPetClass)
-    {
-        if (customRespawnTimeFixed.containsKey(myPetClass))
-        {
+    public static int getCustomRespawnTimeFixed(Class<? extends MyPet> myPetClass) {
+        if (customRespawnTimeFixed.containsKey(myPetClass)) {
             return customRespawnTimeFixed.get(myPetClass);
         }
         return 0;
     }
 
-    public static void setCustomRespawnTimeFixed(Class<? extends MyPet> myPetClass, int factor)
-    {
+    public static void setCustomRespawnTimeFixed(Class<? extends MyPet> myPetClass, int factor) {
         customRespawnTimeFixed.put(myPetClass, factor);
     }
 
-    public static void resetOptions()
-    {
+    public static List<ConfigItem> getFood(Class<? extends MyPet> myPetClass) {
+        return food.get(myPetClass);
+    }
+
+    public static void setFood(Class<? extends MyPet> myPetClass, ConfigItem foodToAdd) {
+        for (ConfigItem configItem : food.get(myPetClass)) {
+            if (configItem.compare(foodToAdd.getItem())) {
+                return;
+            }
+        }
+        food.put(myPetClass, foodToAdd);
+    }
+
+    public static boolean hasLeashFlag(Class<? extends MyPet> myPetClass, LeashFlag flag) {
+        return leashFlags.get(myPetClass).contains(flag);
+    }
+
+    public static List<LeashFlag> getLeashFlags(Class<? extends MyPet> myPetClass) {
+        return leashFlags.get(myPetClass);
+    }
+
+    public static void setLeashFlags(Class<? extends MyPet> myPetClass, LeashFlag leashFlagToAdd) {
+        if (!leashFlags.get(myPetClass).contains(leashFlagToAdd)) {
+            leashFlags.put(myPetClass, leashFlagToAdd);
+        }
+    }
+
+    public boolean setSkilltree(SkillTree skillTree) {
+        if (skillTree == null || this.skillTree == skillTree) {
+            return false;
+        }
+        if (skillTree.getRequiredLevel() > 1 && getExperience().getLevel() < skillTree.getRequiredLevel()) {
+            return false;
+        }
+        skills.reset();
+        this.skillTree = skillTree;
+        getServer().getPluginManager().callEvent(new MyPetLevelUpEvent(this, experience.getLevel(), 0, true));
+        return true;
+    }
+
+    public static double getStartHP(Class<? extends MyPet> myPetClass) {
+        if (startHP.containsKey(myPetClass)) {
+            return startHP.get(myPetClass);
+        }
+        return 20;
+    }
+
+    public static void setStartHP(Class<? extends MyPet> myPetClass, double hp) {
+        startHP.put(myPetClass, hp);
+    }
+
+    public static ConfigItem getLeashItem(Class<? extends MyPet> myPetClass) {
+        return leashItem.get(myPetClass);
+    }
+
+    public static void setLeashItem(Class<? extends MyPet> myPetClass, ConfigItem configItem) {
+        leashItem.put(myPetClass, configItem);
+    }
+
+    public static double getStartSpeed(Class<? extends MyPet> myPetClass) {
+        if (startSpeed.containsKey(myPetClass)) {
+            return startSpeed.get(myPetClass);
+        }
+        return 0.3F;
+    }
+
+    public static void setStartSpeed(Class<? extends MyPet> myPetClass, double speed) {
+        startSpeed.put(myPetClass, speed);
+    }
+
+    public static void resetOptions() {
         customRespawnTimeFactor.clear();
         customRespawnTimeFixed.clear();
         leashFlags.clear();
         food.clear();
         startSpeed.clear();
-        for (MyPetType petType : MyPetType.values())
-        {
-            startHP.put(petType.getMyPetClass(), 20D);
-        }
-    }
-
-    @Override
-    public String toString()
-    {
-        return "MyPet{owner=" + getOwner().getName() + ", name=" + ChatColor.stripColor(petName) + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + skillTree.getName() + "}";
+        startHP.clear();
     }
 }
